@@ -20,7 +20,11 @@ const PARTIER = [
 
 type StatusMap = Record<
   string,
-  { hasNotes: boolean; lastDate?: string }
+  {
+    hasNotes: boolean
+    lastDate?: string
+    readBy?: string | null
+  }
 >
 
 export default function Page() {
@@ -34,7 +38,7 @@ export default function Page() {
       for (const parti of PARTIER) {
         const { data } = await supabase
           .from('handover_notes')
-          .select('shift_date')
+          .select('shift_date, read_by')
           .eq('parti', parti)
           .order('shift_date', { ascending: false })
           .limit(1)
@@ -42,6 +46,7 @@ export default function Page() {
         result[parti] = {
           hasNotes: !!data && data.length > 0,
           lastDate: data?.[0]?.shift_date,
+          readBy: data?.[0]?.read_by ?? null,
         }
       }
 
@@ -62,6 +67,9 @@ export default function Page() {
         {PARTIER.map((parti) => {
           const info = status[parti]
 
+          const isRead = info?.hasNotes && info.readBy
+          const isMissing = !info?.hasNotes || !info.readBy
+
           return (
             <Link
               key={parti}
@@ -73,7 +81,7 @@ export default function Page() {
                   {parti}
                 </h2>
 
-                {info?.hasNotes ? (
+                {isRead ? (
                   <span className="text-green-600 text-sm font-semibold">
                     ✓ Opdateret
                   </span>
@@ -85,9 +93,14 @@ export default function Page() {
               </div>
 
               <p className="text-sm text-gray-500 mt-2">
-                {info?.lastDate
-                  ? `Sidst: ${info.lastDate}`
-                  : 'Ingen overleveringer endnu'}
+                {info?.lastDate ? (
+                  <>
+                    Sidst: {info.lastDate}
+                    {info.readBy && ` · Læst af ${info.readBy}`}
+                  </>
+                ) : (
+                  'Ingen overleveringer endnu'
+                )}
               </p>
             </Link>
           )
