@@ -18,6 +18,17 @@ const inputClass = `
   placeholder-gray-500 dark:placeholder-gray-400
 `
 
+// Fix til date-input (samme højde som de andre)
+const dateInputClass = `
+  w-full rounded mb-3
+  px-2 py-2
+  h-[42px]
+  bg-gray-100 text-gray-900
+  dark:bg-gray-700 dark:text-gray-100
+  border border-gray-300 dark:border-gray-600
+  appearance-none
+`
+
 export default function PartiPage() {
   const params = useParams()
   const router = useRouter()
@@ -82,7 +93,6 @@ export default function PartiPage() {
     <main className="max-w-3xl mx-auto p-6 space-y-10">
       {/* HEADER */}
       <header className="relative flex items-center mb-2">
-        {/* Tilbage-pil */}
         <button
           onClick={() => router.back()}
           className="
@@ -98,7 +108,6 @@ export default function PartiPage() {
           ←
         </button>
 
-        {/* Centreret titel */}
         <div className="w-full text-center">
           <h1 className="text-3xl font-bold">{parti}</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -148,7 +157,7 @@ export default function PartiPage() {
 
         <input
           type="date"
-          className={inputClass}
+          className={dateInputClass}
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
@@ -193,11 +202,18 @@ export default function PartiPage() {
               className={`${cardClass} p-4`}
             >
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {item.shift_date} · {item.author_name || 'Ukendt'}
+                {new Date(item.shift_date).toLocaleDateString('da-DK', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}{' '}
+                · {item.author_name || 'Ukendt'}
               </div>
+
               <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 {item.from_team} → {item.to_team}
               </div>
+
               <div>{item.note}</div>
             </div>
           ))}
