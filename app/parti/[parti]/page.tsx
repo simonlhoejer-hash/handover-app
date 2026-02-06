@@ -15,10 +15,8 @@ const inputClass = `
   bg-gray-100 text-gray-900
   dark:bg-gray-700 dark:text-gray-100
   border border-gray-300 dark:border-gray-600
-  placeholder-gray-500 dark:placeholder-gray-400
 `
 
-// Fix til date-input (samme højde som de andre)
 const dateInputClass = `
   w-full rounded mb-3
   px-2 py-2
@@ -26,7 +24,6 @@ const dateInputClass = `
   bg-gray-100 text-gray-900
   dark:bg-gray-700 dark:text-gray-100
   border border-gray-300 dark:border-gray-600
-  appearance-none
 `
 
 export default function PartiPage() {
@@ -37,12 +34,12 @@ export default function PartiPage() {
   const [name, setName] = useState('')
   const [fromTeam, setFromTeam] = useState('Hold 1')
   const [toTeam, setToTeam] = useState('Hold 2')
-  const [date, setDate] = useState(
-    new Date().toISOString().split('T')[0]
-  )
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [note, setNote] = useState('')
   const [items, setItems] = useState<any[]>([])
+  const [images, setImages] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   const teams = ['Hold 1', 'Hold 2', 'Hold 3', 'Hold 4']
 
@@ -58,6 +55,31 @@ export default function PartiPage() {
       .order('created_at', { ascending: false })
 
     setItems(data || [])
+  }
+
+  async function uploadImage(file: File) {
+    setUploading(true)
+
+    const ext = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${ext}`
+    const filePath = `${parti}/${fileName}`
+
+    const { error } = await supabase.storage
+      .from('handover-images')
+      .upload(filePath, file)
+
+    if (error) {
+      alert('Fejl ved upload af billede')
+      setUploading(false)
+      return
+    }
+
+    const { data } = supabase.storage
+      .from('handover-images')
+      .getPublicUrl(filePath)
+
+    setImages((prev) => [...prev, data.publicUrl])
+    setUploading(false)
   }
 
   async function saveNote() {
@@ -77,6 +99,7 @@ export default function PartiPage() {
         to_team: toTeam,
         shift_date: date,
         note,
+        images,
       })
 
     setLoading(false)
@@ -85,6 +108,7 @@ export default function PartiPage() {
       alert(error.message)
     } else {
       setNote('')
+      setImages([])
       loadNotes()
     }
   }
@@ -95,15 +119,7 @@ export default function PartiPage() {
       <header className="relative flex items-center mb-2">
         <button
           onClick={() => router.back()}
-          className="
-            absolute left-0
-            text-4xl font-bold
-            text-gray-700 dark:text-gray-300
-            hover:text-black dark:hover:text-white
-            transition
-            px-3
-          "
-          aria-label="Tilbage"
+          className="absolute left-0 text-4xl font-bold text-gray-700 dark:text-gray-300 px-3"
         >
           ←
         </button>
@@ -118,9 +134,7 @@ export default function PartiPage() {
 
       {/* FORM */}
       <section className={`${cardClass} p-6`}>
-        <h2 className="text-xl font-semibold mb-4">
-          Ny overlevering
-        </h2>
+        <h2 className="text-xl font-semibold mb-4">Ny overlevering</h2>
 
         <input
           className={inputClass}
@@ -130,27 +144,15 @@ export default function PartiPage() {
         />
 
         <div className="flex gap-3 mb-3">
-          <select
-            className={inputClass}
-            value={fromTeam}
-            onChange={(e) => setFromTeam(e.target.value)}
-          >
+          <select className={inputClass} value={fromTeam} onChange={(e) => setFromTeam(e.target.value)}>
             {teams.map((team) => (
-              <option key={team} value={team}>
-                {team}
-              </option>
+              <option key={team}>{team}</option>
             ))}
           </select>
 
-          <select
-            className={inputClass}
-            value={toTeam}
-            onChange={(e) => setToTeam(e.target.value)}
-          >
+          <select className={inputClass} value={toTeam} onChange={(e) => setToTeam(e.target.value)}>
             {teams.map((team) => (
-              <option key={team} value={team}>
-                {team}
-              </option>
+              <option key={team}>{team}</option>
             ))}
           </select>
         </div>
@@ -169,15 +171,37 @@ export default function PartiPage() {
           onChange={(e) => setNote(e.target.value)}
         />
 
+        {/* BILLEDER */}
+        <div className="mb-4">
+          <label className="block font-medium mb-2">Billeder</label>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => e.target.files && uploadImage(e.target.files[0])}
+          />
+
+          {uploading && (
+            <p className="text-sm mt-1 text-gray-500">Uploader billede…</p>
+          )}
+
+          {images.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mt-3">
+              {images.map((url) => (
+                <img
+                  key={url}
+                  src={url}
+                  className="h-24 w-full object-cover rounded"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
         <button
           onClick={saveNote}
           disabled={loading}
-          className="
-            w-full py-3 rounded font-semibold
-            bg-black text-white
-            dark:bg-white dark:text-black
-            transition
-          "
+          className="w-full py-3 rounded font-semibold bg-black text-white dark:bg-white dark:text-black"
         >
           {loading ? 'Gemmer...' : 'Gem overlevering'}
         </button>
@@ -185,36 +209,33 @@ export default function PartiPage() {
 
       {/* HISTORIK */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">
-          Historik
-        </h2>
-
-        {items.length === 0 && (
-          <p className="text-gray-500 dark:text-gray-400">
-            Ingen overleveringer endnu
-          </p>
-        )}
+        <h2 className="text-xl font-semibold mb-4">Historik</h2>
 
         <div className="space-y-4">
           {items.map((item) => (
-            <div
-              key={item.id}
-              className={`${cardClass} p-4`}
-            >
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {new Date(item.shift_date).toLocaleDateString('da-DK', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}{' '}
-                · {item.author_name || 'Ukendt'}
+            <div key={item.id} className={`${cardClass} p-4`}>
+              <div className="text-sm text-gray-500 mb-1">
+                {new Date(item.shift_date).toLocaleDateString('da-DK')} · {item.author_name}
               </div>
 
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              <div className="text-sm text-gray-400 mb-2">
                 {item.from_team} → {item.to_team}
               </div>
 
               <div>{item.note}</div>
+
+              {item.images?.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  {item.images.map((url: string) => (
+                    <a key={url} href={url} target="_blank">
+                      <img
+                        src={url}
+                        className="h-24 wounded object-cover rounded"
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
