@@ -43,10 +43,12 @@ export default function Page() {
           .order('shift_date', { ascending: false })
           .limit(1)
 
+        const latest = data?.[0]
+
         result[parti] = {
-          hasNotes: !!data && data.length > 0,
-          lastDate: data?.[0]?.shift_date,
-          readBy: data?.[0]?.read_by ?? null,
+          hasNotes: !!latest,
+          lastDate: latest?.shift_date,
+          readBy: latest?.read_by ?? null,
         }
       }
 
@@ -67,8 +69,8 @@ export default function Page() {
         {PARTIER.map((parti) => {
           const info = status[parti]
 
-          const isRead = info?.hasNotes && info.readBy
-          const isMissing = !info?.hasNotes || !info.readBy
+          const hasNotes = info?.hasNotes
+          const isRead = hasNotes && info.readBy
 
           return (
             <Link
@@ -77,17 +79,23 @@ export default function Page() {
               className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition"
             >
               <div className="flex justify-between items-start">
-                <h2 className="text-lg font-semibold">
-                  {parti}
-                </h2>
+                <h2 className="text-lg font-semibold">{parti}</h2>
 
-                {isRead ? (
-                  <span className="text-green-600 text-sm font-semibold">
-                    ✓ Opdateret
-                  </span>
-                ) : (
+                {!hasNotes && (
                   <span className="text-red-600 text-sm font-semibold">
                     ⚠ Mangler
+                  </span>
+                )}
+
+                {hasNotes && !isRead && (
+                  <span className="text-yellow-600 text-sm font-semibold">
+                    ⚠ Ikke læst
+                  </span>
+                )}
+
+                {isRead && (
+                  <span className="text-green-600 text-sm font-semibold">
+                    ✓ Opdateret
                   </span>
                 )}
               </div>
