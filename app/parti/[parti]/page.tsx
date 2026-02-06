@@ -41,6 +41,9 @@ export default function PartiPage() {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
 
+  // 👉 NY STATE til forstørret billede
+  const [activeImage, setActiveImage] = useState<string | null>(null)
+
   const teams = ['Hold 1', 'Hold 2', 'Hold 3', 'Hold 4']
 
   useEffect(() => {
@@ -191,7 +194,8 @@ export default function PartiPage() {
                 <img
                   key={url}
                   src={url}
-                  className="h-24 w-full object-cover rounded"
+                  onClick={() => setActiveImage(url)}
+                  className="h-24 w-full object-cover rounded cursor-pointer hover:opacity-80"
                 />
               ))}
             </div>
@@ -227,12 +231,12 @@ export default function PartiPage() {
               {item.images?.length > 0 && (
                 <div className="grid grid-cols-3 gap-2 mt-3">
                   {item.images.map((url: string) => (
-                    <a key={url} href={url} target="_blank">
-                      <img
-                        src={url}
-                        className="h-24 wounded object-cover rounded"
-                      />
-                    </a>
+                    <img
+                      key={url}
+                      src={url}
+                      onClick={() => setActiveImage(url)}
+                      className="h-24 w-full object-cover rounded cursor-pointer hover:opacity-80"
+                    />
                   ))}
                 </div>
               )}
@@ -240,6 +244,19 @@ export default function PartiPage() {
           ))}
         </div>
       </section>
+
+      {/* OVERLAY – FORSTØRRET BILLEDE */}
+      {activeImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center"
+          onClick={() => setActiveImage(null)}
+        >
+          <img
+            src={activeImage}
+            className="max-h-[90vh] max-w-[90vw] rounded shadow-lg"
+          />
+        </div>
+      )}
     </main>
   )
 }
