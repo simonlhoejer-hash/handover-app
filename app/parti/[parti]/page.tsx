@@ -43,6 +43,9 @@ export default function PartiPage() {
   const [uploading, setUploading] = useState(false)
   const [activeImage, setActiveImage] = useState<string | null>(null)
 
+  // 🔑 navn på den kok, der LÆSER overleveringen
+  const [readName, setReadName] = useState('')
+
   const teams = ['Hold 1', 'Hold 2', 'Hold 3', 'Hold 4']
 
   useEffect(() => {
@@ -61,7 +64,7 @@ export default function PartiPage() {
 
   async function uploadImage(file: File) {
     const allowedTypes = ['image/jpeg', 'image/png']
-    const maxSize = 5 * 1024 * 1024 // 5 MB
+    const maxSize = 5 * 1024 * 1024
 
     if (!allowedTypes.includes(file.type)) {
       alert('Kun JPG og PNG er tilladt')
@@ -130,6 +133,29 @@ export default function PartiPage() {
     }
   }
 
+  // ✅ MODTAGER KVITTERER
+  async function markAsRead(id: string) {
+    if (!readName) {
+      alert('Skriv dit fornavn for at kvittere')
+      return
+    }
+
+    const { error } = await supabase
+      .from('handover_notes')
+      .update({
+        read_by: readName,
+        read_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+
+    if (error) {
+      alert(error.message)
+    } else {
+      setReadName('')
+      loadNotes()
+    }
+  }
+
   return (
     <main className="max-w-3xl mx-auto p-6 space-y-10">
       <header className="relative flex items-center mb-2">
@@ -148,43 +174,12 @@ export default function PartiPage() {
         </div>
       </header>
 
+      {/* NY OVERLEVERING */}
       <section className={`${cardClass} p-6`}>
         <h2 className="text-xl font-semibold mb-4">Ny overlevering</h2>
 
-        <input
-          className={inputClass}
-          placeholder="Dit navn (afsender)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <input
-          className={inputClass}
-          placeholder="Modtager (hvem skal læse)"
-          value={receiver}
-          onChange={(e) => setReceiver(e.target.value)}
-        />
-
-        <div className="flex gap-3 mb-3">
-          <select className={inputClass} value={fromTeam} onChange={(e) => setFromTeam(e.target.value)}>
-            {teams.map((team) => (
-              <option key={team}>{team}</option>
-            ))}
-          </select>
-
-          <select className={inputClass} value={toTeam} onChange={(e) => setToTeam(e.target.value)}>
-            {teams.map((team) => (
-              <option key={team}>{team}</option>
-            ))}
-          </select>
-        </div>
-
-        <input
-          type="date"
-          className={dateInputClass}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <input className={inputClass} placeholder="Dit navn (afsender)" value={name} onChange={(e) => setName(e.target.value)} />
+        <input className={inputClass} placeholder="Modtager (hvem skal læse)" value={receiver} onChange={(e) => setReceiver(e.target.value)} />
 
         <textarea
           className={`${inputClass} h-32`}
@@ -193,43 +188,12 @@ export default function PartiPage() {
           onChange={(e) => setNote(e.target.value)}
         />
 
-        <div className="mb-4">
-          <label className="block font-medium mb-1">Billeder</label>
-          <p className="text-sm text-gray-500 mb-2">
-            JPG eller PNG · max 5 MB pr. billede
-          </p>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => e.target.files && uploadImage(e.target.files[0])}
-          />
-
-          {uploading && <p className="text-sm mt-1 text-gray-500">Uploader billede…</p>}
-
-          {images.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              {images.map((url) => (
-                <img
-                  key={url}
-                  src={url}
-                  onClick={() => setActiveImage(url)}
-                  className="h-24 w-full object-cover rounded cursor-pointer hover:opacity-80"
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={saveNote}
-          disabled={loading}
-          className="w-full py-3 rounded font-semibold bg-black text-white dark:bg-white dark:text-black"
-        >
-          {loading ? 'Gemmer...' : 'Gem overlevering'}
+        <button onClick={saveNote} disabled={loading} className="w-full py-3 rounded font-semibold bg-black text-white">
+          Gem overlevering
         </button>
       </section>
 
+      {/* HISTORIK */}
       <section>
         <h2 className="text-xl font-semibold mb-4">Historik</h2>
 
@@ -237,25 +201,34 @@ export default function PartiPage() {
           {items.map((item) => (
             <div key={item.id} className={`${cardClass} p-4`}>
               <div className="text-sm text-gray-500 mb-1">
-                {new Date(item.shift_date).toLocaleDateString('da-DK')} · {item.author_name} → {item.receiver_name || 'Ukendt'}
-              </div>
-
-              <div className="text-sm text-gray-400 mb-2">
-                {item.from_team} → {item.to_team}
+                {item.author_name} → {item.receiver_name}
               </div>
 
               <div>{item.note}</div>
 
-              {item.images?.length > 0 && (
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  {item.images.map((url: string) => (
-                    <img
-                      key={url}
-                      src={url}
-                      onClick={() => setActiveImage(url)}
-                      className="h-24 w-full object-cover rounded cursor-pointer hover:opacity-80"
-                    />
-                  ))}
+              {/* LÆST / IKKE LÆST */}
+              {item.read_by ? (
+                <p className="mt-2 text-green-600 text-sm">
+                  ✔️ Læst af {item.read_by} kl.{' '}
+                  {new Date(item.read_at).toLocaleTimeString('da-DK', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              ) : (
+                <div className="mt-3 flex gap-2">
+                  <input
+                    className={inputClass}
+                    placeholder="Dit fornavn"
+                    value={readName}
+                    onChange={(e) => setReadName(e.target.value)}
+                  />
+                  <button
+                    onClick={() => markAsRead(item.id)}
+                    className="px-4 py-2 rounded bg-green-600 text-white"
+                  >
+                    Markér som læst
+                  </button>
                 </div>
               )}
             </div>
@@ -264,14 +237,8 @@ export default function PartiPage() {
       </section>
 
       {activeImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center"
-          onClick={() => setActiveImage(null)}
-        >
-          <img
-            src={activeImage}
-            className="max-h-[90vh] max-w-[90vw] rounded shadow-lg"
-          />
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center" onClick={() => setActiveImage(null)}>
+          <img src={activeImage} className="max-h-[90vh] max-w-[90vw] rounded" />
         </div>
       )}
     </main>
