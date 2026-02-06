@@ -32,6 +32,7 @@ export default function PartiPage() {
   const parti = decodeURIComponent(params.parti as string)
 
   const [name, setName] = useState('')
+  const [receiver, setReceiver] = useState('')
   const [fromTeam, setFromTeam] = useState('Hold 1')
   const [toTeam, setToTeam] = useState('Hold 2')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
@@ -40,8 +41,6 @@ export default function PartiPage() {
   const [images, setImages] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-
-  // 👉 NY STATE til forstørret billede
   const [activeImage, setActiveImage] = useState<string | null>(null)
 
   const teams = ['Hold 1', 'Hold 2', 'Hold 3', 'Hold 4']
@@ -61,6 +60,19 @@ export default function PartiPage() {
   }
 
   async function uploadImage(file: File) {
+    const allowedTypes = ['image/jpeg', 'image/png']
+    const maxSize = 5 * 1024 * 1024 // 5 MB
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Kun JPG og PNG er tilladt')
+      return
+    }
+
+    if (file.size > maxSize) {
+      alert('Billedet må max være 5 MB')
+      return
+    }
+
     setUploading(true)
 
     const ext = file.name.split('.').pop()
@@ -86,8 +98,8 @@ export default function PartiPage() {
   }
 
   async function saveNote() {
-    if (!name || !note) {
-      alert('Navn og overlevering skal udfyldes')
+    if (!name || !receiver || !note) {
+      alert('Afsender, modtager og overlevering skal udfyldes')
       return
     }
 
@@ -97,6 +109,7 @@ export default function PartiPage() {
       .from('handover_notes')
       .insert({
         author_name: name,
+        receiver_name: receiver,
         parti,
         from_team: fromTeam,
         to_team: toTeam,
@@ -112,13 +125,13 @@ export default function PartiPage() {
     } else {
       setNote('')
       setImages([])
+      setReceiver('')
       loadNotes()
     }
   }
 
   return (
     <main className="max-w-3xl mx-auto p-6 space-y-10">
-      {/* HEADER */}
       <header className="relative flex items-center mb-2">
         <button
           onClick={() => router.back()}
@@ -135,15 +148,21 @@ export default function PartiPage() {
         </div>
       </header>
 
-      {/* FORM */}
       <section className={`${cardClass} p-6`}>
         <h2 className="text-xl font-semibold mb-4">Ny overlevering</h2>
 
         <input
           className={inputClass}
-          placeholder="Dit navn"
+          placeholder="Dit navn (afsender)"
           value={name}
           onChange={(e) => setName(e.target.value)}
+        />
+
+        <input
+          className={inputClass}
+          placeholder="Modtager (hvem skal læse)"
+          value={receiver}
+          onChange={(e) => setReceiver(e.target.value)}
         />
 
         <div className="flex gap-3 mb-3">
@@ -174,9 +193,11 @@ export default function PartiPage() {
           onChange={(e) => setNote(e.target.value)}
         />
 
-        {/* BILLEDER */}
         <div className="mb-4">
-          <label className="block font-medium mb-2">Billeder</label>
+          <label className="block font-medium mb-1">Billeder</label>
+          <p className="text-sm text-gray-500 mb-2">
+            JPG eller PNG · max 5 MB pr. billede
+          </p>
 
           <input
             type="file"
@@ -184,9 +205,7 @@ export default function PartiPage() {
             onChange={(e) => e.target.files && uploadImage(e.target.files[0])}
           />
 
-          {uploading && (
-            <p className="text-sm mt-1 text-gray-500">Uploader billede…</p>
-          )}
+          {uploading && <p className="text-sm mt-1 text-gray-500">Uploader billede…</p>}
 
           {images.length > 0 && (
             <div className="grid grid-cols-3 gap-2 mt-3">
@@ -211,7 +230,6 @@ export default function PartiPage() {
         </button>
       </section>
 
-      {/* HISTORIK */}
       <section>
         <h2 className="text-xl font-semibold mb-4">Historik</h2>
 
@@ -219,7 +237,7 @@ export default function PartiPage() {
           {items.map((item) => (
             <div key={item.id} className={`${cardClass} p-4`}>
               <div className="text-sm text-gray-500 mb-1">
-                {new Date(item.shift_date).toLocaleDateString('da-DK')} · {item.author_name}
+                {new Date(item.shift_date).toLocaleDateString('da-DK')} · {item.author_name} → {item.receiver_name || 'Ukendt'}
               </div>
 
               <div className="text-sm text-gray-400 mb-2">
@@ -245,7 +263,6 @@ export default function PartiPage() {
         </div>
       </section>
 
-      {/* OVERLAY – FORSTØRRET BILLEDE */}
       {activeImage && (
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center"
