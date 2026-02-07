@@ -268,18 +268,20 @@ export default function PartiPage() {
         </div>
 
         {/* GEM-KNAP – samme stil som før */}
-        <button
-          onClick={saveNote}
-          disabled={loading}
-          className="
-            w-full py-3 rounded font-semibold
-            bg-black text-white
-            hover:bg-gray-900
-            transition
-          "
-        >
-          {loading ? 'Gemmer...' : 'Gem overlevering'}
-        </button>
+       <button
+  onClick={saveNote}
+  disabled={loading}
+  className="
+  w-full py-3 rounded font-semibold transition
+  bg-black text-white
+  dark:bg-white dark:text-black
+  hover:opacity-90
+  disabled:opacity-50
+"
+>
+  {loading ? 'Gemmer...' : 'Gem overlevering'}
+</button>
+  
       </section>
 
       {/* HISTORIK */}
