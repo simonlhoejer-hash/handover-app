@@ -55,6 +55,8 @@ export default function PartiPage() {
 
   // 🔑 navn på kokken der LÆSER overleveringen
   const [readName, setReadName] = useState('')
+// ✏️ ID på overlevering der redigeres
+const [editingId, setEditingId] = useState<string | null>(null)
 
 
   const teams = ['Hold 1', 'Hold 2', 'Hold 3', 'Hold 4']
@@ -134,32 +136,57 @@ export default function PartiPage() {
     setLoading(true)
 
 
-    const { error } = await supabase
-      .from('handover_notes')
-      .insert({
-        author_name: name,
-        receiver_name: receiver,
-        parti,
-        from_team: fromTeam,
-        to_team: toTeam,
-        shift_date: date,
-        note,
-        images,
-      })
+    let error
+
+if (editingId) {
+  // ✏️ OPDATER eksisterende overlevering
+  const result = await supabase
+    .from('handover_notes')
+    .update({
+      author_name: name,
+      receiver_name: receiver,
+      from_team: fromTeam,
+      to_team: toTeam,
+      shift_date: date,
+      note,
+      images,
+    })
+    .eq('id', editingId)
+
+  error = result.error
+} else {
+  // 🆕 NY overlevering
+  const result = await supabase
+    .from('handover_notes')
+    .insert({
+      author_name: name,
+      receiver_name: receiver,
+      parti,
+      from_team: fromTeam,
+      to_team: toTeam,
+      shift_date: date,
+      note,
+      images,
+    })
+
+  error = result.error
+}
+
 
 
     setLoading(false)
 
 
     if (error) {
-      alert(error.message)
-    } else {
-      setNote('')
-      setImages([])
-      setReceiver('')
-      loadNotes()
-    }
-  }
+  alert(error.message)
+} else {
+  setNote('')
+  setImages([])
+  setReceiver('')
+  setEditingId(null) // ✅ HER – nr. 3
+  loadNotes()
+}
+}
 
 
   // ✅ MODTAGER KVITTERER
@@ -365,6 +392,7 @@ export default function PartiPage() {
 {!item.read_by && (
   <button
     onClick={() => {
+      setEditingId(item.id)
       setName(item.author_name)
       setReceiver(item.receiver_name)
       setFromTeam(item.from_team)
@@ -426,6 +454,3 @@ export default function PartiPage() {
     </main>
   )
 }
-
-
-
