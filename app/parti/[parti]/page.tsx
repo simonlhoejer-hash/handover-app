@@ -346,7 +346,7 @@ export default function PartiPage() {
               </div>
 
 
-              <div>{item.note}</div>
+              <div className="whitespace-pre-line">{item.note}</div>
 
 
               {item.images?.length > 0 && (
@@ -362,6 +362,23 @@ export default function PartiPage() {
                 </div>
               )}
 
+{!item.read_by && (
+  <button
+    onClick={() => {
+      setName(item.author_name)
+      setReceiver(item.receiver_name)
+      setFromTeam(item.from_team)
+      setToTeam(item.to_team)
+      setDate(item.shift_date)
+      setNote(item.note)
+      setImages(item.images || [])
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }}
+    className="mt-3 text-sm text-blue-600 underline"
+  >
+    ✏️ Rediger
+  </button>
+)}
 
               {/* LÆST / IKKE LÆST */}
               {item.read_by ? (
