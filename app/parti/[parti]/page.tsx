@@ -426,11 +426,20 @@ if (editingId) {
                     onChange={(e) => setReadName(e.target.value)}
                   />
                   <button
-                    onClick={() => markAsRead(item.id)}
-                    className="px-4 py-2 rounded bg-green-600 text-white"
-                  >
-                    Markér som læst
-                  </button>
+  onClick={() => markAsRead(item.id)}
+  className="
+    h-[42px]
+    px-4
+    rounded
+    bg-green-600
+    text-white
+    font-semibold
+    whitespace-nowrap
+  "
+>
+  Markér som læst
+</button>
+
                 </div>
               )}
             </div>
