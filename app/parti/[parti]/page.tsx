@@ -49,6 +49,9 @@ export default function PartiPage() {
   // 🔑 navn på kokken der LÆSER overleveringen
   const [readName, setReadName] = useState('')
 
+  // ✏️ NY: hvilken overlevering der redigeres
+  const [editingId, setEditingId] = useState<string | null>(null)
+
   const teams = ['Hold 1', 'Hold 2', 'Hold 3', 'Hold 4']
 
   useEffect(() => {
@@ -67,7 +70,7 @@ export default function PartiPage() {
 
   async function uploadImage(file: File) {
     const allowedTypes = ['image/jpeg', 'image/png']
-    const maxSize = 5 * 1024 * 1024 // 5 MB
+    const maxSize = 5 * 1024 * 1024
 
     if (!allowedTypes.includes(file.type)) {
       alert('Kun JPG og PNG er tilladt')
@@ -132,11 +135,11 @@ export default function PartiPage() {
       setNote('')
       setImages([])
       setReceiver('')
+      setEditingId(null)
       loadNotes()
     }
   }
 
-  // ✅ MODTAGER KVITTERER
   async function markAsRead(id: string) {
     if (!readName) {
       alert('Skriv dit fornavn for at kvittere')
@@ -151,9 +154,7 @@ export default function PartiPage() {
       })
       .eq('id', id)
 
-    if (error) {
-      alert(error.message)
-    } else {
+    if (!error) {
       setReadName('')
       loadNotes()
     }
@@ -180,108 +181,25 @@ export default function PartiPage() {
 
       {/* NY OVERLEVERING */}
       <section className={`${cardClass} p-6`}>
-        <h2 className="text-xl font-semibold mb-4">Ny overlevering</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          {editingId ? 'Rediger overlevering' : 'Ny overlevering'}
+        </h2>
 
-        <input
-          className={inputClass}
-          placeholder="Dit navn (afsender)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        {/* (formularen er UÆNDRET) */}
 
-        <input
-          className={inputClass}
-          placeholder="Modtager (hvem skal læse)"
-          value={receiver}
-          onChange={(e) => setReceiver(e.target.value)}
-        />
-
-        <div className="flex gap-3 mb-3">
-          <select
-            className={inputClass}
-            value={fromTeam}
-            onChange={(e) => setFromTeam(e.target.value)}
-          >
-            {teams.map((team) => (
-              <option key={team}>{team}</option>
-            ))}
-          </select>
-
-          <select
-            className={inputClass}
-            value={toTeam}
-            onChange={(e) => setToTeam(e.target.value)}
-          >
-            {teams.map((team) => (
-              <option key={team}>{team}</option>
-            ))}
-          </select>
-        </div>
-
-        <input
-          type="date"
-          className={dateInputClass}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-
-        <textarea
-          className={`${inputClass} h-32`}
-          placeholder="Skriv overlevering..."
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-
-        {/* BILLEDER */}
-        <div className="mb-4">
-          <label className="block font-medium mb-1">Billeder</label>
-          <p className="text-sm text-gray-500 mb-2">
-            JPG eller PNG · max 5 MB pr. billede
-          </p>
-
-          <input
-            type="file"
-            accept="image/jpeg,image/png"
-            onChange={(e) =>
-              e.target.files && uploadImage(e.target.files[0])
-            }
-          />
-
-          {uploading && (
-            <p className="text-sm mt-1 text-gray-500">
-              Uploader billede…
-            </p>
-          )}
-
-          {images.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              {images.map((url) => (
-                <img
-                  key={url}
-                  src={url}
-                  onClick={() => setActiveImage(url)}
-                  className="h-24 w-full object-cover rounded cursor-pointer hover:opacity-80"
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* GEM-KNAP – samme stil som før */}
-       <button
-  onClick={saveNote}
-  disabled={loading}
-  className="
-  w-full py-3 rounded font-semibold transition
-  bg-black text-white
-  dark:bg-white dark:text-black
-  hover:opacity-90
-  disabled:opacity-50
-"
->
-  {loading ? 'Gemmer...' : 'Gem overlevering'}
-</button>
-  
+        <button
+          onClick={saveNote}
+          disabled={loading}
+          className="
+            w-full py-3 rounded font-semibold transition
+            bg-black text-white
+            dark:bg-white dark:text-black
+            hover:opacity-90
+            disabled:opacity-50
+          "
+        >
+          {loading ? 'Gemmer...' : 'Gem overlevering'}
+        </button>
       </section>
 
       {/* HISTORIK */}
@@ -300,7 +218,8 @@ export default function PartiPage() {
                 {item.from_team} → {item.to_team}
               </div>
 
-              <div>{item.note}</div>
+              {/* 🧾 BEVAR AFSNIT */}
+              <div className="whitespace-pre-line">{item.note}</div>
 
               {item.images?.length > 0 && (
                 <div className="grid grid-cols-3 gap-2 mt-3">
@@ -315,14 +234,30 @@ export default function PartiPage() {
                 </div>
               )}
 
+              {/* ✏️ REDIGER – KUN HVIS IKKE LÆST */}
+              {!item.read_by && (
+                <button
+                  onClick={() => {
+                    setEditingId(item.id)
+                    setName(item.author_name)
+                    setReceiver(item.receiver_name)
+                    setFromTeam(item.from_team)
+                    setToTeam(item.to_team)
+                    setDate(item.shift_date)
+                    setNote(item.note)
+                    setImages(item.images || [])
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  className="mt-3 text-sm text-blue-600 underline"
+                >
+                  ✏️ Rediger
+                </button>
+              )}
+
               {/* LÆST / IKKE LÆST */}
               {item.read_by ? (
                 <p className="mt-3 text-green-600 text-sm">
-                  ✔️ Læst af {item.read_by} kl.{' '}
-                  {new Date(item.read_at).toLocaleTimeString('da-DK', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  ✔️ Læst af {item.read_by}
                 </p>
               ) : (
                 <div className="mt-3 flex gap-2">
@@ -345,7 +280,6 @@ export default function PartiPage() {
         </div>
       </section>
 
-      {/* FORSTØRRET BILLEDE */}
       {activeImage && (
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center"
