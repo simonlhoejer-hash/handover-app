@@ -40,7 +40,7 @@ export default function Page() {
           .from('handover_notes')
           .select('shift_date, read_by')
           .eq('parti', parti)
-          .order('shift_date', { ascending: false })
+          .order('created_at', { ascending: false }) // 👈 vigtigt: NYESTE overlevering
           .limit(1)
 
         const latest = data?.[0]
@@ -70,7 +70,8 @@ export default function Page() {
           const info = status[parti]
 
           const hasNotes = info?.hasNotes
-          const isRead = hasNotes && info.readBy
+          const isRead = hasNotes && !!info.readBy
+          const isUnread = hasNotes && !info.readBy
 
           return (
             <Link
@@ -81,18 +82,21 @@ export default function Page() {
               <div className="flex justify-between items-start">
                 <h2 className="text-lg font-semibold">{parti}</h2>
 
+                {/* 🔴 Ingen overlevering */}
                 {!hasNotes && (
                   <span className="text-red-600 text-sm font-semibold">
-                    ⚠ Mangler
+                    ❌ Mangler
                   </span>
                 )}
 
-                {hasNotes && !isRead && (
+                {/* 🟡 Overlevering findes – men ikke læst */}
+                {isUnread && (
                   <span className="text-yellow-600 text-sm font-semibold">
-                    ⚠ Ikke læst
+                    🕒 Afventer læsning
                   </span>
                 )}
 
+                {/* 🟢 Overlevering læst */}
                 {isRead && (
                   <span className="text-green-600 text-sm font-semibold">
                     ✓ Opdateret
@@ -104,7 +108,7 @@ export default function Page() {
                 {info?.lastDate ? (
                   <>
                     Sidst: {info.lastDate}
-                    {info.readBy && ` · Læst af ${info.readBy}`}
+                    {isRead && ` · Læst af ${info.readBy}`}
                   </>
                 ) : (
                   'Ingen overleveringer endnu'
