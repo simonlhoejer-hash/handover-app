@@ -112,18 +112,29 @@ export default function Page() {
       Sidst: {info.lastDate}
 
       {isUnread && (info as any)?.receiver_name && (
-        <> · Klar til læsning – {(info as any).receiver_name}</>
+        <>
+          {' · '}
+          Afventer –{' '}
+          <span className="font-semibold text-yellow-400">
+            {(info as any).receiver_name}
+          </span>
+        </>
       )}
 
       {isRead && (info as any)?.read_by && (
-        <> · Læst af {(info as any).read_by}</>
+        <>
+          {' · '}
+          Opdateret –{' '}
+          <span className="font-semibold text-green-400">
+            {(info as any).read_by}
+          </span>
+        </>
       )}
     </>
   ) : (
     'Ingen overleveringer endnu'
   )}
 </p>
-
 
             </Link>
           )
