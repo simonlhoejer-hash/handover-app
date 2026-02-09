@@ -108,12 +108,12 @@ export default function Page() {
     🕒 Afventer
   </span>
 )}
-    {/* 🟢 Overlevering læst */}
-    {isRead && (
-      <span className="text-green-600 text-sm font-semibold whitespace-normal">
-        ✓ Opdateret
-      </span>
-    )}
+{/* 🟢 Overlevering læst */}
+{isRead && (
+  <span className="text-green-600 text-sm font-semibold whitespace-normal">
+    ✓ Læst
+  </span>
+)}
   </div>
 </div>
 <p className="text-sm text-gray-500 mt-2">
@@ -124,7 +124,6 @@ export default function Page() {
       {isUnread && info.receiverName && (
         <>
           {' · '}
-          Afventer –{' '}
           <span className="font-semibold text-yellow-400">
             {info.receiverName}
           </span>
@@ -134,7 +133,6 @@ export default function Page() {
       {isRead && info.readBy && (
         <>
           {' · '}
-          Opdateret –{' '}
           <span className="font-semibold text-green-400">
             {info.readBy}
           </span>
