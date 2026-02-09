@@ -95,14 +95,12 @@ export default function Page() {
         ❌ Mangler
       </span>
     )}
-
-    {/* 🟡 Overlevering findes – men ikke læst */}
-    {isUnread && (
-      <span className="text-yellow-600 text-sm font-semibold whitespace-normal">
-        🕒 Afventer læsning
-      </span>
-    )}
-
+{/* 🟡 Overlevering findes – men ikke læst */}
+{isUnread && (
+  <span className="text-yellow-600 text-sm font-semibold whitespace-normal">
+    🕒 Afventer
+  </span>
+)}
     {/* 🟢 Overlevering læst */}
     {isRead && (
       <span className="text-green-600 text-sm font-semibold whitespace-normal">
