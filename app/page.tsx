@@ -24,6 +24,7 @@ type StatusMap = Record<
     hasNotes: boolean
     lastDate?: string
     readBy?: string | null
+    receiverName?: string | null
   }
 >
 
@@ -31,33 +32,38 @@ export default function Page() {
   const [status, setStatus] = useState<StatusMap>({})
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchStatus = async () => {
-      const result: StatusMap = {}
+ useEffect(() => {
+  const fetchStatus = async () => {
+    const result: StatusMap = {}
 
-      for (const parti of PARTIER) {
-        const { data } = await supabase
-          .from('handover_notes')
-          .select('shift_date, read_by, receiver_name')
-          .eq('parti', parti)
-          .order('created_at', { ascending: false }) // 👈 vigtigt: NYESTE overlevering
-          .limit(1)
+    for (const parti of PARTIER) {
+      const { data, error } = await supabase
+        .from('handover_notes')
+        .select('shift_date, read_by, receiver_name')
+        .eq('parti', parti)
+        .order('created_at', { ascending: false })
+        .limit(1)
 
-        const latest = data?.[0]
-
-        result[parti] = {
-          hasNotes: !!latest,
-          lastDate: latest?.shift_date,
-          readBy: latest?.read_by ?? null,
-        }
+      if (error) {
+        console.error(error)
       }
 
-      setStatus(result)
-      setLoading(false)
+      const latest = data?.[0]
+
+      result[parti] = {
+        hasNotes: !!latest,
+        lastDate: latest?.shift_date,
+        readBy: latest?.read_by ?? null,
+        receiverName: latest?.receiver_name ?? null,
+      }
     }
 
-    fetchStatus()
-  }, [])
+    setStatus(result)
+    setLoading(false)
+  }
+
+  fetchStatus()
+}, [])
 
   if (loading) {
     return <p className="p-6">Indlæser…</p>
@@ -111,22 +117,22 @@ export default function Page() {
     <>
       Sidst: {info.lastDate}
 
-      {isUnread && (info as any)?.receiver_name && (
+      {isUnread && info.receiverName && (
         <>
           {' · '}
           Afventer –{' '}
           <span className="font-semibold text-yellow-400">
-            {(info as any).receiver_name}
+            {info.receiverName}
           </span>
         </>
       )}
 
-      {isRead && (info as any)?.read_by && (
+      {isRead && info.readBy && (
         <>
           {' · '}
           Opdateret –{' '}
           <span className="font-semibold text-green-400">
-            {(info as any).read_by}
+            {info.readBy}
           </span>
         </>
       )}
