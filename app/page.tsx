@@ -38,7 +38,7 @@ export default function Page() {
       for (const parti of PARTIER) {
         const { data } = await supabase
           .from('handover_notes')
-          .select('shift_date, read_by')
+          .select('shift_date, read_by, receiver_name')
           .eq('parti', parti)
           .order('created_at', { ascending: false }) // 👈 vigtigt: NYESTE overlevering
           .limit(1)
