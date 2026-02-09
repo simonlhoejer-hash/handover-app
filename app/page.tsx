@@ -110,12 +110,21 @@ export default function Page() {
   {info?.lastDate ? (
     <>
       Sidst: {info.lastDate}
-      {isRead && ` · Læst af ${info.readBy}`}
+
+      {isUnread && (info as any)?.receiver_name && (
+        <> · Klar til læsning – {(info as any).receiver_name}</>
+      )}
+
+      {isRead && (info as any)?.read_by && (
+        <> · Læst af {(info as any).read_by}</>
+      )}
     </>
   ) : (
     'Ingen overleveringer endnu'
   )}
 </p>
+
+
             </Link>
           )
         })}
