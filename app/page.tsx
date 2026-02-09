@@ -3,7 +3,14 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+function formatDanishDate(dateString?: string) {
+  if (!dateString) return ''
 
+  return new Date(dateString).toLocaleDateString('da-DK', {
+    day: 'numeric',
+    month: 'short',
+  })
+}
 const PARTIER = [
   'NORD',
   'SYD',
@@ -109,11 +116,10 @@ export default function Page() {
     )}
   </div>
 </div>
-
 <p className="text-sm text-gray-500 mt-2">
   {info?.lastDate ? (
     <>
-      Sidst: {info.lastDate}
+      Sidst: {formatDanishDate(info.lastDate)}
 
       {isUnread && info.receiverName && (
         <>
@@ -139,7 +145,6 @@ export default function Page() {
     'Ingen overleveringer endnu'
   )}
 </p>
-
             </Link>
           )
         })}
