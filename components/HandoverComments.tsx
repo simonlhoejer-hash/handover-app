@@ -96,19 +96,15 @@ export default function HandoverComments({
 {comments.map((c) => (
   <div
     key={c.id}
-    className="
-      rounded-lg
-      px-3 py-2
-      bg-gray-100 dark:bg-gray-800
-    "
+    className="rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800"
   >
     {/* Navn */}
-    <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
       {c.author_name}
     </div>
 
     {/* Tid */}
-    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
       {new Date(c.created_at).toLocaleDateString('da-DK', {
         day: '2-digit',
         month: '2-digit',
@@ -120,12 +116,11 @@ export default function HandoverComments({
     </div>
 
     {/* Kommentar */}
-    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">
+    <div className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">
       {c.comment}
     </div>
   </div>
 ))}
-
           <div className="space-y-2">
             <input
               className="
