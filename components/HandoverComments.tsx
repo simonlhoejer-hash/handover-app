@@ -22,7 +22,7 @@ export default function HandoverComments({
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // 🔁 FÆLLES FUNKTION – hent kommentarer
+  // 🔁 Hent kommentarer
   const fetchComments = async () => {
     const { data } = await supabase
       .from('handover_comments')
@@ -33,25 +33,28 @@ export default function HandoverComments({
     setComments(data || [])
   }
 
-  // 🔢 Hent antal kommentarer (vises også når lukket)
+  // 🔢 Hent antal kommentarer
+  const fetchCount = async () => {
+    const { count } = await supabase
+      .from('handover_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('handover_id', handoverId)
+
+    setCount(count || 0)
+  }
+
+  // 🔄 Kør når handover skifter
   useEffect(() => {
-    const fetchCount = async () => {
-      const { count } = await supabase
-        .from('handover_comments')
-        .select('*', { count: 'exact', head: true })
-        .eq('handover_id', handoverId)
-
-      setCount(count || 0)
-    }
-
     fetchCount()
+    setComments([])
+    setOpen(false)
   }, [handoverId])
 
   // 💬 Hent kommentarer når man åbner
   useEffect(() => {
     if (!open) return
     fetchComments()
-  }, [open, handoverId])
+  }, [open])
 
   // ➕ Tilføj kommentar
   const addComment = async () => {
@@ -75,10 +78,8 @@ export default function HandoverComments({
     setAuthor('')
     setText('')
 
-    // ✅ opdatér tæller
-    setCount((c) => c + 1)
-
-    // 🔄 hent kommentarer igen (VIGTIGT)
+    // ✅ GENHENT ALT FRA DB (ingen lokale hacks)
+    await fetchCount()
     await fetchComments()
   }
 
@@ -93,6 +94,12 @@ export default function HandoverComments({
 
       {open && (
         <div className="mt-3 space-y-3">
+          {comments.length === 0 && (
+            <p className="text-gray-500 text-sm">
+              Ingen kommentarer endnu
+            </p>
+          )}
+
           {comments.map((c) => (
             <div
               key={c.id}
