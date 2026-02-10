@@ -107,8 +107,8 @@ export default function HandoverComments({
       {c.author_name}
     </div>
 
-    {/* Dato + tid (uden år) */}
-    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+    {/* Tid */}
+    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
       {new Date(c.created_at).toLocaleDateString('da-DK', {
         day: '2-digit',
         month: '2-digit',
@@ -120,11 +120,12 @@ export default function HandoverComments({
     </div>
 
     {/* Kommentar */}
-    <div className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">
+    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">
       {c.comment}
     </div>
   </div>
 ))}
+
           <div className="space-y-2">
             <input
               className="
