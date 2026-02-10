@@ -22,7 +22,18 @@ export default function HandoverComments({
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // 🔢 Hent antal kommentarer (vises selv når lukket)
+  // 🔁 FÆLLES FUNKTION – hent kommentarer
+  const fetchComments = async () => {
+    const { data } = await supabase
+      .from('handover_comments')
+      .select('*')
+      .eq('handover_id', handoverId)
+      .order('created_at', { ascending: true })
+
+    setComments(data || [])
+  }
+
+  // 🔢 Hent antal kommentarer (vises også når lukket)
   useEffect(() => {
     const fetchCount = async () => {
       const { count } = await supabase
@@ -39,17 +50,6 @@ export default function HandoverComments({
   // 💬 Hent kommentarer når man åbner
   useEffect(() => {
     if (!open) return
-
-    const fetchComments = async () => {
-      const { data } = await supabase
-        .from('handover_comments')
-        .select('*')
-        .eq('handover_id', handoverId)
-        .order('created_at', { ascending: true })
-
-      setComments(data || [])
-    }
-
     fetchComments()
   }, [open, handoverId])
 
@@ -75,23 +75,17 @@ export default function HandoverComments({
     setAuthor('')
     setText('')
 
-    // ✅ opdatér tæller med det samme
+    // ✅ opdatér tæller
     setCount((c) => c + 1)
 
-    // 🔄 hent kommentarer igen
-    const { data } = await supabase
-      .from('handover_comments')
-      .select('*')
-      .eq('handover_id', handoverId)
-      .order('created_at', { ascending: true })
-
-    setComments(data || [])
+    // 🔄 hent kommentarer igen (VIGTIGT)
+    await fetchComments()
   }
 
   return (
     <div className="mt-4 text-sm">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((o) => !o)}
         className="text-gray-600 dark:text-gray-400 underline"
       >
         💬 Kommentarer ({count})
