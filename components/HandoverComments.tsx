@@ -97,36 +97,33 @@ export default function HandoverComments({
   <div
     key={c.id}
     className="
-      rounded-lg p-3
-      bg-gray-50 dark:bg-gray-800
-      border border-gray-200 dark:border-gray-700
+      rounded-lg
+      px-3 py-2
+      bg-gray-100 dark:bg-gray-800
     "
   >
-    {/* HEADER: navn + tidspunkt */}
-    <div className="flex items-baseline gap-2 mb-1">
-      <span className="font-semibold text-gray-900 dark:text-gray-100">
-        {c.author_name}
-      </span>
-
-      <span className="text-xs text-gray-500 dark:text-gray-400">
-        {new Date(c.created_at).toLocaleDateString('da-DK', {
-          day: '2-digit',
-          month: '2-digit',
-          year: '2-digit',
-        })}{' '}
-        kl.{new Date(c.created_at).toLocaleTimeString('da-DK', {
-          hour: '2-digit',
-          minute: '2-digit',
-        })}
-      </span>
+    {/* Header: navn */}
+    <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+      {c.author_name}
     </div>
 
-    {/* TEKST */}
-    <div className="whitespace-pre-line text-gray-800 dark:text-gray-200">
+    {/* Tidspunkt */}
+    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+      {new Date(c.created_at).toLocaleDateString('da-DK')} kl.
+      {' '}
+      {new Date(c.created_at).toLocaleTimeString('da-DK', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}
+    </div>
+
+    {/* Kommentar */}
+    <div className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">
       {c.comment}
     </div>
   </div>
 ))}
+
           <div className="space-y-2">
             <input
               className="
