@@ -442,8 +442,11 @@ if (editingId) {
                 </div>
               )}
 
-              {/* 💬 KOMMENTARER – LIGGER KORREKT */}
-              <HandoverComments handoverId={item.id} />
+{/* 💬 KOMMENTARER – LIGGER KORREKT */}
+<HandoverComments
+  key={item.id}
+  handoverId={item.id}
+/>
 
             </div>
           ))}
