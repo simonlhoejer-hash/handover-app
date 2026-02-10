@@ -22,39 +22,30 @@ export default function HandoverComments({
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // 🔁 Hent kommentarer
-  const fetchComments = async () => {
-    const { data } = await supabase
-      .from('handover_comments')
-      .select('*')
-      .eq('handover_id', handoverId)
-      .order('created_at', { ascending: true })
+  // 🔁 ÉN sandhed: hent ALT fra DB
+  const fetchAll = async () => {
+    const [{ data }, { count }] = await Promise.all([
+      supabase
+        .from('handover_comments')
+        .select('*')
+        .eq('handover_id', handoverId)
+        .order('created_at', { ascending: true }),
+
+      supabase
+        .from('handover_comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('handover_id', handoverId),
+    ])
 
     setComments(data || [])
-  }
-
-  // 🔢 Hent antal kommentarer
-  const fetchCount = async () => {
-    const { count } = await supabase
-      .from('handover_comments')
-      .select('*', { count: 'exact', head: true })
-      .eq('handover_id', handoverId)
-
     setCount(count || 0)
   }
 
-  // 🔄 Kør når handover skifter
+  // 🔄 Når overlevering skifter (eller side reloades)
   useEffect(() => {
-    fetchCount()
-    setComments([])
+    fetchAll()
     setOpen(false)
   }, [handoverId])
-
-  // 💬 Hent kommentarer når man åbner
-  useEffect(() => {
-    if (!open) return
-    fetchComments()
-  }, [open])
 
   // ➕ Tilføj kommentar
   const addComment = async () => {
@@ -78,15 +69,18 @@ export default function HandoverComments({
     setAuthor('')
     setText('')
 
-    // ✅ GENHENT ALT FRA DB (ingen lokale hacks)
-    await fetchCount()
-    await fetchComments()
+    // 🔄 ALT genhentes – ingen gæt
+    await fetchAll()
   }
 
   return (
     <div className="mt-4 text-sm">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={async () => {
+          const next = !open
+          setOpen(next)
+          if (next) await fetchAll()
+        }}
         className="text-gray-600 dark:text-gray-400 underline"
       >
         💬 Kommentarer ({count})
