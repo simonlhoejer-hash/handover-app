@@ -102,16 +102,18 @@ export default function HandoverComments({
       bg-gray-100 dark:bg-gray-800
     "
   >
-    {/* Header: navn */}
+    {/* Navn */}
     <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
       {c.author_name}
     </div>
 
-    {/* Tidspunkt */}
+    {/* Dato + tid (uden år) */}
     <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-      {new Date(c.created_at).toLocaleDateString('da-DK')} kl.
-      {' '}
-      {new Date(c.created_at).toLocaleTimeString('da-DK', {
+      {new Date(c.created_at).toLocaleDateString('da-DK', {
+        day: '2-digit',
+        month: '2-digit',
+      })}{' '}
+      kl.{new Date(c.created_at).toLocaleTimeString('da-DK', {
         hour: '2-digit',
         minute: '2-digit',
       })}
@@ -123,7 +125,6 @@ export default function HandoverComments({
     </div>
   </div>
 ))}
-
           <div className="space-y-2">
             <input
               className="
