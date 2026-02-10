@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-
+import HandoverComments from '../../../components/HandoverComments'
 
 const cardClass = `
   bg-white dark:bg-gray-800
@@ -426,26 +426,30 @@ if (editingId) {
                     onChange={(e) => setReadName(e.target.value)}
                   />
                   <button
-  onClick={() => markAsRead(item.id)}
-  className="
-    h-[42px]
-    px-4
-    rounded
-    bg-green-600
-    text-white
-    font-semibold
-    whitespace-nowrap
-  "
->
-  Markér som læst
-</button>
-
+                    onClick={() => markAsRead(item.id)}
+                    className="
+                      h-[42px]
+                      px-4
+                      rounded
+                      bg-green-600
+                      text-white
+                      font-semibold
+                      whitespace-nowrap
+                    "
+                  >
+                    Markér som læst
+                  </button>
                 </div>
               )}
+
+              {/* 💬 KOMMENTARER – LIGGER KORREKT */}
+              <HandoverComments handoverId={item.id} />
+
             </div>
           ))}
         </div>
       </section>
+
 
 
       {/* FORSTØRRET BILLEDE */}
