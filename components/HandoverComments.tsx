@@ -94,15 +94,27 @@ export default function HandoverComments({
             </p>
           )}
 
-          {comments.map((c) => (
-            <div
-              key={c.id}
-              className="rounded bg-gray-100 dark:bg-gray-700 p-2"
-            >
-              <div className="font-semibold">{c.author_name}</div>
-              <div className="whitespace-pre-line">{c.comment}</div>
-            </div>
-          ))}
+{comments.map((c) => (
+  <div
+    key={c.id}
+    className="rounded bg-gray-100 dark:bg-gray-700 p-2"
+  >
+    <div className="flex justify-between items-center mb-1">
+      <div className="font-semibold">{c.author_name}</div>
+      <div className="text-xs text-gray-500">
+        {new Date(c.created_at).toLocaleString('da-DK', {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        })}
+      </div>
+    </div>
+
+    <div className="whitespace-pre-line">{c.comment}</div>
+  </div>
+))}
+
 
           <div className="space-y-2">
             <input
