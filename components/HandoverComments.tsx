@@ -83,27 +83,48 @@ export default function HandoverComments({
           ))}
 
           <div className="space-y-2">
-            <input
-              className="w-full rounded p-2 text-gray-900"
-              placeholder="Dit navn"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-            />
+<input
+  className="
+    w-full rounded p-2
+    bg-gray-100 text-gray-900
+    dark:bg-gray-700 dark:text-gray-100
+    border border-gray-300 dark:border-gray-600
+  "
+  placeholder="Dit navn"
+  value={author}
+  onChange={(e) => setAuthor(e.target.value)}
+/>
 
-            <textarea
-              className="w-full rounded p-2 text-gray-900"
-              placeholder="Skriv kommentar..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
+<textarea
+  className="
+    w-full rounded p-2
+    bg-gray-100 text-gray-900
+    dark:bg-gray-700 dark:text-gray-100
+    border border-gray-300 dark:border-gray-600
+  "
+  placeholder="Skriv kommentar..."
+  value={text}
+  onChange={(e) => setText(e.target.value)}
+/>
 
-            <button
-              onClick={addComment}
-              disabled={loading}
-              className="rounded bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
-            >
-              {loading ? 'Gemmer...' : 'Tilføj kommentar'}
-            </button>
+<button
+  onClick={addComment}
+  disabled={loading}
+  className="
+    w-full
+    py-3
+    rounded
+    font-semibold
+    transition
+    bg-black text-white
+    dark:bg-white dark:text-black
+    hover:opacity-90
+    disabled:opacity-50
+  "
+>
+  {loading ? 'Gemmer...' : 'Tilføj kommentar'}
+</button>
+
           </div>
         </div>
       )}
