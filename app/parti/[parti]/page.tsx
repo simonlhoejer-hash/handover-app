@@ -259,17 +259,10 @@ const result = await supabase
   type="date"
   value={date}
   onChange={(e) => setDate(e.target.value)}
-  className="
-    w-40 
-    h-[44px]
-    mb-3
-    rounded
-    px-3
-    text-center   ← ✅ den ER centreret
-    bg-gray-100 text-gray-900
-    dark:bg-gray-700 dark:text-gray-100
-    border border-gray-300 dark:border-gray-600
-  "
+  className={`
+    ${inputClass}
+    appearance-none
+  `}
 />
 
 <HandoverEditor
