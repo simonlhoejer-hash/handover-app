@@ -11,7 +11,9 @@ export default function SideMenu() {
       {/* Burger-knap */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-gray-800 text-white"
+        className="fixed top-4 left-4 z-50 p-2 rounded-md
+                   bg-gray-800 text-white dark:bg-gray-700"
+        aria-label="Åbn menu"
       >
         ☰
       </button>
@@ -24,16 +26,14 @@ export default function SideMenu() {
         />
       )}
 
-      {/* Selve menuen */}
+      {/* Slide-menu */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 z-50 transform transition-transform duration-300
+        className={`fixed top-0 left-0 h-full w-64 z-50
+        bg-white dark:bg-gray-900
+        transform transition-transform duration-300
         ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="p-4 text-lg font-semibold border-b">
-          Menu
-        </div>
-
-        <nav className="flex flex-col gap-2 p-4">
+        <nav className="flex flex-col gap-2 p-4 pt-16">
           <Link
             href="/"
             onClick={() => setOpen(false)}
