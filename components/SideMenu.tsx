@@ -18,51 +18,49 @@ export default function SideMenu() {
         ☰
       </button>
 
-      {/* Overlay – findes kun når menu er åben */}
+      {/* Menu + overlay findes KUN når open === true */}
       {open && (
-        <div
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 bg-black/40 z-40"
-        />
+        <>
+          {/* Overlay */}
+          <div
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 bg-black/40 z-40"
+          />
+
+          {/* Slide-menu */}
+          <aside
+            className="fixed top-0 left-0 h-full w-64 z-50
+                       bg-white dark:bg-gray-900
+                       transition-transform duration-300"
+          >
+            <nav className="flex flex-col gap-2 p-4 pt-16">
+              <Link
+                href="/"
+                onClick={() => setOpen(false)}
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                🏠 Partier
+              </Link>
+
+              <Link
+                href="/kalender"
+                onClick={() => setOpen(false)}
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                📅 Kalender
+              </Link>
+
+              <Link
+                href="/egenkontrol"
+                onClick={() => setOpen(false)}
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                ✅ Egenkontrol
+              </Link>
+            </nav>
+          </aside>
+        </>
       )}
-
-      {/* Slide-menu */}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 z-50
-        bg-white dark:bg-gray-900
-        transform transition-transform duration-300
-        ${
-          open
-            ? 'translate-x-0 pointer-events-auto'
-            : '-translate-x-full pointer-events-none'
-        }`}
-      >
-        <nav className="flex flex-col gap-2 p-4 pt-16">
-          <Link
-            href="/"
-            onClick={() => setOpen(false)}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            🏠 Partier
-          </Link>
-
-          <Link
-            href="/kalender"
-            onClick={() => setOpen(false)}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            📅 Kalender
-          </Link>
-
-          <Link
-            href="/egenkontrol"
-            onClick={() => setOpen(false)}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            ✅ Egenkontrol
-          </Link>
-        </nav>
-      </aside>
     </>
   )
 }
