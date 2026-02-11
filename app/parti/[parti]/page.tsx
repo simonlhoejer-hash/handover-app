@@ -260,7 +260,7 @@ const result = await supabase
   value={date}
   onChange={(e) => setDate(e.target.value)}
   className="
-    w-full
+    w-40 
     h-[44px]
     mb-3
     rounded
