@@ -18,7 +18,7 @@ export default function SideMenu() {
         ☰
       </button>
 
-      {/* Overlay */}
+      {/* Overlay – findes kun når menu er åben */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -31,7 +31,11 @@ export default function SideMenu() {
         className={`fixed top-0 left-0 h-full w-64 z-50
         bg-white dark:bg-gray-900
         transform transition-transform duration-300
-        ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        ${
+          open
+            ? 'translate-x-0 pointer-events-auto'
+            : '-translate-x-full pointer-events-none'
+        }`}
       >
         <nav className="flex flex-col gap-2 p-4 pt-16">
           <Link
