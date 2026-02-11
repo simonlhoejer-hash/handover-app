@@ -11,53 +11,78 @@ export default function SideMenu() {
       {/* Burger-knap */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-4 left-4 z-50 p-2 rounded-md
-                   bg-gray-800 text-white dark:bg-gray-700"
+        className="
+          fixed top-4 left-4 z-50
+          h-10 w-10 flex items-center justify-center
+          rounded-xl
+          bg-white/90 text-gray-900
+          shadow-lg backdrop-blur
+          border border-gray-200
+          dark:bg-gray-800/90 dark:text-white dark:border-gray-700
+          transition active:scale-95
+        "
         aria-label="Åbn menu"
       >
         ☰
       </button>
 
-      {/* Menu + overlay findes KUN når open === true */}
       {open && (
         <>
           {/* Overlay */}
           <div
             onClick={() => setOpen(false)}
-            className="fixed inset-0 bg-black/40 z-40"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-fadeIn"
           />
 
           {/* Slide-menu */}
           <aside
-            className="fixed top-0 left-0 h-full w-64 z-50
-                       bg-white dark:bg-gray-900
-                       transition-transform duration-300"
+            className="
+              fixed top-0 left-0 h-full w-72 z-50
+              bg-white dark:bg-gray-900
+              shadow-2xl
+              animate-slideIn
+            "
           >
-            <nav className="flex flex-col gap-2 p-4 pt-16">
+            <div className="p-6 pt-16 space-y-4">
               <Link
                 href="/"
                 onClick={() => setOpen(false)}
-                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="
+                  flex items-center gap-3
+                  p-3 rounded-xl
+                  hover:bg-gray-100 dark:hover:bg-gray-800
+                  transition
+                "
               >
-                🏠 Partier
+                🏠 <span>Partier</span>
               </Link>
 
               <Link
                 href="/kalender"
                 onClick={() => setOpen(false)}
-                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="
+                  flex items-center gap-3
+                  p-3 rounded-xl
+                  hover:bg-gray-100 dark:hover:bg-gray-800
+                  transition
+                "
               >
-                📅 Kalender
+                📅 <span>Kalender</span>
               </Link>
 
               <Link
                 href="/egenkontrol"
                 onClick={() => setOpen(false)}
-                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="
+                  flex items-center gap-3
+                  p-3 rounded-xl
+                  hover:bg-gray-100 dark:hover:bg-gray-800
+                  transition
+                "
               >
-                ✅ Egenkontrol
+                ✅ <span>Egenkontrol</span>
               </Link>
-            </nav>
+            </div>
           </aside>
         </>
       )}
