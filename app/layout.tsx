@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import SideMenu from '@/components/SideMenu'
 import { Providers } from './providers'
 import ThemeToggle from './ThemeToggle'
 
@@ -17,8 +18,11 @@ export default function RootLayout({
     <html lang="da" suppressHydrationWarning>
       <body className="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors">
         <Providers>
+          {/* MENU – fixed, påvirker ikke layout */}
+          <SideMenu />
+
           <div className="min-h-screen">
-            {/* HEADER */}
+            {/* HEADER – UÆNDRET */}
             <header
               className="
                 flex flex-col items-center gap-2
@@ -30,7 +34,7 @@ export default function RootLayout({
               <ThemeToggle />
             </header>
 
-            {/* CONTENT */}
+            {/* CONTENT – UÆNDRET */}
             <main className="max-w-3xl mx-auto px-4 pb-8">
               {children}
             </main>
