@@ -1,11 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Smooth overgang mellem light/dark */
 html {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
 
 /* ---------- APP STYLE ANIMATION ---------- */
 

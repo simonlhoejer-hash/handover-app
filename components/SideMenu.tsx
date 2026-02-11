@@ -26,66 +26,69 @@ export default function SideMenu() {
         ☰
       </button>
 
-      {open && (
-        <>
-          {/* Overlay */}
-          <div
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-fadeIn"
-          />
+      {/* Overlay */}
+      <div
+        onClick={() => setOpen(false)}
+        className={`
+          fixed inset-0 z-40
+          bg-black/40 backdrop-blur-sm
+          transition-opacity duration-300
+          ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+        `}
+      />
 
-          {/* Slide-menu */}
-          <aside
+      {/* Slide-menu */}
+      <aside
+        className={`
+          fixed top-0 left-0 h-full w-72 z-50
+          bg-white dark:bg-gray-800
+          border-r border-gray-200 dark:border-gray-700
+          shadow-2xl
+          transform transition-transform duration-300 ease-in-out
+          ${open ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        <div className="p-6 pt-16 space-y-4">
+          <Link
+            href="/"
+            onClick={() => setOpen(false)}
             className="
-              fixed top-0 left-0 h-full w-72 z-50
-              bg-white dark:bg-gray-900
-              shadow-2xl
-              animate-slideIn
+              flex items-center gap-3
+              p-3 rounded-xl
+              hover:bg-gray-100 dark:hover:bg-gray-700
+              transition
             "
           >
-            <div className="p-6 pt-16 space-y-4">
-              <Link
-                href="/"
-                onClick={() => setOpen(false)}
-                className="
-                  flex items-center gap-3
-                  p-3 rounded-xl
-                  hover:bg-gray-100 dark:hover:bg-gray-800
-                  transition
-                "
-              >
-                🏠 <span>Partier</span>
-              </Link>
+            🏠 <span>Partier</span>
+          </Link>
 
-              <Link
-                href="/kalender"
-                onClick={() => setOpen(false)}
-                className="
-                  flex items-center gap-3
-                  p-3 rounded-xl
-                  hover:bg-gray-100 dark:hover:bg-gray-800
-                  transition
-                "
-              >
-                📅 <span>Kalender</span>
-              </Link>
+          <Link
+            href="/kalender"
+            onClick={() => setOpen(false)}
+            className="
+              flex items-center gap-3
+              p-3 rounded-xl
+              hover:bg-gray-100 dark:hover:bg-gray-700
+              transition
+            "
+          >
+            📅 <span>Kalender</span>
+          </Link>
 
-              <Link
-                href="/egenkontrol"
-                onClick={() => setOpen(false)}
-                className="
-                  flex items-center gap-3
-                  p-3 rounded-xl
-                  hover:bg-gray-100 dark:hover:bg-gray-800
-                  transition
-                "
-              >
-                ✅ <span>Egenkontrol</span>
-              </Link>
-            </div>
-          </aside>
-        </>
-      )}
+          <Link
+            href="/egenkontrol"
+            onClick={() => setOpen(false)}
+            className="
+              flex items-center gap-3
+              p-3 rounded-xl
+              hover:bg-gray-100 dark:hover:bg-gray-700
+              transition
+            "
+          >
+            ✅ <span>Egenkontrol</span>
+          </Link>
+        </div>
+      </aside>
     </>
   )
 }
