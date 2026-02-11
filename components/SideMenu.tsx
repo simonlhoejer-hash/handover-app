@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ThemeToggle from '@/app/ThemeToggle'
 
 export default function SideMenu() {
   const [open, setOpen] = useState(false)
 
   return (
     <>
-      {/* Burger-knap */}
+      {/* Burger */}
       <button
         onClick={() => setOpen(true)}
         className="
@@ -29,35 +30,36 @@ export default function SideMenu() {
       {/* Overlay */}
       <div
         onClick={() => setOpen(false)}
-        className={`
-          fixed inset-0 z-40
-          bg-black/40 backdrop-blur-sm
-          transition-opacity duration-300
-          ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
-        `}
+className={`
+  fixed top-0 left-0 h-screen w-80 z-50
+  bg-white dark:bg-gray-800
+  border-r border-gray-200 dark:border-gray-700
+  shadow-2xl
+  transform
+  transition-transform duration-300 ease-in-out
+  ${open ? 'translate-x-0' : '-translate-x-full'}
+`}
+
       />
 
-      {/* Slide-menu */}
+      {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-72 z-50
+          fixed top-0 left-0 h-screen w-80 z-50
           bg-white dark:bg-gray-800
           border-r border-gray-200 dark:border-gray-700
           shadow-2xl
           transform transition-transform duration-300 ease-in-out
+          flex flex-col
           ${open ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <div className="p-6 pt-16 space-y-4">
+        {/* Top section */}
+        <div className="p-6 pt-16 space-y-4 flex-1">
           <Link
             href="/"
             onClick={() => setOpen(false)}
-            className="
-              flex items-center gap-3
-              p-3 rounded-xl
-              hover:bg-gray-100 dark:hover:bg-gray-700
-              transition
-            "
+            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             🏠 <span>Partier</span>
           </Link>
@@ -65,12 +67,7 @@ export default function SideMenu() {
           <Link
             href="/kalender"
             onClick={() => setOpen(false)}
-            className="
-              flex items-center gap-3
-              p-3 rounded-xl
-              hover:bg-gray-100 dark:hover:bg-gray-700
-              transition
-            "
+            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             📅 <span>Kalender</span>
           </Link>
@@ -78,15 +75,15 @@ export default function SideMenu() {
           <Link
             href="/egenkontrol"
             onClick={() => setOpen(false)}
-            className="
-              flex items-center gap-3
-              p-3 rounded-xl
-              hover:bg-gray-100 dark:hover:bg-gray-700
-              transition
-            "
+            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             ✅ <span>Egenkontrol</span>
           </Link>
+        </div>
+
+        {/* Bottom section */}
+        <div className="p-6 border-t border-gray-200 dark:border-gray-700">
+          <ThemeToggle />
         </div>
       </aside>
     </>
