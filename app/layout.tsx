@@ -35,7 +35,7 @@ export default function RootLayout({
             </header>
 
             {/* CONTENT – UÆNDRET */}
-            <main className="max-w-3xl mx-auto px-4 pb-8">
+            <main className="max-w-3xl mx-auto px-4 pb-10">
               {children}
             </main>
           </div>
