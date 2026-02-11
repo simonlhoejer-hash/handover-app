@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import HandoverComments from '../../../components/HandoverComments'
+import HandoverEditor from '../../../components/HandoverEditor'
 
 const cardClass = `
   bg-white dark:bg-gray-800
@@ -38,12 +39,8 @@ export default function PartiPage() {
   const params = useParams()
   const router = useRouter()
   const parti = decodeURIComponent(params.parti as string)
-
-
   const [name, setName] = useState('')
   const [receiver, setReceiver] = useState('')
-  const [fromTeam, setFromTeam] = useState('Hold 1')
-  const [toTeam, setToTeam] = useState('Hold 2')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [note, setNote] = useState('')
   const [items, setItems] = useState<any[]>([])
@@ -57,9 +54,6 @@ export default function PartiPage() {
   const [readName, setReadName] = useState('')
 // ✏️ ID på overlevering der redigeres
 const [editingId, setEditingId] = useState<string | null>(null)
-
-
-  const teams = ['Hold 1', 'Hold 2', 'Hold 3', 'Hold 4']
 
 
   useEffect(() => {
@@ -88,6 +82,7 @@ const [editingId, setEditingId] = useState<string | null>(null)
       alert('Kun JPG og PNG er tilladt')
       return
     }
+
 
 
     if (file.size > maxSize) {
@@ -140,34 +135,31 @@ const [editingId, setEditingId] = useState<string | null>(null)
 
 if (editingId) {
   // ✏️ OPDATER eksisterende overlevering
-  const result = await supabase
-    .from('handover_notes')
-    .update({
-      author_name: name,
-      receiver_name: receiver,
-      from_team: fromTeam,
-      to_team: toTeam,
-      shift_date: date,
-      note,
-      images,
-    })
-    .eq('id', editingId)
+const result = await supabase
+  .from('handover_notes')
+  .update({
+    author_name: name,
+    receiver_name: receiver,
+    shift_date: date,
+    note,
+    images,
+  })
+  .eq('id', editingId)
 
   error = result.error
 } else {
   // 🆕 NY overlevering
-  const result = await supabase
-    .from('handover_notes')
-    .insert({
-      author_name: name,
-      receiver_name: receiver,
-      parti,
-      from_team: fromTeam,
-      to_team: toTeam,
-      shift_date: date,
-      note,
-      images,
-    })
+const result = await supabase
+  .from('handover_notes')
+  .insert({
+    author_name: name,
+    receiver_name: receiver,
+    parti,
+    shift_date: date,
+    note,
+    images,
+  })
+
 
   error = result.error
 }
@@ -241,12 +233,16 @@ if (editingId) {
         <h2 className="text-xl font-semibold mb-4">Ny overlevering</h2>
 
 
-        <input
-          className={inputClass}
-          placeholder="Dit navn (afsender)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+
+
+
+
+<input
+  className={inputClass}
+  placeholder="Dit navn (afsender)"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+/>
 
 
         <input
@@ -257,44 +253,31 @@ if (editingId) {
         />
 
 
-        <div className="flex gap-3 mb-3">
-          <select
-            className={inputClass}
-            value={fromTeam}
-            onChange={(e) => setFromTeam(e.target.value)}
-          >
-            {teams.map((team) => (
-              <option key={team}>{team}</option>
-            ))}
-          </select>
 
 
-          <select
-            className={inputClass}
-            value={toTeam}
-            onChange={(e) => setToTeam(e.target.value)}
-          >
-            {teams.map((team) => (
-              <option key={team}>{team}</option>
-            ))}
-          </select>
-        </div>
+<input
+  type="date"
+  value={date}
+  onChange={(e) => setDate(e.target.value)}
+  className="
+    w-full
+    h-[44px]
+    mb-3
+    rounded
+    px-3
+    text-center   ← ✅ den ER centreret
+    bg-gray-100 text-gray-900
+    dark:bg-gray-700 dark:text-gray-100
+    border border-gray-300 dark:border-gray-600
+  "
+/>
 
+<HandoverEditor
+  value={note}
+  onChange={setNote}
 
-        <input
-          type="date"
-          className={dateInputClass}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+/>
 
-
-        <textarea
-          className={`${inputClass} h-32`}
-          placeholder="Skriv overlevering..."
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
 
 
         {/* BILLEDER */}
@@ -368,12 +351,13 @@ if (editingId) {
               </div>
 
 
-              <div className="text-sm text-gray-400 mb-2">
-                {item.from_team} → {item.to_team}
-              </div>
+              <div className="whitespace-pre-line">
+  {item.note.split('**').map((part: string, i: number) =>
+  i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+)}
 
+</div>
 
-              <div className="whitespace-pre-line">{item.note}</div>
 
 
               {item.images?.length > 0 && (
@@ -391,17 +375,16 @@ if (editingId) {
 
 {!item.read_by && (
   <button
-    onClick={() => {
-      setEditingId(item.id)
-      setName(item.author_name)
-      setReceiver(item.receiver_name)
-      setFromTeam(item.from_team)
-      setToTeam(item.to_team)
-      setDate(item.shift_date)
-      setNote(item.note)
-      setImages(item.images || [])
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }}
+onClick={() => {
+  setEditingId(item.id)
+  setName(item.author_name)
+  setReceiver(item.receiver_name)
+  setDate(item.shift_date)
+  setNote(item.note)
+  setImages(item.images || [])
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}}
+
     className="mt-3 text-sm text-blue-600 underline"
   >
     ✏️ Rediger
