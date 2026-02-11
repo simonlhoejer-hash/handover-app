@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
 type Props = {
   value: string
@@ -10,8 +10,8 @@ type Props = {
 export default function HandoverEditor({ value, onChange }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
-  // 🔁 Auto-grow textarea
-  useEffect(() => {
+  // 🔁 Auto-grow textarea (mobil-safe)
+  useLayoutEffect(() => {
     if (!textareaRef.current) return
     textareaRef.current.style.height = 'auto'
     textareaRef.current.style.height =
@@ -41,27 +41,26 @@ export default function HandoverEditor({ value, onChange }: Props) {
     <div className="mb-4">
       {/* TOOLBAR */}
       <div className="mb-2">
-  <button
-    type="button"
-    onClick={insertBullet}
-    className="
-      flex items-center gap-2
-      px-4 py-2
-      rounded-full
-      text-sm font-semibold
-      bg-white/90 dark:bg-gray-800
-      text-gray-900 dark:text-gray-100
-      border border-gray-300 dark:border-gray-600
-      shadow-sm
-      hover:bg-gray-100 dark:hover:bg-gray-700
-      active:scale-[0.97]
-      transition
-    "
-  >
-    <span className="text-lg leading-none">•</span>
-    Punkt
-  </button>
-
+        <button
+          type="button"
+          onClick={insertBullet}
+          className="
+            flex items-center gap-2
+            px-4 py-2
+            rounded-full
+            text-sm font-semibold
+            bg-white/90 dark:bg-gray-800
+            text-gray-900 dark:text-gray-100
+            border border-gray-300 dark:border-gray-600
+            shadow-sm
+            hover:bg-gray-100 dark:hover:bg-gray-700
+            active:scale-[0.97]
+            transition
+          "
+        >
+          <span className="text-lg leading-none">•</span>
+          Punkt
+        </button>
       </div>
 
       {/* OVERLEVERING */}
