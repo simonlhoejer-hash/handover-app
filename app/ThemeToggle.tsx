@@ -18,16 +18,38 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="
-        rounded-full p-2 text-sm shadow
-        bg-white text-gray-800
-        dark:bg-gray-800 dark:text-gray-100
-        opacity-80 hover:opacity-100
-        transition
-      "
+      className={`
+        relative w-20 h-10 flex items-center
+        rounded-full px-1.5
+        transition-all duration-300 ease-in-out
+        shadow-inner
+        ${isDark 
+          ? 'bg-gray-700 ring-1 ring-gray-600' 
+          : 'bg-gray-200 ring-1 ring-gray-300'}
+      `}
       aria-label="Skift tema"
     >
-      {isDark ? '☀️' : '🌙'}
+      {/* Sun */}
+      <span className="absolute left-3 text-base opacity-70">
+        ☀️
+      </span>
+
+      {/* Moon */}
+      <span className="absolute right-3 text-base opacity-70">
+        🌙
+      </span>
+
+      {/* Knob */}
+      <span
+        className={`
+          w-8 h-8 rounded-full
+          ${isDark 
+            ? 'bg-white shadow-lg' 
+            : 'bg-gray-900 shadow-lg'}
+          transform transition-transform duration-300 ease-in-out
+          ${isDark ? 'translate-x-10' : 'translate-x-0'}
+        `}
+      />
     </button>
   )
 }
