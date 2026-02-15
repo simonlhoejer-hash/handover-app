@@ -28,7 +28,6 @@ export default function HandoverEditor({ value, onChange }: Props) {
 
     onChange(newValue)
 
-    // 👇 behold fokus + cursor efter punkt
     requestAnimationFrame(() => {
       textareaRef.current?.focus()
       textareaRef.current!.selectionStart =
@@ -38,7 +37,7 @@ export default function HandoverEditor({ value, onChange }: Props) {
   }
 
   return (
-    <div className="mb-4">
+    <div>
       {/* TOOLBAR */}
       <div className="mb-2">
         <button
@@ -70,14 +69,14 @@ export default function HandoverEditor({ value, onChange }: Props) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="Skriv overlevering…"
         className="
-  w-full
-  max-w-full
-  min-h-[220px]
-          rounded-xl
-          p-4
-          text-base
-          bg-gray-100 dark:bg-gray-700
-          text-gray-900 dark:text-gray-100
+          w-full
+          box-border
+          min-h-[220px]
+          rounded
+          p-2
+          mb-3
+          bg-gray-100 text-gray-900
+          dark:bg-gray-700 dark:text-gray-100
           border border-gray-300 dark:border-gray-600
           focus:outline-none
           focus:ring-2 focus:ring-blue-500/40
