@@ -90,20 +90,19 @@ const { department } = useDepartment()
   Kalender
 </Link>
 
-  {/* Egenkontrol – måske kun Shop */}
-  {department === 'shop' && (
-    <Link
-      href="/egenkontrol"
-      onClick={() => setOpen(false)}
-      className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-        pathname === '/egenkontrol'
-          ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-      }`}
-    >
-      Egenkontrol
-    </Link>
-  )}
+{/* Egenkontrol – både Galley og Shop */}
+<Link
+  href="/egenkontrol"
+  onClick={() => setOpen(false)}
+  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+    pathname === '/egenkontrol'
+      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
+      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+  }`}
+>
+  Egenkontrol
+</Link>
+
 
 </div>
 

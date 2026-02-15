@@ -94,10 +94,13 @@ useEffect(() => {
               href={`/parti/${encodeURIComponent(parti)}`}
               className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition"
             >
-             <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-  <h2 className="text-lg font-semibold">{parti}</h2>
+<div className="flex items-start justify-between">
+  <h2 className="text-lg font-semibold">
+    {parti}
+  </h2>
 
-  <div className="sm:text-right">
+  <div className="text-right">
+
     {/* 🔴 Ingen overlevering */}
     {!hasNotes && (
       <span className="text-red-600 text-sm font-semibold whitespace-normal">

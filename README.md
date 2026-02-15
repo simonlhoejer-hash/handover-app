@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kitchen Handover
 
-## Getting Started
+Internt overleveringssystem til Galley & Shop.
 
-First, run the development server:
+---
+
+## 🚀 Features
+
+### 📋 Partier
+- Status: **Mangler / Afventer / Læst**
+- Viser seneste overleveringsdato
+- Viser hvem der skal læse / har læst
+- Klikbart kort pr. parti
+- Ens layout for Galley & Shop
+
+---
+
+### 📅 Kalender
+- Dansk & Norsk skoleferie
+- Dansk & Norske helligdage
+- Påske beregnes dynamisk
+- Overlap vises med gradient
+- Klikbar dato
+- Markering af dags dato
+- Måned navigation
+
+---
+
+## 🧠 Holiday Engine
+
+Holiday logik er samlet i:
+
+```
+lib/holidays/
+  danish.ts
+  norwegian.ts
+  easter.ts
+  holidayEngine.ts
+```
+
+UI bruger kun:
+
+```
+createHolidayEngine(year)
+```
+
+Det holder logik adskilt fra UI og gør systemet nemt at udvide.
+
+---
+
+## 🏗 Struktur
+
+```
+app/
+components/
+lib/
+  holidays/
+```
+
+Holiday logik er samlet ét sted.  
+UI komponenter indeholder ingen dato-beregning.
+
+---
+
+## 🛠 Development
+
+Start lokalt:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧹 Hvis der opstår mærkelige fejl
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Stop server:
 
-## Learn More
+```bash
+CTRL + C
+```
 
-To learn more about Next.js, take a look at the following resources:
+Slet cache:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+rd /s /q .next
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Start igen:
 
-## Deploy on Vercel
+```bash
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📦 Commit & Deploy til Vercel
+
+Commit ændringer:
+
+```bash
+git add .
+git commit -m "Holiday engine + unified status layout"
+git push
+```
+
+Vercel deployer automatisk fra `main` branch.
+
+---
+
+## 🌍 Production
+
+App hostes via Vercel.  
+Deploy sker automatisk ved push til main.
+
+---
+
+## 👨‍🍳 Formål
+
+Systemet bruges til:
+
+- Daglig overlevering
+- Overblik over manglende partier
+- Planlægning ved ferie og helligdage
+- Travlhedsforståelse for køkken & shop
