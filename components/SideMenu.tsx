@@ -77,20 +77,18 @@ const { department } = useDepartment()
     {department === 'galley' ? 'Galley Afdelingsmøde' : 'Shop Afdelingsmøde'}
   </Link>
 
-  {/* Kalender – måske kun Galley */}
-  {department === 'galley' && (
-    <Link
-      href="/kalender"
-      onClick={() => setOpen(false)}
-      className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-        pathname === '/kalender'
-          ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-      }`}
-    >
-      Kalender
-    </Link>
-  )}
+{/* Kalender */}
+<Link
+  href="/kalender"
+  onClick={() => setOpen(false)}
+  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+    pathname === '/kalender'
+      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
+      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+  }`}
+>
+  Kalender
+</Link>
 
   {/* Egenkontrol – måske kun Shop */}
   {department === 'shop' && (
