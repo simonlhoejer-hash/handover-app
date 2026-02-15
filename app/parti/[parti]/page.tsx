@@ -167,12 +167,24 @@ export default function PartiPage() {
           onChange={(e) => setReceiver(e.target.value)}
         />
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className={inputClass}
-        />
+<input
+  type="date"
+  value={date}
+  onChange={(e) => setDate(e.target.value)}
+  className={`
+    w-full
+    box-border
+    rounded
+    p-2
+    pr-2
+    mb-3
+    bg-gray-100 text-gray-900
+    dark:bg-gray-700 dark:text-gray-100
+    border border-gray-300 dark:border-gray-600
+    appearance-none
+  `}
+/>
+
 
         <HandoverEditor value={note} onChange={setNote} />
 
