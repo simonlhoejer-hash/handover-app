@@ -1,5 +1,6 @@
 'use client'
 
+import { useDepartment } from '@/lib/DepartmentContext'
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -8,6 +9,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 export default function SideMenu() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+const { department } = useDepartment()
 
   return (
     <>
@@ -46,56 +48,67 @@ export default function SideMenu() {
         </div>
 
         {/* Menu links */}
-        <div className="p-6 space-y-2 flex-1">
+<div className="p-6 space-y-2 flex-1">
 
-          <Link
-            href="/"
-            onClick={() => setOpen(false)}
-            className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-              pathname === '/'
-                ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
-          >
-            Partier
-          </Link>
+  {/* Partier */}
 <Link
-  href="/afdelingsmoede"
+  href="/"
   onClick={() => setOpen(false)}
   className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-    pathname === '/afdelingsmoede'
+    pathname === '/'
       ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
   }`}
 >
-  Afdelingsmøde
+  {department === 'galley' ? 'Partier' : 'Outlets'}
 </Link>
 
-          <Link
-            href="/kalender"
-            onClick={() => setOpen(false)}
-            className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-              pathname === '/kalender'
-                ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
-          >
-            Kalender
-          </Link>
 
-          <Link
-            href="/egenkontrol"
-            onClick={() => setOpen(false)}
-            className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-              pathname === '/egenkontrol'
-                ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
-          >
-            Egenkontrol
-          </Link>
+  {/* Afdelingsmøde – kan evt. ændre navn pr afdeling */}
+  <Link
+    href="/afdelingsmoede"
+    onClick={() => setOpen(false)}
+    className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+      pathname === '/afdelingsmoede'
+        ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
+        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+    }`}
+  >
+    {department === 'galley' ? 'Galley Afdelingsmøde' : 'Shop Afdelingsmøde'}
+  </Link>
 
-        </div>
+  {/* Kalender – måske kun Galley */}
+  {department === 'galley' && (
+    <Link
+      href="/kalender"
+      onClick={() => setOpen(false)}
+      className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+        pathname === '/kalender'
+          ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
+          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+      }`}
+    >
+      Kalender
+    </Link>
+  )}
+
+  {/* Egenkontrol – måske kun Shop */}
+  {department === 'shop' && (
+    <Link
+      href="/egenkontrol"
+      onClick={() => setOpen(false)}
+      className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+        pathname === '/egenkontrol'
+          ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
+          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+      }`}
+    >
+      Egenkontrol
+    </Link>
+  )}
+
+</div>
+
 
         {/* Bottom section */}
         <div className="p-6 border-t border-gray-200 dark:border-gray-800 flex justify-center">

@@ -14,10 +14,14 @@ const DepartmentContext = createContext<DepartmentContextType | null>(null)
 export function DepartmentProvider({ children }: { children: React.ReactNode }) {
   const [department, setDepartment] = useState<Department>('galley')
 
-  useEffect(() => {
-    const saved = localStorage.getItem('department') as Department
-    if (saved) setDepartment(saved)
-  }, [])
+useEffect(() => {
+  const saved = localStorage.getItem('department')
+
+  if (saved === 'galley' || saved === 'shop') {
+    setDepartment(saved)
+  }
+}, [])
+
 
   const changeDepartment = (d: Department) => {
     setDepartment(d)

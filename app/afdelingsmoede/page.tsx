@@ -1,5 +1,6 @@
 'use client'
 
+import { useDepartment } from '@/lib/DepartmentContext'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -16,16 +17,20 @@ export default function AfdelingsmoedePage() {
   const [file, setFile] = useState<File | null>(null)
   const [moeder, setMoeder] = useState<Moede[]>([])
   const [loading, setLoading] = useState(false)
+const { department } = useDepartment()
 
-  useEffect(() => {
-    fetchMoeder()
-  }, [])
+useEffect(() => {
+  fetchMoeder()
+}, [department])
+
 
   async function fetchMoeder() {
-    const { data, error } = await supabase
-      .from('afdelingsmoeder')
-      .select('*')
-      .order('dato', { ascending: false })
+const { data, error } = await supabase
+  .from('afdelingsmoeder')
+  .select('*')
+  .eq('department', department)
+  .order('dato', { ascending: false })
+
 
     if (error) {
       console.error('Fetch error:', error.message)
@@ -78,13 +83,15 @@ export default function AfdelingsmoedePage() {
       }
 
       // 3️⃣ Gem i database
-      const { error: insertError } = await supabase
-        .from('afdelingsmoeder')
-        .insert({
-          dato: date,
-          hold: hold,
-          fil_url: publicUrlData.publicUrl
-        })
+const { error: insertError } = await supabase
+  .from('afdelingsmoeder')
+  .insert({
+    dato: date,
+    hold: hold,
+    fil_url: publicUrlData.publicUrl,
+    department: department
+  })
+
 
       if (insertError) {
         console.error(insertError)
