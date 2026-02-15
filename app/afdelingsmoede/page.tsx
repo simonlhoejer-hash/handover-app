@@ -125,13 +125,20 @@ const { error: insertError } = await supabase
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+ {/* HER starter den nye date blok */}
+<div className="space-y-2">
+  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+    Dato
+  </label>
 
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border bg-gray-50 dark:bg-gray-800"
-          />
+  <input
+    type="date"
+    value={date}
+    onChange={(e) => setDate(e.target.value)}
+    className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700 appearance-none"
+  />
+</div>
+
 
           <input
             type="text"
