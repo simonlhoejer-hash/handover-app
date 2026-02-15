@@ -2,9 +2,12 @@ import type { Metadata } from 'next'
 import './globals.css'
 import SideMenu from '@/components/SideMenu'
 import { Providers } from './providers'
+import { DepartmentProvider } from '@/lib/DepartmentContext'
+import DepartmentToggle from '@/components/DepartmentToggle'
+import HeaderTitle from '@/components/HeaderTitle'
 
 export const metadata: Metadata = {
-  title: 'Kitchen Handover',
+  title: 'Handover',
   description: 'Intern overlevering',
 }
 
@@ -17,25 +20,26 @@ export default function RootLayout({
     <html lang="da" suppressHydrationWarning>
       <body className="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors">
         <Providers>
-          <SideMenu />
+          <DepartmentProvider>
+            <SideMenu />
 
-          <div className="min-h-screen">
-            <header
-              className="
-                flex flex-col items-center gap-2
-                sm:flex-row sm:justify-between
-                p-4 max-w-3xl mx-auto
-              "
-            >
-              <h1 className="text-2xl font-bold">
-                Kitchen Handover
-              </h1>
-            </header>
+            <div className="min-h-screen">
+              <header
+                className="
+                  flex flex-col items-center gap-3
+                  sm:flex-row sm:justify-between
+                  p-4 max-w-3xl mx-auto
+                "
+              >
+                <HeaderTitle />
+                <DepartmentToggle />
+              </header>
 
-            <main className="max-w-3xl mx-auto px-4 pb-10">
-              {children}
-            </main>
-          </div>
+              <main className="max-w-3xl mx-auto px-4 pb-10">
+                {children}
+              </main>
+            </div>
+          </DepartmentProvider>
         </Providers>
       </body>
     </html>

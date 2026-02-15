@@ -2,6 +2,7 @@
 
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
+import { Sun, Moon } from 'lucide-react'
 
 export default function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
@@ -19,8 +20,9 @@ export default function ThemeToggle() {
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className={`
-        relative w-20 h-10 flex items-center
-        rounded-full px-1.5
+        relative w-20 h-10
+        rounded-full
+        cursor-pointer select-none
         transition-all duration-300 ease-in-out
         shadow-inner
         ${isDark 
@@ -29,24 +31,32 @@ export default function ThemeToggle() {
       `}
       aria-label="Skift tema"
     >
-      {/* Sun */}
-      <span className="absolute left-3 text-base opacity-70">
-        ☀️
-      </span>
+      {/* Icons */}
+      <div className="absolute inset-0 flex items-center justify-between px-3">
+        <Sun 
+          size={16} 
+          className={`transition-opacity duration-200 ${
+            isDark ? 'opacity-40' : 'opacity-100'
+          }`} 
+        />
+        <Moon 
+          size={16} 
+          className={`transition-opacity duration-200 ${
+            isDark ? 'opacity-100' : 'opacity-40'
+          }`} 
+        />
+      </div>
 
-      {/* Moon */}
-      <span className="absolute right-3 text-base opacity-70">
-        🌙
-      </span>
-
-      {/* Knob */}
+      {/* Active ring */}
       <span
         className={`
+          absolute left-1 top-1
           w-8 h-8 rounded-full
+          border-[2.5px]
           ${isDark 
-            ? 'bg-white shadow-lg' 
-            : 'bg-gray-900 shadow-lg'}
-          transform transition-transform duration-300 ease-in-out
+            ? 'border-white' 
+            : 'border-gray-700 shadow-[0_0_4px_rgba(0,0,0,0.15)]'}
+          transition-all duration-300 ease-in-out
           ${isDark ? 'translate-x-10' : 'translate-x-0'}
         `}
       />

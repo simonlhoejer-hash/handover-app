@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import ThemeToggle from '@/app/ThemeToggle'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default function SideMenu() {
   const [open, setOpen] = useState(false)
@@ -59,6 +59,17 @@ export default function SideMenu() {
           >
             Partier
           </Link>
+<Link
+  href="/afdelingsmoede"
+  onClick={() => setOpen(false)}
+  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+    pathname === '/afdelingsmoede'
+      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
+      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+  }`}
+>
+  Afdelingsmøde
+</Link>
 
           <Link
             href="/kalender"
@@ -89,6 +100,7 @@ export default function SideMenu() {
         {/* Bottom section */}
         <div className="p-6 border-t border-gray-200 dark:border-gray-800 flex justify-center">
           <ThemeToggle />
+
         </div>
       </aside>
     </>
