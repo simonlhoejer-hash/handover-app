@@ -53,16 +53,31 @@ useEffect(() => {
 
     const result: StatusMap = {}
 
-    for (const parti of PARTIER) {
-      const latest = data?.find(d => d.parti === parti)
+for (const parti of PARTIER) {
+  const latest = data?.find(d => d.parti === parti)
 
-      result[parti] = {
-        hasNotes: !!latest,
-        lastDate: latest?.shift_date,
-        readBy: latest?.read_by ?? null,
-        receiverName: latest?.receiver_name ?? null,
-      }
-    }
+  let isExpired = false
+
+  if (latest?.created_at) {
+    const daysOld = Math.floor(
+      (Date.now() - new Date(latest.created_at).getTime()) /
+        (1000 * 60 * 60 * 24)
+    )
+
+if (daysOld >= 14) {
+  isExpired = true
+}
+
+  }
+
+  result[parti] = {
+    hasNotes: !!latest && !isExpired,
+    lastDate: latest?.shift_date,
+    readBy: isExpired ? null : latest?.read_by ?? null,
+    receiverName: isExpired ? null : latest?.receiver_name ?? null,
+  }
+}
+
 
     setStatus(result)
     setLoading(false)

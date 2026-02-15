@@ -51,21 +51,36 @@ export default function ShopHome() {
         return
       }
 
-      const result: StatusMap = {}
+const result: StatusMap = {}
 
-      for (const outlet of OUTLETS) {
-        const latest = data?.find(d => d.parti === outlet)
+const RESET_DAYS = 14
 
-        result[outlet] = {
-          hasNotes: !!latest,
-          lastDate: latest?.shift_date,
-          readBy: latest?.read_by ?? null,
-          receiverName: latest?.receiver_name ?? null,
-        }
-      }
+for (const outlet of OUTLETS) {
+  const latest = data?.find(d => d.parti === outlet)
 
-      setStatus(result)
-      setLoading(false)
+  let isExpired = false
+
+  if (latest?.created_at) {
+    const daysOld = Math.floor(
+      (Date.now() - new Date(latest.created_at).getTime()) /
+      (1000 * 60 * 60 * 24)
+    )
+
+    if (daysOld >= RESET_DAYS) {
+      isExpired = true
+    }
+  }
+
+  result[outlet] = {
+    hasNotes: !!latest && !isExpired,
+    lastDate: latest?.shift_date,
+    readBy: isExpired ? null : latest?.read_by ?? null,
+    receiverName: isExpired ? null : latest?.receiver_name ?? null,
+  }
+}
+
+setStatus(result)
+setLoading(false)
     }
 
     fetchStatus()
