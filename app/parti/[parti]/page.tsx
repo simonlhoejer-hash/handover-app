@@ -15,7 +15,11 @@ const cardClass = `
 `
 
 const inputClass = `
-  w-full rounded p-2 mb-3
+  w-full
+  box-border
+  rounded
+  p-2
+  mb-3
   bg-gray-100 text-gray-900
   dark:bg-gray-700 dark:text-gray-100
   border border-gray-300 dark:border-gray-600

@@ -70,8 +70,9 @@ export default function HandoverEditor({ value, onChange }: Props) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="Skriv overlevering…"
         className="
-          w-full
-          min-h-[220px]
+  w-full
+  max-w-full
+  min-h-[220px]
           rounded-xl
           p-4
           text-base
