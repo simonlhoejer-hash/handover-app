@@ -172,17 +172,19 @@ const { error: insertError } = await supabase
           )}
 
           {moeder.map((m) => (
-            <div
-              key={m.id}
-              className="flex justify-between items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-800"
-            >
+  <div
+    key={m.id}
+    className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-800"
+  >
+
               <div>
                 <div className="font-medium">
                   Hold {m.hold}
                 </div>
-                <div className="text-sm text-gray-500">
-                  {m.dato}
-                </div>
+<div className="text-sm text-gray-500 break-words">
+  {m.dato}
+</div>
+
               </div>
 
               <a
