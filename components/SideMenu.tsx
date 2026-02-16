@@ -43,7 +43,7 @@ const { department } = useDepartment()
         {/* Header i menu */}
         <div className="px-6 pt-10 pb-6 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
-            Kitchen Handover
+            Handover
           </h2>
         </div>
 
