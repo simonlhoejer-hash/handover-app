@@ -17,27 +17,27 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
   const [loading, setLoading] = useState(false)
 
   async function saveEdit() {
-  if (item.read_by) {
-    alert('Overleveringen er allerede læst og kan ikke redigeres')
-    return
+    if (item.read_by) {
+      alert('Overleveringen er allerede læst og kan ikke redigeres')
+      return
+    }
+
+    setLoading(true)
+
+    const { error } = await supabase
+      .from('handover_notes')
+      .update({ note })
+      .eq('id', item.id)
+
+    setLoading(false)
+
+    if (error) {
+      alert(error.message)
+    } else {
+      setIsEditing(false)
+      reload()
+    }
   }
-
-  setLoading(true)
-
-  const { error } = await supabase
-    .from('handover_notes')
-    .update({ note })
-    .eq('id', item.id)
-
-  setLoading(false)
-
-  if (error) {
-    alert(error.message)
-  } else {
-    setIsEditing(false)
-    reload()
-  }
-}
 
   async function markAsRead() {
     if (!readName) {
@@ -75,15 +75,14 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
           {item.author_name} → {item.receiver_name}
         </div>
 
-{!isEditing && !item.read_by && (
-  <button
-    onClick={() => setIsEditing(true)}
-    className="text-blue-500 text-xs font-medium hover:underline"
-  >
-    ✏️ Rediger
-  </button>
-)}
-
+        {!isEditing && !item.read_by && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="text-blue-500 text-xs font-medium hover:underline"
+          >
+            ✏️ Rediger
+          </button>
+        )}
       </div>
 
       {/* CONTENT */}
@@ -112,15 +111,28 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
           </div>
         </>
       ) : (
-        <div className="whitespace-pre-line text-base leading-relaxed">
-          {item.note}
-        </div>
+        <>
+          <div className="whitespace-pre-line text-base leading-relaxed">
+            {item.note}
+          </div>
+
+          {item.images?.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mt-3">
+              {item.images.map((url: string) => (
+                <img
+                  key={url}
+                  src={url}
+                  className="h-24 w-full object-cover rounded cursor-pointer hover:opacity-80"
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* SEPARATOR */}
       <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
 
-        {/* KVITTERING */}
         {!item.read_by ? (
           <div className="flex gap-2">
             <input
@@ -143,7 +155,6 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
             ✔️ Læst af {item.read_by}
           </p>
         )}
-
       </div>
 
       {/* KOMMENTARER */}
