@@ -22,7 +22,6 @@ type StatusMap = Record<
   }
 >
 
-// 🔥 Samme dato-format som Galley
 function formatDanishDate(dateString?: string) {
   if (!dateString) return ''
 
@@ -46,41 +45,39 @@ export default function ShopHome() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        alert(error.message)
         console.error(error)
         return
       }
 
-const result: StatusMap = {}
+      const RESET_DAYS = 14
+      const result: StatusMap = {}
 
-const RESET_DAYS = 14
+      for (const outlet of OUTLETS) {
+        const latest = data?.find(d => d.parti === outlet)
 
-for (const outlet of OUTLETS) {
-  const latest = data?.find(d => d.parti === outlet)
+        let isExpired = false
 
-  let isExpired = false
+        if (latest?.created_at) {
+          const daysOld = Math.floor(
+            (Date.now() - new Date(latest.created_at).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
 
-  if (latest?.created_at) {
-    const daysOld = Math.floor(
-      (Date.now() - new Date(latest.created_at).getTime()) /
-      (1000 * 60 * 60 * 24)
-    )
+          if (daysOld >= RESET_DAYS) {
+            isExpired = true
+          }
+        }
 
-    if (daysOld >= RESET_DAYS) {
-      isExpired = true
-    }
-  }
+        result[outlet] = {
+          hasNotes: !!latest && !isExpired,
+          lastDate: latest?.shift_date,
+          readBy: isExpired ? null : latest?.read_by ?? null,
+          receiverName: isExpired ? null : latest?.receiver_name ?? null,
+        }
+      }
 
-  result[outlet] = {
-    hasNotes: !!latest && !isExpired,
-    lastDate: latest?.shift_date,
-    readBy: isExpired ? null : latest?.read_by ?? null,
-    receiverName: isExpired ? null : latest?.receiver_name ?? null,
-  }
-}
-
-setStatus(result)
-setLoading(false)
+      setStatus(result)
+      setLoading(false)
     }
 
     fetchStatus()
@@ -104,10 +101,12 @@ setLoading(false)
             <Link
               key={outlet}
               href={`/parti/${encodeURIComponent(outlet)}`}
-              className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition hover:shadow-lg"
+              className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 transition active:scale-[0.98] hover:shadow-lg"
             >
               <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">{outlet}</h2>
+                <h2 className="text-lg font-semibold">
+                  {outlet}
+                </h2>
 
                 {!hasNotes && (
                   <span className="text-red-600 text-sm font-semibold">

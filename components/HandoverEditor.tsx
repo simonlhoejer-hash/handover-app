@@ -7,8 +7,29 @@ type Props = {
   onChange: (value: string) => void
 }
 
+const TEMPLATE = `
+Nye tiltag:
+• 
+
+Udfordringer:
+• 
+
+Vigtigt:
+• 
+
+Rengøring:
+• 
+`
+
 export default function HandoverEditor({ value, onChange }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  // 📝 Indsæt skabelon hvis tom
+  useLayoutEffect(() => {
+    if (!value || value.trim() === '') {
+      onChange(TEMPLATE)
+    }
+  }, [])
 
   // 🔁 Auto-grow textarea (mobil-safe)
   useLayoutEffect(() => {
@@ -67,13 +88,12 @@ export default function HandoverEditor({ value, onChange }: Props) {
         ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Skriv overlevering…"
         className="
           w-full
           box-border
           min-h-[220px]
           rounded
-          p-2
+          p-3
           mb-3
           bg-gray-100 text-gray-900
           dark:bg-gray-700 dark:text-gray-100

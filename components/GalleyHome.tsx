@@ -29,6 +29,7 @@ type StatusMap = Record<
   string,
   {
     hasNotes: boolean
+    hasComments: boolean
     lastDate?: string
     readBy?: string | null
     receiverName?: string | null
@@ -43,7 +44,15 @@ useEffect(() => {
   const fetchStatus = async () => {
     const { data, error } = await supabase
       .from('handover_notes')
-      .select('parti, shift_date, read_by, receiver_name, created_at')
+      .select(`
+  parti,
+  shift_date,
+  read_by,
+  receiver_name,
+  created_at,
+handover_comments(id)
+`)
+
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -54,7 +63,7 @@ useEffect(() => {
     const result: StatusMap = {}
 
 for (const parti of PARTIER) {
-  const latest = data?.find(d => d.parti === parti)
+  const latest = data?.find(d => d.parti === parti) as any
 
   let isExpired = false
 
@@ -70,12 +79,17 @@ if (daysOld >= 14) {
 
   }
 
-  result[parti] = {
-    hasNotes: !!latest && !isExpired,
-    lastDate: latest?.shift_date,
-    readBy: isExpired ? null : latest?.read_by ?? null,
-    receiverName: isExpired ? null : latest?.receiver_name ?? null,
-  }
+result[parti] = {
+  hasNotes: !!latest && !isExpired,
+  hasComments:
+    !!latest &&
+    !isExpired &&
+    (latest.handover_comments?.length ?? 0) > 0,
+  lastDate: latest?.shift_date,
+  readBy: isExpired ? null : latest?.read_by ?? null,
+  receiverName: isExpired ? null : latest?.receiver_name ?? null,
+}
+
 }
 
 
@@ -103,68 +117,76 @@ if (daysOld >= 14) {
           const isRead = hasNotes && !!info.readBy
           const isUnread = hasNotes && !info.readBy
 
-          return (
-            <Link
-              key={parti}
-              href={`/parti/${encodeURIComponent(parti)}`}
-              className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition"
-            >
-<div className="flex items-start justify-between">
-  <h2 className="text-lg font-semibold">
-    {parti}
-  </h2>
+return (
+  <Link
+    key={parti}
+    href={`/parti/${encodeURIComponent(parti)}`}
+    className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition hover:shadow-lg"
+  >
+    <div className="flex justify-between items-center">
+      <h2 className="text-lg font-semibold">
+        {parti}
+      </h2>
 
-  <div className="text-right">
-
-    {/* 🔴 Ingen overlevering */}
-    {!hasNotes && (
-      <span className="text-red-600 text-sm font-semibold whitespace-normal">
-        ❌ Mangler
-      </span>
-    )}
-{/* 🟡 Overlevering findes – men ikke læst */}
-{isUnread && (
-  <span className="text-yellow-600 text-sm font-semibold whitespace-normal">
-    🕒 Afventer
-  </span>
-)}
-{/* 🟢 Overlevering læst */}
-{isRead && (
-  <span className="text-green-600 text-sm font-semibold whitespace-normal">
-    ✓ Læst
-  </span>
-)}
-  </div>
-</div>
-<p className="text-sm text-gray-500 mt-2">
-  {info?.lastDate ? (
-    <>
-      Sidst: {formatDanishDate(info.lastDate)}
-
-      {isUnread && info.receiverName && (
-        <>
-          {' · '}
-          <span className="font-semibold text-yellow-400">
-            {info.receiverName}
-          </span>
-        </>
+      {!hasNotes && (
+        <span className="text-red-600 text-sm font-semibold">
+          ❌ Mangler
+        </span>
       )}
 
-      {isRead && info.readBy && (
-        <>
-          {' · '}
-          <span className="font-semibold text-green-400">
-            {info.readBy}
-          </span>
-        </>
+      {isUnread && (
+        <span className="text-yellow-600 text-sm font-semibold">
+          🕒 Afventer
+        </span>
       )}
-    </>
-  ) : (
-    'Ingen overleveringer endnu'
-  )}
-</p>
-            </Link>
-          )
+
+      {isRead && (
+        <span className="text-green-600 text-sm font-semibold">
+          ✓ Læst
+        </span>
+      )}
+    </div>
+
+    <p className="text-sm text-gray-500 mt-2">
+      {info?.lastDate ? (
+        <>
+          Sidst: {formatDanishDate(info.lastDate)}
+
+          {isUnread && info.receiverName && (
+            <>
+              {' · '}
+              <span className="font-semibold text-yellow-500">
+                {info.receiverName}
+              </span>
+            </>
+          )}
+
+          {isRead && info.readBy && (
+            <>
+              {' · '}
+              <span className="font-semibold text-green-600">
+                {info.readBy}
+              </span>
+            </>
+          )}
+
+          {info?.hasComments && (
+            <>
+              {' '}
+              <span className="text-gray-400">
+                💬
+              </span>
+            </>
+          )}
+        </>
+      ) : (
+        'Ingen overleveringer endnu'
+      )}
+    </p>
+  </Link>
+)
+
+
         })}
       </div>
     </main>

@@ -264,12 +264,26 @@ export default function PartiPage() {
                     value={readName}
                     onChange={(e) => setReadName(e.target.value)}
                   />
-                  <button
-                    onClick={() => markAsRead(item.id)}
-                    className="h-[42px] px-4 rounded bg-green-600 text-white font-semibold"
-                  >
-                    Markér som læst
-                  </button>
+<button
+  onClick={() => markAsRead(item.id)}
+  className="
+    h-[42px] 
+    px-5 
+    rounded-xl 
+    bg-emerald-600 
+    hover:bg-emerald-700 
+    active:scale-95
+    transition-all 
+    text-white 
+    text-sm 
+    font-medium 
+    shadow-sm
+    whitespace-nowrap
+  "
+>
+  ✓ Markér som læst
+</button>
+
                 </div>
               ) : (
                 <p className="mt-3 text-green-600 text-sm">
