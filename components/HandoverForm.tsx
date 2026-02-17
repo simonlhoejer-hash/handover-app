@@ -2,6 +2,7 @@
 
 import HandoverEditor from './HandoverEditor'
 import ImageUploader from './ImageUploader'
+import { useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
   name: string
@@ -51,22 +52,24 @@ export default function HandoverForm({
   onSave,
   parti,
 }: Props) {
+  const { t } = useTranslation()
+
   return (
     <section className={`${cardClass} p-6`}>
       <h2 className="text-xl font-semibold mb-4">
-        Ny overlevering
+        {t.newHandover}
       </h2>
 
       <input
         className={inputClass}
-        placeholder="Dit navn (afsender)"
+        placeholder={t.senderName}
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
 
       <input
         className={inputClass}
-        placeholder="Modtager (hvem skal læse)"
+        placeholder={t.receiverName}
         value={receiver}
         onChange={(e) => setReceiver(e.target.value)}
       />
@@ -82,7 +85,7 @@ export default function HandoverForm({
 
       <div className="mb-4">
         <label className="block font-medium mb-1">
-          Billeder
+          {t.images}
         </label>
 
         <ImageUploader
@@ -116,7 +119,7 @@ export default function HandoverForm({
           disabled:opacity-50
         "
       >
-        {loading ? 'Gemmer...' : 'Gem overlevering'}
+        {loading ? t.saving : t.saveHandover}
       </button>
     </section>
   )

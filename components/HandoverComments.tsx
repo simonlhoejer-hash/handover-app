@@ -22,7 +22,6 @@ export default function HandoverComments({
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // 🔁 ÉN sandhed: hent ALT fra DB
   const fetchAll = async () => {
     const [{ data }, { count }] = await Promise.all([
       supabase
@@ -41,13 +40,11 @@ export default function HandoverComments({
     setCount(count || 0)
   }
 
-  // 🔄 Når overlevering skifter (eller side reloades)
   useEffect(() => {
     fetchAll()
     setOpen(false)
   }, [handoverId])
 
-  // ➕ Tilføj kommentar
   const addComment = async () => {
     if (!author || !text) return
 
@@ -68,104 +65,135 @@ export default function HandoverComments({
 
     setAuthor('')
     setText('')
-
-    // 🔄 ALT genhentes – ingen gæt
     await fetchAll()
   }
 
   return (
-    <div className="mt-4 text-sm">
-      <button
-        onClick={async () => {
-          const next = !open
-          setOpen(next)
-          if (next) await fetchAll()
-        }}
-        className="text-gray-600 dark:text-gray-400 underline"
-      >
-        💬 Kommentarer ({count})
-      </button>
+    <div className="mt-6">
 
-      {open && (
-        <div className="mt-3 space-y-3">
-          {comments.length === 0 && (
-            <p className="text-gray-500 text-sm">
-              Ingen kommentarer endnu
-            </p>
-          )}
+      {/* BADGE BUTTON */}
+      <div className="flex justify-center">
+<button
+  onClick={async () => {
+    const next = !open
+    setOpen(next)
+    if (next) await fetchAll()
+  }}
+  className="
+    px-4 py-1.5
+    text-xs font-medium
+    rounded-full
+    bg-gray-100 text-gray-700
+    dark:bg-gray-700 dark:text-gray-300
+    hover:bg-gray-200 dark:hover:bg-gray-600
+    transition
+  "
+>
+  Kommentarer ({count})
+</button>
+
+      </div>
+
+      {/* EXPAND SECTION */}
+      <div
+  className={`
+    overflow-hidden
+    transition-all
+    duration-300
+    ease-in-out
+    ${open ? 'max-h-[2000px] opacity-100 mt-6' : 'max-h-0 opacity-0'}
+  `}
+>
+  <div className="space-y-4">
+            {comments.length === 0 && (
+              <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                Ingen kommentarer endnu
+              </p>
+            )}
 {comments.map((c) => (
   <div
     key={c.id}
-    className="rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800"
+    className="
+      bg-gray-50 dark:bg-gray-800/60
+      border border-gray-200 dark:border-gray-700
+      rounded-xl
+      p-4
+      shadow-sm
+      transition
+    "
   >
-    {/* Navn */}
-    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-      {c.author_name}
-    </div>
+    {/* Header */}
+    <div className="flex justify-between items-center mb-2">
+      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        {c.author_name}
+      </div>
 
-    {/* Tid */}
-    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-      {new Date(c.created_at).toLocaleDateString('da-DK', {
-        day: '2-digit',
-        month: '2-digit',
-      })}{' '}
-      kl.{new Date(c.created_at).toLocaleTimeString('da-DK', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })}
+      <div className="text-xs text-gray-500 dark:text-gray-400">
+        {new Date(c.created_at).toLocaleDateString('da-DK', {
+          day: '2-digit',
+          month: '2-digit',
+        })}{' '}
+        kl.{new Date(c.created_at).toLocaleTimeString('da-DK', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })}
+      </div>
     </div>
 
     {/* Kommentar */}
-    <div className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">
+    <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-line leading-relaxed">
       {c.comment}
     </div>
   </div>
 ))}
-          <div className="space-y-2">
-            <input
-              className="
-                w-full rounded p-2
-                bg-gray-100 text-gray-900
-                dark:bg-gray-700 dark:text-gray-100
-                border border-gray-300 dark:border-gray-600
-              "
-              placeholder="Dit navn"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-            />
 
-            <textarea
-              className="
-                w-full rounded p-2
-                bg-gray-100 text-gray-900
-                dark:bg-gray-700 dark:text-gray-100
-                border border-gray-300 dark:border-gray-600
-              "
-              placeholder="Skriv kommentar..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
 
-            <button
-              onClick={addComment}
-              disabled={loading}
-              className="
-                w-full
-                py-3
-                rounded
-                font-semibold
-                transition
-                bg-black text-white
-                dark:bg-white dark:text-black
-                hover:opacity-90
-                disabled:opacity-50
-              "
-            >
-              {loading ? 'Gemmer...' : 'Tilføj kommentar'}
-            </button>
+            {/* FORM */}
+            <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <input
+                className="
+                  w-full rounded-lg p-2
+                  bg-gray-100 text-gray-900
+                  dark:bg-gray-700 dark:text-gray-100
+                  border border-gray-300 dark:border-gray-600
+                  text-sm
+                "
+                placeholder="Dit navn"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+              />
+
+              <textarea
+                className="
+                  w-full rounded-lg p-2
+                  bg-gray-100 text-gray-900
+                  dark:bg-gray-700 dark:text-gray-100
+                  border border-gray-300 dark:border-gray-600
+                  text-sm
+                "
+                placeholder="Skriv kommentar..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
+
+              <button
+                onClick={addComment}
+                disabled={loading}
+                className="
+                  w-full py-3 rounded-lg font-semibold
+                  bg-black text-white
+                  dark:bg-white dark:text-black
+                  hover:opacity-90
+                  disabled:opacity-50
+                  transition
+                "
+              >
+                {loading ? 'Gemmer...' : 'Tilføj kommentar'}
+              </button>
+            </div>
+
           </div>
         </div>
-      )}
-    </div>
+      </div>
   )
 }

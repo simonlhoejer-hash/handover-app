@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from '@/lib/LanguageContext'
 import HandoverComments from './HandoverComments'
 import HandoverEditor from './HandoverEditor'
 
@@ -11,14 +12,17 @@ type Props = {
 }
 
 export default function HandoverHistoryItem({ item, reload }: Props) {
+  const { t, lang } = useTranslation()
+
   const [isEditing, setIsEditing] = useState(false)
   const [note, setNote] = useState(item.note)
   const [readName, setReadName] = useState('')
   const [loading, setLoading] = useState(false)
+const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   async function saveEdit() {
     if (item.read_by) {
-      alert('Overleveringen er allerede læst og kan ikke redigeres')
+      alert(t.cannotEditRead)
       return
     }
 
@@ -41,7 +45,7 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
 
   async function markAsRead() {
     if (!readName) {
-      alert('Skriv dit fornavn for at kvittere')
+      alert(t.enterFirstName)
       return
     }
 
@@ -66,37 +70,56 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
 
-      {/* HEADER + REDIGER */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="text-xs text-gray-400 tracking-wide">
-          {new Date(item.shift_date).toLocaleDateString('da-DK')} ·{' '}
-          {item.author_name} → {item.receiver_name}
+      <div className="relative pb-4 mb-4 border-b border-gray-200 dark:border-gray-700">
+
+        <div className="absolute left-0 top-0">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+            {new Date(item.shift_date).toLocaleDateString(
+              lang === 'sv' ? 'sv-SE' : 'da-DK'
+            )}
+          </span>
+        </div>
+
+        <div className="text-center text-lg font-semibold tracking-tight">
+          <span className="text-gray-900 dark:text-gray-100">
+            {item.author_name}
+          </span>
+
+          <span className="mx-3 text-gray-400 font-normal">→</span>
+
+          <span className="text-gray-900 dark:text-gray-100 whitespace-nowrap">
+            {item.receiver_name}
+          </span>
         </div>
 
         {!isEditing && !item.read_by && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="text-blue-500 text-xs font-medium hover:underline"
-          >
-            ✏️ Rediger
-          </button>
+          <div className="absolute right-0 top-0">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-3 py-1 text-xs font-medium rounded-full 
+                         bg-gray-100 text-gray-700 
+                         dark:bg-gray-700 dark:text-gray-300
+                         hover:opacity-80 transition"
+            >
+              {t.edit}
+            </button>
+          </div>
         )}
       </div>
 
-      {/* CONTENT */}
       {isEditing ? (
         <>
           <HandoverEditor value={note} onChange={setNote} />
 
-          <div className="flex gap-3 mt-3">
+          <div className="flex gap-3 mt-4">
             <button
               onClick={saveEdit}
               disabled={loading}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition"
             >
-              Gem
+              {t.save}
             </button>
 
             <button
@@ -106,38 +129,39 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
               }}
               className="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg text-sm"
             >
-              Annuller
+              {t.cancel}
             </button>
           </div>
         </>
       ) : (
         <>
-          <div className="whitespace-pre-line text-base leading-relaxed">
-            {item.note}
-          </div>
+<div
+  className="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200"
+  dangerouslySetInnerHTML={{ __html: item.note }}
+/>
 
           {item.images?.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              {item.images.map((url: string) => (
-                <img
-                  key={url}
-                  src={url}
-                  className="h-24 w-full object-cover rounded cursor-pointer hover:opacity-80"
-                />
-              ))}
+            <div className="grid grid-cols-3 gap-3 mt-4">
+{item.images.map((url: string) => (
+  <img
+    key={url}
+    src={url}
+    onClick={() => setSelectedImage(url)}
+    className="h-24 w-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition"
+  />
+))}
+
             </div>
           )}
         </>
       )}
 
-      {/* SEPARATOR */}
-      <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
-
+      <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-4">
         {!item.read_by ? (
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <input
-              className="w-full rounded p-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm"
-              placeholder="Dit fornavn"
+              className="w-full rounded-lg p-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm"
+              placeholder={t.firstNamePlaceholder}
               value={readName}
               onChange={(e) => setReadName(e.target.value)}
             />
@@ -145,22 +169,32 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
             <button
               onClick={markAsRead}
               disabled={loading}
-              className="h-[40px] px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-sm transition whitespace-nowrap"
+              className="h-[40px] px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-sm transition whitespace-nowrap"
             >
-              ✓ Markér som læst
+              {t.markAsRead}
             </button>
           </div>
         ) : (
-          <p className="text-green-600 text-sm">
-            ✔️ Læst af {item.read_by}
+          <p className="text-green-600 text-sm font-medium">
+            {t.readBy} {item.read_by}
           </p>
         )}
       </div>
 
-      {/* KOMMENTARER */}
-      <div className="mt-4">
+      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
         <HandoverComments handoverId={item.id} />
       </div>
+      {selectedImage && (
+  <div
+    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+    onClick={() => setSelectedImage(null)}
+  >
+    <img
+      src={selectedImage}
+      className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl"
+    />
+  </div>
+)}
 
     </div>
   )

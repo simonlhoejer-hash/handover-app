@@ -1,15 +1,18 @@
 'use client'
 
+import LanguageToggle from '@/components/LanguageToggle'
 import { useDepartment } from '@/lib/DepartmentContext'
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ThemeToggle from '@/components/ThemeToggle'
+import { useTranslation } from '@/lib/LanguageContext'
 
 export default function SideMenu() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 const { department } = useDepartment()
+const { t } = useTranslation()
 
   return (
     <>
@@ -60,7 +63,7 @@ const { department } = useDepartment()
       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
   }`}
 >
-  {department === 'galley' ? 'Partier' : 'Outlets'}
+  {department === 'galley' ? t.partier : t.outlets}
 </Link>
 
 
@@ -74,7 +77,7 @@ const { department } = useDepartment()
         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
     }`}
   >
-    {department === 'galley' ? 'Galley Afdelingsmøde' : 'Shop Afdelingsmøde'}
+    {department === 'galley' ? t.galleyMoede : t.shopMoede}
   </Link>
 
 {/* Kalender */}
@@ -87,7 +90,7 @@ const { department } = useDepartment()
       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
   }`}
 >
-  Kalender
+  {t.kalender}
 </Link>
 
 {/* Egenkontrol – både Galley og Shop */}
@@ -100,18 +103,21 @@ const { department } = useDepartment()
       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
   }`}
 >
-  Egenkontrol
+  {t.egenkontrol}
 </Link>
 
 
 </div>
 
 
-        {/* Bottom section */}
-        <div className="p-6 border-t border-gray-200 dark:border-gray-800 flex justify-center">
-          <ThemeToggle />
+{/* Bottom section */}
+<div className="mt-auto px-6 pb-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+  <div className="flex items-center justify-center gap-6">
+    <LanguageToggle />
+    <ThemeToggle />
+  </div>
+</div>
 
-        </div>
       </aside>
     </>
   )

@@ -3,6 +3,7 @@
 import HandoverHistoryItem from '../../../components/HandoverHistoryItem'
 import HandoverForm from '../../../components/HandoverForm'
 import { useDepartment } from '@/lib/DepartmentContext'
+import { useTranslation } from '@/lib/LanguageContext'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -12,6 +13,7 @@ export default function PartiPage() {
   const router = useRouter()
   const parti = decodeURIComponent(params.parti as string)
   const { department } = useDepartment()
+  const { t } = useTranslation()
 
   const [name, setName] = useState('')
   const [receiver, setReceiver] = useState('')
@@ -39,7 +41,7 @@ export default function PartiPage() {
 
   async function saveNote() {
     if (!name || !receiver || !note) {
-      alert('Afsender, modtager og overlevering skal udfyldes')
+      alert(t.requiredFields)
       return
     }
 
@@ -104,12 +106,12 @@ export default function PartiPage() {
         <div className="w-full text-center">
           <h1 className="text-3xl font-bold">{parti}</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Overleveringer for {parti}
+            {t.handoversFor} {parti}
           </p>
         </div>
       </header>
 
-      {/* FORM COMPONENT */}
+      {/* FORM */}
       <HandoverForm
         name={name}
         setName={setName}
@@ -128,7 +130,9 @@ export default function PartiPage() {
 
       {/* HISTORIK */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">Historik</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          {t.history}
+        </h2>
 
         <div className="space-y-4">
           {items.map((item) => (

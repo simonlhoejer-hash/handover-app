@@ -6,8 +6,14 @@ export default function HeaderTitle() {
   const { department } = useDepartment()
 
   return (
-    <h1 className="text-2xl font-bold">
-      Handover – {department === 'galley' ? 'Galley' : 'Shop'}
-    </h1>
+    <div className="text-center">
+      <h1 className="text-3xl font-bold tracking-tight">
+        HandoverPro
+      </h1>
+
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        {department === 'galley' ? 'Galley' : 'Shop'}
+      </p>
+    </div>
   )
 }

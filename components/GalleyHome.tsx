@@ -3,14 +3,20 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-function formatDanishDate(dateString?: string) {
+import { useTranslation } from '@/lib/LanguageContext'
+
+function formatDate(dateString?: string, lang?: string) {
   if (!dateString) return ''
 
-  return new Date(dateString).toLocaleDateString('da-DK', {
-    day: 'numeric',
-    month: 'short',
-  })
+  return new Date(dateString).toLocaleDateString(
+    lang === 'sv' ? 'sv-SE' : 'da-DK',
+    {
+      day: 'numeric',
+      month: 'short',
+    }
+  )
 }
+
 const PARTIER = [
   'NORD',
   'SYD',
@@ -25,6 +31,7 @@ const PARTIER = [
   'Slagter',
 ]
 
+
 type StatusMap = Record<
   string,
   {
@@ -37,6 +44,8 @@ type StatusMap = Record<
 >
 
 export default function Page() {
+  const { t, lang } = useTranslation()
+  
   const [status, setStatus] = useState<StatusMap>({})
   const [loading, setLoading] = useState(true)
 
@@ -104,7 +113,7 @@ result[parti] = {
 
 
   if (loading) {
-    return <p className="p-6">Indlæser…</p>
+    return <p className="p-6">{t.loading}</p>
   }
 
   return (
@@ -130,19 +139,19 @@ return (
 
       {!hasNotes && (
         <span className="text-red-600 text-sm font-semibold">
-          ❌ Mangler
+          {t.missing}
         </span>
       )}
 
       {isUnread && (
         <span className="text-yellow-600 text-sm font-semibold">
-          🕒 Afventer
+          {t.pending}
         </span>
       )}
 
       {isRead && (
         <span className="text-green-600 text-sm font-semibold">
-          ✓ Læst
+          {t.read}
         </span>
       )}
     </div>
@@ -150,7 +159,7 @@ return (
     <p className="text-sm text-gray-500 mt-2">
       {info?.lastDate ? (
         <>
-          Sidst: {formatDanishDate(info.lastDate)}
+{t.last}: {formatDate(info.lastDate, lang)}
 
           {isUnread && info.receiverName && (
             <>
@@ -180,7 +189,7 @@ return (
           )}
         </>
       ) : (
-        'Ingen overleveringer endnu'
+t.noHandover
       )}
     </p>
   </Link>

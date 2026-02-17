@@ -1,108 +1,153 @@
 'use client'
 
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Underline from '@tiptap/extension-underline'
 
 type Props = {
   value: string
   onChange: (value: string) => void
 }
 
-const TEMPLATE = `
-Nye tiltag:
-• 
-
-Udfordringer:
-• 
-
-Vigtigt:
-• 
-
-Rengøring:
-• 
-`
-
 export default function HandoverEditor({ value, onChange }: Props) {
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+const editor = useEditor({
+  extensions: [StarterKit, Underline],
+  content: value || '<p></p>',   // 🔥 vigtig
+  immediatelyRender: false,
+  editable: true,
+  onUpdate: ({ editor }) => {
+    onChange(editor.getHTML())
+  },
+})
 
-  // 📝 Indsæt skabelon hvis tom
-  useLayoutEffect(() => {
-    if (!value || value.trim() === '') {
-      onChange(TEMPLATE)
+
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value || '')
     }
-  }, [])
+  }, [value, editor])
 
-  // 🔁 Auto-grow textarea (mobil-safe)
-  useLayoutEffect(() => {
-    if (!textareaRef.current) return
-    textareaRef.current.style.height = 'auto'
-    textareaRef.current.style.height =
-      textareaRef.current.scrollHeight + 'px'
-  }, [value])
+  if (!editor) return null
 
-  function insertBullet() {
-    if (!textareaRef.current) return
+const btn = (active: boolean) =>
+  `px-2 py-1.5 text-sm rounded-md transition ${
+    active
+      ? 'bg-emerald-600 text-white'
+      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+  }`
 
-    const newValue =
-      value.trim() === ''
-        ? '• '
-        : value + '\n• '
-
-    onChange(newValue)
-
-    requestAnimationFrame(() => {
-      textareaRef.current?.focus()
-      textareaRef.current!.selectionStart =
-        textareaRef.current!.selectionEnd =
-          newValue.length
-    })
-  }
 
   return (
-    <div>
-      {/* TOOLBAR */}
-      <div className="mb-2">
-        <button
-          type="button"
-          onClick={insertBullet}
-          className="
-            flex items-center gap-2
-            px-4 py-2
-            rounded-full
-            text-sm font-semibold
-            bg-white/90 dark:bg-gray-800
-            text-gray-900 dark:text-gray-100
-            border border-gray-300 dark:border-gray-600
-            shadow-sm
-            hover:bg-gray-100 dark:hover:bg-gray-700
-            active:scale-[0.97]
-            transition
-          "
-        >
-          <span className="text-lg leading-none">•</span>
-          Punkt
-        </button>
-      </div>
+    <div className="
+  border 
+  border-gray-300 dark:border-gray-700 
+  rounded-xl 
+  overflow-hidden 
+  bg-white dark:bg-gray-900 
+  transition
+">
 
-      {/* OVERLEVERING */}
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="
-          w-full
-          box-border
-          min-h-[220px]
-          rounded
-          p-3
-          mb-3
-          bg-gray-100 text-gray-900
-          dark:bg-gray-700 dark:text-gray-100
-          border border-gray-300 dark:border-gray-600
-          focus:outline-none
-          focus:ring-2 focus:ring-blue-500/40
-          resize-none
-        "
-      />
+
+      {/* 🔥 Toolbar */}
+<div
+  className="
+    flex flex-wrap items-center gap-1 px-3 py-2 
+    border-b border-gray-200 dark:border-gray-700 
+    bg-gray-100 dark:bg-gray-800
+  "
+>
+
+  {/* Bold */}
+  <button
+    type="button"
+    onClick={() => editor?.chain().focus().toggleBold().run()}
+    className={btn(editor.isActive('bold'))}
+  >
+    B
+  </button>
+
+  {/* Italic */}
+  <button
+    type="button"
+    onClick={() => editor?.chain().focus().toggleItalic().run()}
+    className={btn(editor.isActive('italic'))}
+  >
+    I
+  </button>
+
+  {/* Underline */}
+  <button
+    type="button"
+    onClick={() => editor?.chain().focus().toggleUnderline().run()}
+    className={btn(editor.isActive('underline'))}
+  >
+    U
+  </button>
+
+  <div className="w-px h-6 bg-gray-400 mx-2" />
+
+  {/* Bullet list */}
+<button
+  type="button"
+  onClick={() => {
+    editor
+      ?.chain()
+      .focus()
+      .liftListItem('listItem') // 🔥 bryd ud af eksisterende liste
+      .toggleBulletList()
+      .run()
+  }}
+  className={btn(editor.isActive('bulletList'))}
+>
+  • Liste
+</button>
+
+
+  {/* Ordered list */}
+<button
+  type="button"
+  onClick={() => {
+    editor
+      ?.chain()
+      .focus()
+      .liftListItem('listItem') // 🔥 bryd først
+      .toggleOrderedList()
+      .run()
+  }}
+  className={btn(editor.isActive('orderedList'))}
+>
+  1. Liste
+</button>
+
+
+</div>
+
+
+      {/* 📝 Editor */}
+<EditorContent
+  editor={editor}
+  className="
+    w-full
+    p-4
+    min-h-[200px]
+    text-gray-900 dark:text-gray-100
+    outline-none
+    focus:outline-none
+
+    [&_.ProseMirror]:outline-none
+    [&_.ProseMirror]:border-0
+    [&_.ProseMirror]:w-full
+    [&_.ProseMirror]:min-h-[200px]
+
+    [&_ul]:list-disc
+    [&_ol]:list-decimal
+    [&_ul]:pl-6
+    [&_ol]:pl-6
+    [&_li]:my-1
+  "
+/>
+
     </div>
   )
 }

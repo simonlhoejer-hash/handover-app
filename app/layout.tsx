@@ -3,8 +3,8 @@ import './globals.css'
 import SideMenu from '@/components/SideMenu'
 import { Providers } from './providers'
 import { DepartmentProvider } from '@/lib/DepartmentContext'
-import DepartmentToggle from '@/components/DepartmentToggle'
 import HeaderTitle from '@/components/HeaderTitle'
+import { LanguageProvider } from '@/lib/LanguageContext'
 
 export const metadata: Metadata = {
   title: 'Handover',
@@ -20,26 +20,29 @@ export default function RootLayout({
     <html lang="da" suppressHydrationWarning>
       <body className="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors">
         <Providers>
-          <DepartmentProvider>
-            <SideMenu />
+          <LanguageProvider>
+            <DepartmentProvider>
 
-            <div className="min-h-screen">
-              <header
-                className="
-                  flex flex-col items-center gap-3
-                  sm:flex-row sm:justify-between
-                  p-4 max-w-3xl mx-auto
-                "
-              >
-                <HeaderTitle />
-                <DepartmentToggle />
-              </header>
+              <SideMenu />
 
-              <main className="max-w-3xl mx-auto px-4 pb-10">
-                {children}
-              </main>
-            </div>
-          </DepartmentProvider>
+              <div className="min-h-screen">
+                <header
+                  className="
+                    flex flex-col items-center gap-3
+                    sm:flex-row sm:justify-between
+                    p-4 max-w-3xl mx-auto
+                  "
+                >
+                  <HeaderTitle />
+                </header>
+
+                <main className="max-w-3xl mx-auto px-4 pb-10">
+                  {children}
+                </main>
+              </div>
+
+            </DepartmentProvider>
+          </LanguageProvider>
         </Providers>
       </body>
     </html>
