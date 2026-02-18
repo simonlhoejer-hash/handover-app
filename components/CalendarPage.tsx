@@ -6,7 +6,7 @@ import { createHolidayEngine } from '@/lib/holidays/holidayEngine'
 export default function CalendarPage() {
   const today = new Date()
   const [currentDate, setCurrentDate] = useState(today)
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+const [selectedDate, setSelectedDate] = useState<Date>(today)
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -76,22 +76,25 @@ export default function CalendarPage() {
 
           return (
             <div
-              key={index}
-              onClick={() => date && setSelectedDate(date)}
-              className={`h-20 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200
+  key={index}
+  onClick={() => date && setSelectedDate(date)}
+className={`aspect-square rounded-lg flex items-center justify-center cursor-pointer
+  transform transition-all duration-300 ease-out text-sm sm:text-base
 
-                ${!isSelected && info.isDK && !info.isNO ? 'bg-green-300' : ''}
-                ${!isSelected && info.isNO && !info.isDK ? 'bg-blue-300' : ''}
-                ${!isSelected && info.isDK && info.isNO ? 'bg-gradient-to-r from-green-300 to-blue-300' : ''}
-                ${!isSelected && !info.isDK && !info.isNO ? 'bg-gray-100 dark:bg-gray-700' : ''}
+  ${!isSelected && info.isDK && !info.isNO ? 'bg-green-300' : ''}
+  ${!isSelected && info.isNO && !info.isDK ? 'bg-blue-300' : ''}
+  ${!isSelected && info.isDK && info.isNO ? 'bg-gradient-to-r from-green-300 to-blue-300' : ''}
+  ${!isSelected && !info.isDK && !info.isNO ? 'bg-gray-100 dark:bg-gray-700' : ''}
 
-                ${isToday && !isSelected ? 'ring-2 ring-black dark:ring-white' : ''}
+  ${isToday && !isSelected ? 'ring-2 ring-black dark:ring-white' : ''}
 
-                ${isSelected ? 'bg-black text-white dark:bg-white dark:text-black scale-105 shadow-md' : ''}
-              `}
-            >
-              {date ? date.getDate() : ''}
-            </div>
+  ${isSelected ? 'bg-black text-white dark:bg-white dark:text-black scale-110 shadow-xl' : 'hover:scale-105'}
+`}
+
+>
+  {date ? date.getDate() : ''}
+</div>
+
           )
         })}
       </div>

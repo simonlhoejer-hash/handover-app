@@ -39,14 +39,18 @@ const btn = (active: boolean) =>
 
 
   return (
-    <div className="
-  border 
-  border-gray-300 dark:border-gray-700 
-  rounded-xl 
-  overflow-hidden 
-  bg-white dark:bg-gray-900 
-  transition
-">
+<div
+  className="
+    w-full
+    box-border
+    border 
+    border-gray-300 dark:border-gray-700 
+    rounded-xl 
+    bg-white dark:bg-gray-900 
+    transition
+  "
+>
+
 
 
       {/* 🔥 Toolbar */}
@@ -129,24 +133,19 @@ const btn = (active: boolean) =>
   editor={editor}
   className="
     w-full
+    box-border
     p-4
     min-h-[200px]
     text-gray-900 dark:text-gray-100
     outline-none
-    focus:outline-none
 
-    [&_.ProseMirror]:outline-none
-    [&_.ProseMirror]:border-0
     [&_.ProseMirror]:w-full
     [&_.ProseMirror]:min-h-[200px]
-
-    [&_ul]:list-disc
-    [&_ol]:list-decimal
-    [&_ul]:pl-6
-    [&_ol]:pl-6
-    [&_li]:my-1
+    [&_.ProseMirror]:outline-none
+    [&_.ProseMirror]:break-words
   "
 />
+
 
     </div>
   )

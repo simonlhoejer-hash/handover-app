@@ -1,4 +1,4 @@
-import AfdelingsmoedePage from '@/components/AfdelingsmoedePage'
+import AfdelingsmoedePage from '../../../components/AfdelingsmoedePage'
 
 export default function Page() {
   return <AfdelingsmoedePage />

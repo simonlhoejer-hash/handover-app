@@ -18,7 +18,7 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
   const [note, setNote] = useState(item.note)
   const [readName, setReadName] = useState('')
   const [loading, setLoading] = useState(false)
-const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   async function saveEdit() {
     if (item.read_by) {
@@ -72,17 +72,34 @@ const [selectedImage, setSelectedImage] = useState<string | null>(null)
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
 
-      <div className="relative pb-4 mb-4 border-b border-gray-200 dark:border-gray-700">
+      {/* ✅ NEW HEADER (mobil-venlig) */}
+      <div className="pb-4 mb-4 border-b border-gray-200 dark:border-gray-700">
 
-        <div className="absolute left-0 top-0">
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+        {/* Top row: Dato + Edit */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="px-3 py-1 text-xs font-medium rounded-full 
+                           bg-gray-100 text-gray-700 
+                           dark:bg-gray-700 dark:text-gray-300">
             {new Date(item.shift_date).toLocaleDateString(
               lang === 'sv' ? 'sv-SE' : 'da-DK'
             )}
           </span>
+
+          {!isEditing && !item.read_by && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-3 py-1 text-xs font-medium rounded-full 
+                         bg-gray-100 text-gray-700 
+                         dark:bg-gray-700 dark:text-gray-300
+                         hover:opacity-80 transition"
+            >
+              {t.edit}
+            </button>
+          )}
         </div>
 
-        <div className="text-center text-lg font-semibold tracking-tight">
+        {/* Centered names */}
+        <div className="text-center text-lg sm:text-xl font-semibold tracking-tight">
           <span className="text-gray-900 dark:text-gray-100">
             {item.author_name}
           </span>
@@ -94,19 +111,6 @@ const [selectedImage, setSelectedImage] = useState<string | null>(null)
           </span>
         </div>
 
-        {!isEditing && !item.read_by && (
-          <div className="absolute right-0 top-0">
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-3 py-1 text-xs font-medium rounded-full 
-                         bg-gray-100 text-gray-700 
-                         dark:bg-gray-700 dark:text-gray-300
-                         hover:opacity-80 transition"
-            >
-              {t.edit}
-            </button>
-          </div>
-        )}
       </div>
 
       {isEditing ? (
@@ -135,22 +139,21 @@ const [selectedImage, setSelectedImage] = useState<string | null>(null)
         </>
       ) : (
         <>
-<div
-  className="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200"
-  dangerouslySetInnerHTML={{ __html: item.note }}
-/>
+          <div
+            className="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200"
+            dangerouslySetInnerHTML={{ __html: item.note }}
+          />
 
           {item.images?.length > 0 && (
             <div className="grid grid-cols-3 gap-3 mt-4">
-{item.images.map((url: string) => (
-  <img
-    key={url}
-    src={url}
-    onClick={() => setSelectedImage(url)}
-    className="h-24 w-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition"
-  />
-))}
-
+              {item.images.map((url: string) => (
+                <img
+                  key={url}
+                  src={url}
+                  onClick={() => setSelectedImage(url)}
+                  className="h-24 w-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition"
+                />
+              ))}
             </div>
           )}
         </>
@@ -184,17 +187,18 @@ const [selectedImage, setSelectedImage] = useState<string | null>(null)
       <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
         <HandoverComments handoverId={item.id} />
       </div>
+
       {selectedImage && (
-  <div
-    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-    onClick={() => setSelectedImage(null)}
-  >
-    <img
-      src={selectedImage}
-      className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl"
-    />
-  </div>
-)}
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <img
+            src={selectedImage}
+            className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl"
+          />
+        </div>
+      )}
 
     </div>
   )
