@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import Placeholder from '@tiptap/extension-placeholder' // ✅ NY
 
 type Props = {
   value: string
@@ -11,15 +12,30 @@ type Props = {
 }
 
 export default function HandoverEditor({ value, onChange }: Props) {
+
 const editor = useEditor({
-  extensions: [StarterKit, Underline],
-  content: value || '<p></p>',   // 🔥 vigtig
+  extensions: [
+    StarterKit,
+    Underline,
+    Placeholder.configure({   // ✅ NY
+      placeholder: `Hjælp den næste vagt 👇
+
+Hvad er anderledes i dag?
+Hvad mangler at blive lavet?
+Er der noget kritisk?
+Skriv tal og mængder.
+Skriv hvor tingene står.`,
+    emptyEditorClass: 'is-editor-empty',
+  }),
+  ],
+  content: value || '',
   immediatelyRender: false,
   editable: true,
   onUpdate: ({ editor }) => {
     onChange(editor.getHTML())
   },
 })
+
 
 
   useEffect(() => {

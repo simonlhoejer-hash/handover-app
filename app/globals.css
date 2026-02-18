@@ -2,19 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth overgang mellem light/dark */
+/* ---------- BASE SMOOTHNESS ---------- */
+
 html {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ens border-radius i hele appen */
+:root {
+  --radius: 14px;
+}
+
+/* ---------- INPUT BASE STYLE ---------- */
+
+input,
+textarea,
+select {
+  border-radius: var(--radius);
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+/* Subtil focus effekt */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+/* ---------- DATE INPUT FIX ---------- */
+
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 42px;
+  padding: 8px 10px;
+}
 
 /* ---------- APP STYLE ANIMATION ---------- */
 
-/* Slide-in fra venstre */
 @keyframes slideIn {
   from {
     transform: translateX(-100%);
-    opacity: 0.8;
+    opacity: 0.9;
   }
   to {
     transform: translateX(0);
@@ -26,7 +69,6 @@ html {
   animation: slideIn 0.25s ease-out forwards;
 }
 
-/* Fade overlay */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -39,13 +81,13 @@ html {
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out forwards;
 }
+
 /* ---------- BOTTOM SHEET ANIMATION ---------- */
 
-/* Slide-up fra bunden */
 @keyframes slideUp {
   from {
     transform: translateY(100%);
-    opacity: 0.95;
+    opacity: 0.98;
   }
   to {
     transform: translateY(0);
@@ -54,10 +96,9 @@ html {
 }
 
 .animate-slideUp {
-  animation: slideUp 0.25s ease-out forwards;
+  animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Slide-down (når den lukkes – optional senere) */
 @keyframes slideDown {
   from {
     transform: translateY(0);
@@ -71,4 +112,13 @@ html {
 
 .animate-slideDown {
   animation: slideDown 0.2s ease-in forwards;
+}
+/* ---------- TIPTAP PLACEHOLDER ---------- */
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af; /* gray-400 */
+  pointer-events: none;
+  height: 0;
 }

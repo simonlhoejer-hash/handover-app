@@ -8,9 +8,9 @@ export default async function Page({
   const { parti } = await params
 
   return (
-    <HandoverPage
-      department="galley"
-      itemName={decodeURIComponent(parti)}
+<HandoverPage
+  department="galley"
+  itemName={decodeURIComponent(parti)}
     />
   )
 }

@@ -56,10 +56,6 @@ export default function HandoverForm({
 
   return (
     <section className={`${cardClass} p-6`}>
-      <h2 className="text-xl font-semibold mb-4">
-        {t.newHandover}
-      </h2>
-
       <input
         className={inputClass}
         placeholder={t.senderName}
@@ -74,12 +70,14 @@ export default function HandoverForm({
         onChange={(e) => setReceiver(e.target.value)}
       />
 
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        className={inputClass}
-      />
+<input
+  type="date"
+  value={date}
+  onChange={(e) => setDate(e.target.value)}
+  className={`${inputClass} appearance-none`}
+  style={{ WebkitAppearance: 'none' }}
+/>
+
 
       <HandoverEditor value={note} onChange={setNote} />
 

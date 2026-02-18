@@ -23,13 +23,9 @@ export default function BottomNav() {
     { icon: Users, href: `${basePath}/afdelingsmoede` },
   ]
 
-  // Luk settings ved klik udenfor
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
-      ) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpen(false)
       }
     }
@@ -43,10 +39,20 @@ export default function BottomNav() {
   }, [open])
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-30">
-      <div className="flex justify-center items-center gap-4 py-3">
+    <nav className="
+      fixed bottom-0 left-0 right-0
+      bg-white/90 dark:bg-gray-900/90
+      backdrop-blur-md
+      border-t border-gray-200 dark:border-gray-800
+      z-30
+    ">
+      <div className="
+        max-w-xl mx-auto
+        flex justify-between items-center
+        px-6 py-3
+      ">
 
-        {tabs.map((tab, index) => {
+        {tabs.map((tab) => {
           const Icon = tab.icon
 
           const active = tab.exact
@@ -54,48 +60,38 @@ export default function BottomNav() {
             : pathname.startsWith(tab.href)
 
           return (
-            <div key={tab.href} className="flex items-center gap-4">
-
-              <Link
-                href={tab.href}
-                className={`
-                  flex items-center justify-center
-                  w-11 h-11
-                  rounded-xl
-                  transition-all duration-200
-                  ${
-                    active
-                      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                      : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }
-                `}
-              >
-                <Icon size={20} strokeWidth={1.8} />
-              </Link>
-
-              {/* Separator */}
-              {index !== tabs.length - 1 && (
-                <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
-              )}
-            </div>
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={`
+                flex items-center justify-center
+                w-12 h-12
+                rounded-2xl
+                transition-all duration-200
+                ${
+                  active
+                    ? 'bg-gray-200 dark:bg-gray-800 text-black dark:text-white shadow-sm scale-105'
+                    : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }
+              `}
+            >
+              <Icon size={20} strokeWidth={1.8} />
+            </Link>
           )
         })}
 
-        {/* Separator before settings */}
-        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
-
-        {/* Settings button */}
+        {/* Settings */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setOpen(!open)}
             className={`
               flex items-center justify-center
-              w-11 h-11
-              rounded-xl
+              w-12 h-12
+              rounded-2xl
               transition-all duration-200
               ${
                 open
-                  ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                  ? 'bg-gray-200 dark:bg-gray-800 text-black dark:text-white shadow-sm scale-105'
                   : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
               }
             `}
@@ -104,17 +100,32 @@ export default function BottomNav() {
           </button>
 
           {open && (
-            <div className="absolute bottom-14 right-0 w-64 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 animate-fadeIn">
-              <div className="space-y-4">
+            <div className="
+              absolute bottom-16 right-0
+              w-64
+              bg-white dark:bg-gray-900
+              rounded-2xl
+              shadow-2xl
+              border border-gray-200 dark:border-gray-700
+              p-4
+              animate-fadeIn
+            ">
+              <div className="space-y-5">
+
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">Sprog</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Sprog
+                  </span>
                   <LanguageToggle />
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">Tema</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Tema
+                  </span>
                   <ThemeToggle />
                 </div>
+
               </div>
             </div>
           )}

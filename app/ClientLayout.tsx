@@ -13,6 +13,10 @@ export default function ClientLayout({
   const pathname = usePathname()
   const isAdmin = pathname === '/'
 
+  const isPartiPage =
+    pathname.startsWith('/galley/') ||
+    pathname.startsWith('/shop/')
+
   if (isAdmin) {
     return <div className="min-h-screen">{children}</div>
   }
@@ -28,7 +32,7 @@ export default function ClientLayout({
         <div className="flex-1 flex flex-col">
 
           <header className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between p-4 max-w-3xl mx-auto w-full">
-            <HeaderTitle />
+            {!isPartiPage && <HeaderTitle />}
           </header>
 
           <main className="flex-1 max-w-3xl mx-auto px-4 pb-20 md:pb-6 w-full">

@@ -97,20 +97,30 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
             </button>
           )}
         </div>
+{/* Centered names */}
+<div className="flex flex-col items-center gap-3 text-center">
 
-        {/* Centered names */}
-        <div className="text-center text-lg sm:text-xl font-semibold tracking-tight">
-          <span className="text-gray-900 dark:text-gray-100">
-            {item.author_name}
-          </span>
+  <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+    {item.author_name}
+  </div>
 
-          <span className="mx-3 text-gray-400 font-normal">→</span>
+  <div className="text-gray-400 opacity-50">
+    <svg width="22" height="22" viewBox="0 0 24 24">
+      <path
+        d="M12 5v14M12 19l-5-5M12 19l5-5"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
+    </svg>
+  </div>
 
-          <span className="text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.receiver_name}
-          </span>
-        </div>
+  <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+    {item.receiver_name}
+  </div>
 
+</div>
       </div>
 
       {isEditing ? (

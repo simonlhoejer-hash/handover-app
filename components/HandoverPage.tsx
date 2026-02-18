@@ -93,43 +93,86 @@ export default function HandoverPage({ department, itemName }: Props) {
   }
 
   return (
-    <main className="max-w-3xl mx-auto p-6 space-y-10">
-      <header className="relative flex items-center mb-2">
+    <main className="
+      max-w-xl
+      mx-auto
+      px-4
+      pt-6
+      pb-24
+      space-y-12
+    ">
+
+      {/* HEADER */}
+      <header className="relative flex items-center justify-center">
+
         <button
           onClick={() => router.back()}
-          className="absolute left-0 text-4xl font-bold text-gray-700 dark:text-gray-300 px-3"
+          className="
+            absolute left-0
+            text-xl
+            font-medium
+            text-gray-500 dark:text-gray-400
+            hover:text-black dark:hover:text-white
+            transition
+            px-2
+          "
         >
           ←
         </button>
 
-        <div className="w-full text-center">
-          <h1 className="text-3xl font-bold">{itemName}</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+        <div className="text-center">
+          <h1 className="
+            text-2xl sm:text-3xl
+            font-semibold
+            tracking-tight
+            text-gray-900 dark:text-white
+          ">
+            {itemName}
+          </h1>
+
+          <p className="
+            text-sm
+            text-gray-500 dark:text-gray-400
+            mt-1
+          ">
             {t.handoversFor} {itemName}
           </p>
         </div>
+
       </header>
 
-      <HandoverForm
-        name={name}
-        setName={setName}
-        receiver={receiver}
-        setReceiver={setReceiver}
-        date={date}
-        setDate={setDate}
-        note={note}
-        setNote={setNote}
-        images={images}
-        setImages={setImages}
-        loading={loading}
-        onSave={saveNote}
-        parti={itemName}
-      />
+      {/* FORM SECTION */}
+      <section className="space-y-4">
+        
 
-      <section>
-        <h2 className="text-xl font-semibold mb-4">
+        <HandoverForm
+          name={name}
+          setName={setName}
+          receiver={receiver}
+          setReceiver={setReceiver}
+          date={date}
+          setDate={setDate}
+          note={note}
+          setNote={setNote}
+          images={images}
+          setImages={setImages}
+          loading={loading}
+          onSave={saveNote}
+          parti={department}
+        />
+      </section>
+
+      {/* HISTORY SECTION */}
+      <section className="space-y-4">
+
+        <div className="
+          text-xs
+          uppercase
+          tracking-wider
+          text-gray-500 dark:text-gray-400
+        ">
           {t.history}
-        </h2>
+        </div>
 
         <div className="space-y-4">
           {items.map((item) => (
@@ -140,7 +183,9 @@ export default function HandoverPage({ department, itemName }: Props) {
             />
           ))}
         </div>
+
       </section>
+
     </main>
   )
 }
