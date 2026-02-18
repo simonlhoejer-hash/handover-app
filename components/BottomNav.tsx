@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from '@/lib/LanguageContext'
 import LanguageToggle from '@/components/LanguageToggle'
 import ThemeToggle from '@/components/ThemeToggle'
+import { LayoutGrid, CalendarDays, Users, MoreHorizontal } from 'lucide-react'
 
 export default function BottomNav() {
   const { t } = useTranslation()
@@ -17,22 +18,12 @@ export default function BottomNav() {
   const basePath = isGalley ? '/galley' : '/shop'
 
   const tabs = [
-    {
-      label: isGalley ? t.partier : t.outlets,
-      href: basePath,
-      exact: true,
-    },
-    {
-      label: t.kalender,
-      href: `${basePath}/kalender`,
-    },
-    {
-      label: isGalley ? t.galleyMoede : t.shopMoede,
-      href: `${basePath}/afdelingsmoede`,
-    },
+    { icon: LayoutGrid, href: basePath, exact: true },
+    { icon: CalendarDays, href: `${basePath}/kalender` },
+    { icon: Users, href: `${basePath}/afdelingsmoede` },
   ]
 
-  // Luk menu ved klik udenfor
+  // Luk settings ved klik udenfor
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -53,51 +44,63 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-30">
-      <div className="relative flex justify-around items-center py-3 px-4">
+      <div className="flex justify-center items-center gap-4 py-3">
 
-        {tabs.map((tab) => {
+        {tabs.map((tab, index) => {
+          const Icon = tab.icon
+
           const active = tab.exact
             ? pathname === tab.href
             : pathname.startsWith(tab.href)
 
           return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`
-                px-4 py-2
-                rounded-xl
-                text-sm font-medium
-                transition-all duration-200
-                ${
-                  active
-                    ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }
-              `}
-            >
-              {tab.label}
-            </Link>
+            <div key={tab.href} className="flex items-center gap-4">
+
+              <Link
+                href={tab.href}
+                className={`
+                  flex items-center justify-center
+                  w-11 h-11
+                  rounded-xl
+                  transition-all duration-200
+                  ${
+                    active
+                      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }
+                `}
+              >
+                <Icon size={20} strokeWidth={1.8} />
+              </Link>
+
+              {/* Separator */}
+              {index !== tabs.length - 1 && (
+                <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+              )}
+            </div>
           )
         })}
+
+        {/* Separator before settings */}
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
 
         {/* Settings button */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setOpen(!open)}
             className={`
-              px-4 py-2
+              flex items-center justify-center
+              w-11 h-11
               rounded-xl
-              text-sm font-medium
               transition-all duration-200
               ${
                 open
                   ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
               }
             `}
           >
-            {t.indstillinger}
+            <MoreHorizontal size={20} strokeWidth={1.8} />
           </button>
 
           {open && (
