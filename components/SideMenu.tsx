@@ -1,7 +1,6 @@
 'use client'
 
 import LanguageToggle from '@/components/LanguageToggle'
-import { useDepartment } from '@/lib/DepartmentContext'
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -11,8 +10,9 @@ import { useTranslation } from '@/lib/LanguageContext'
 export default function SideMenu() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-const { department } = useDepartment()
 const { t } = useTranslation()
+const isGalley = pathname.startsWith('/galley')
+const isShop = pathname.startsWith('/shop')
 
   return (
     <>
@@ -46,67 +46,51 @@ const { t } = useTranslation()
         {/* Header i menu */}
         <div className="px-6 pt-10 pb-6 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
-            Handover
+            HandoverPro
           </h2>
         </div>
 
         {/* Menu links */}
 <div className="p-6 space-y-2 flex-1">
 
-  {/* Partier */}
+{/* Partier */}
 <Link
-  href="/"
+  href={isGalley ? '/galley' : '/shop'}
   onClick={() => setOpen(false)}
   className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-    pathname === '/'
+    pathname === (isGalley ? '/galley' : '/shop')
       ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
   }`}
 >
-  {department === 'galley' ? t.partier : t.outlets}
+  {isGalley ? t.partier : t.outlets}
 </Link>
 
-
-  {/* Afdelingsmøde – kan evt. ændre navn pr afdeling */}
-  <Link
-    href="/afdelingsmoede"
-    onClick={() => setOpen(false)}
-    className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-      pathname === '/afdelingsmoede'
-        ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-    }`}
-  >
-    {department === 'galley' ? t.galleyMoede : t.shopMoede}
-  </Link>
+{/* Afdelingsmøde */}
+<Link
+  href={isGalley ? '/galley/afdelingsmoede' : '/shop/afdelingsmoede'}
+  onClick={() => setOpen(false)}
+  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+    pathname.includes('/afdelingsmoede')
+      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
+      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+  }`}
+>
+  {isGalley ? t.galleyMoede : t.shopMoede}
+</Link>
 
 {/* Kalender */}
 <Link
-  href="/kalender"
+  href={isGalley ? '/galley/kalender' : '/shop/kalender'}
   onClick={() => setOpen(false)}
   className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-    pathname === '/kalender'
+    pathname.includes('/kalender')
       ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
   }`}
 >
   {t.kalender}
 </Link>
-
-{/* Egenkontrol – både Galley og Shop */}
-<Link
-  href="/egenkontrol"
-  onClick={() => setOpen(false)}
-  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-    pathname === '/egenkontrol'
-      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-  }`}
->
-  {t.egenkontrol}
-</Link>
-
-
 </div>
 
 

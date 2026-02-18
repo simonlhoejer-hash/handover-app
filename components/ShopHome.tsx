@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useDepartment } from '@/lib/DepartmentContext'
 
 const OUTLETS = [
   'Tøj',
@@ -32,7 +31,6 @@ function formatDanishDate(dateString?: string) {
 }
 
 export default function ShopHome() {
-  const { department } = useDepartment()
   const [status, setStatus] = useState<StatusMap>({})
   const [loading, setLoading] = useState(true)
 
@@ -41,7 +39,7 @@ export default function ShopHome() {
       const { data, error } = await supabase
         .from('handover_notes')
         .select('parti, shift_date, read_by, receiver_name, created_at')
-        .eq('department', department)
+        .eq('department', 'shop')
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -81,7 +79,7 @@ export default function ShopHome() {
     }
 
     fetchStatus()
-  }, [department])
+  }, [])
 
   if (loading) {
     return <p className="p-6">Indlæser…</p>
@@ -100,7 +98,7 @@ export default function ShopHome() {
           return (
             <Link
               key={outlet}
-              href={`/parti/${encodeURIComponent(outlet)}`}
+              href={`/shop/outlet/${encodeURIComponent(outlet)}`}
               className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 transition active:scale-[0.98] hover:shadow-lg"
             >
               <div className="flex justify-between items-center">

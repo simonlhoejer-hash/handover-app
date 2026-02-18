@@ -1,6 +1,6 @@
 'use client'
 
-import { useDepartment } from '@/lib/DepartmentContext'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -17,7 +17,10 @@ export default function AfdelingsmoedePage() {
   const [file, setFile] = useState<File | null>(null)
   const [moeder, setMoeder] = useState<Moede[]>([])
   const [loading, setLoading] = useState(false)
-const { department } = useDepartment()
+  const pathname = usePathname()
+const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
+
+
 
 useEffect(() => {
   fetchMoeder()

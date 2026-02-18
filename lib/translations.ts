@@ -6,7 +6,7 @@ export const translations = {
     galleyMoede: 'Galley Afdelingsmøde',
     shopMoede: 'Shop Afdelingsmøde',
     kalender: 'Kalender',
-    egenkontrol: 'Egenkontrol',
+    indstillinger: 'Indstillinger', // 👈 TILFØJET
 
     // Forside
     missing: '❌ Mangler',
@@ -68,7 +68,7 @@ Rengøring:
     galleyMoede: 'Galley Avdelningsmöte',
     shopMoede: 'Shop Avdelningsmöte',
     kalender: 'Kalender',
-    egenkontrol: 'Egenkontroll',
+    indstillinger: 'Inställningar', // 👈 TILFØJET
 
     // Forside
     missing: '❌ Saknas',

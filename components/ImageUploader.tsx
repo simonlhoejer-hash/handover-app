@@ -1,8 +1,8 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useDepartment } from '@/lib/DepartmentContext'
 import { useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
@@ -18,8 +18,10 @@ export default function ImageUploader({
   parti,
   onUploadComplete,
 }: Props) {
-  const { department } = useDepartment()
+
   const { t } = useTranslation()
+const pathname = usePathname()
+const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
 
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)

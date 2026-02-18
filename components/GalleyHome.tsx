@@ -129,7 +129,7 @@ result[parti] = {
 return (
   <Link
     key={parti}
-    href={`/parti/${encodeURIComponent(parti)}`}
+    href={`/galley/parti/${encodeURIComponent(parti)}`}
     className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition hover:shadow-lg"
   >
     <div className="flex justify-between items-center">
