@@ -113,6 +113,19 @@ const isShop = pathname.startsWith('/shop')
 >
   {t.kalender}
 </Link>
+
+{/* Idé parkering */}
+<Link
+  href={isGalley ? '/galley/ideas' : '/shop/ideas'}
+  onClick={() => setOpen(false)}
+  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+    pathname.includes('/ideas')
+      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
+      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+  }`}
+>
+  Idé parkering
+</Link>
 </div>
 
 

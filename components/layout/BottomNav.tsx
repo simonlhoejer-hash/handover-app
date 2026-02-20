@@ -6,7 +6,13 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from '@/lib/LanguageContext'
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
-import { LayoutGrid, CalendarDays, Users, MoreHorizontal } from 'lucide-react'
+import { 
+  LayoutGrid, 
+  CalendarDays, 
+  Users, 
+  MoreHorizontal,
+  Lightbulb
+} from 'lucide-react'
 
 export default function BottomNav() {
   const { t } = useTranslation()
@@ -21,6 +27,7 @@ export default function BottomNav() {
     { icon: LayoutGrid, href: basePath, exact: true },
     { icon: CalendarDays, href: `${basePath}/kalender` },
     { icon: Users, href: `${basePath}/afdelingsmoede` },
+    { icon: Lightbulb, href: `${basePath}/ideas` }, // ✅ NY
   ]
 
   useEffect(() => {
@@ -39,19 +46,22 @@ export default function BottomNav() {
   }, [open])
 
   return (
-    <nav className="
+    <nav
+      className="
       fixed bottom-0 left-0 right-0
       bg-white/90 dark:bg-gray-900/90
       backdrop-blur-md
       border-t border-gray-200 dark:border-gray-800
       z-30
-    ">
-      <div className="
+    "
+    >
+      <div
+        className="
         max-w-xl mx-auto
         flex justify-between items-center
         px-6 py-3
-      ">
-
+      "
+      >
         {tabs.map((tab) => {
           const Icon = tab.icon
 
@@ -100,7 +110,8 @@ export default function BottomNav() {
           </button>
 
           {open && (
-            <div className="
+            <div
+              className="
               absolute bottom-16 right-0
               w-64
               bg-white dark:bg-gray-900
@@ -109,9 +120,9 @@ export default function BottomNav() {
               border border-gray-200 dark:border-gray-700
               p-4
               animate-fadeIn
-            ">
+            "
+            >
               <div className="space-y-5">
-
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Sprog
@@ -125,12 +136,10 @@ export default function BottomNav() {
                   </span>
                   <ThemeToggle />
                 </div>
-
               </div>
             </div>
           )}
         </div>
-
       </div>
     </nav>
   )
