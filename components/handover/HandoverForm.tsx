@@ -1,7 +1,7 @@
 'use client'
 
 import HandoverEditor from './HandoverEditor'
-import ImageUploader from './ImageUploader'
+import ImageUploader from '../ui/ImageUploader'
 import { useTranslation } from '@/lib/LanguageContext'
 
 type Props = {

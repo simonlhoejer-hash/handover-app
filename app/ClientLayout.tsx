@@ -1,9 +1,9 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import SideMenu from '@/components/SideMenu'
-import BottomNav from '@/components/BottomNav'
-import HeaderTitle from '@/components/HeaderTitle'
+import SideMenu from '@/components/layout/SideMenu'
+import BottomNav from '@/components/layout/BottomNav'
+import HeaderTitle from '@/components/layout/HeaderTitle'
 
 export default function ClientLayout({
   children,
@@ -31,7 +31,7 @@ export default function ClientLayout({
 
         <div className="flex-1 flex flex-col">
 
-          <header className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between p-4 max-w-3xl mx-auto w-full">
+          <header className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between py-4 max-w-3xl mx-auto w-full">
             {!isPartiPage && <HeaderTitle />}
           </header>
 

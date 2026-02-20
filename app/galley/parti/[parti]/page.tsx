@@ -1,4 +1,4 @@
-import HandoverPage from '@/components/HandoverPage'
+import HandoverPage from '@/components/handover/HandoverPage'
 
 export default async function Page({
   params,

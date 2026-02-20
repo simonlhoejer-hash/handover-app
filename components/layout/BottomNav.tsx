@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from '@/lib/LanguageContext'
-import LanguageToggle from '@/components/LanguageToggle'
-import ThemeToggle from '@/components/ThemeToggle'
+import LanguageToggle from '@/components/ui/LanguageToggle'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 import { LayoutGrid, CalendarDays, Users, MoreHorizontal } from 'lucide-react'
 
 export default function BottomNav() {

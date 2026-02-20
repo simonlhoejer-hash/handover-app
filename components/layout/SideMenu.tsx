@@ -1,10 +1,10 @@
 'use client'
 
-import LanguageToggle from '@/components/LanguageToggle'
+import LanguageToggle from '@/components/ui/LanguageToggle'
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import ThemeToggle from '@/components/ThemeToggle'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useTranslation } from '@/lib/LanguageContext'
 
 export default function SideMenu() {

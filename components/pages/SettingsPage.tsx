@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import LanguageToggle from '@/components/LanguageToggle'
-import ThemeToggle from '@/components/ThemeToggle'
+import LanguageToggle from '@/components/ui/LanguageToggle'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useTranslation } from '@/lib/LanguageContext'
 
 export default function SettingsPage() {

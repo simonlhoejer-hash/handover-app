@@ -1,7 +1,7 @@
 'use client'
 
-import LanguageToggle from '@/components/LanguageToggle'
-import ThemeToggle from '@/components/ThemeToggle'
+import LanguageToggle from '@/components/ui/LanguageToggle'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 
 type SettingsSheetProps = {
   open: boolean

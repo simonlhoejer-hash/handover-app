@@ -3,34 +3,43 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from '@/lib/LanguageContext'
 
-const OUTLETS = [
-  'Tøj',
-  'Sprut',
-  'Slik',
-  'Parfume',
-]
+type Props = {
+  department: 'shop' | 'galley'
+  items: string[]
+  basePath: string
+}
 
 type StatusMap = Record<
   string,
   {
     hasNotes: boolean
+    hasComments: boolean
     lastDate?: string
     readBy?: string | null
     receiverName?: string | null
   }
 >
 
-function formatDanishDate(dateString?: string) {
+function formatDate(dateString?: string, lang?: string) {
   if (!dateString) return ''
 
-  return new Date(dateString).toLocaleDateString('da-DK', {
-    day: 'numeric',
-    month: 'short',
-  })
+  return new Date(dateString).toLocaleDateString(
+    lang === 'sv' ? 'sv-SE' : 'da-DK',
+    {
+      day: 'numeric',
+      month: 'short',
+    }
+  )
 }
 
-export default function ShopHome() {
+export default function DepartmentHome({
+  department,
+  items,
+  basePath,
+}: Props) {
+  const { t, lang } = useTranslation()
   const [status, setStatus] = useState<StatusMap>({})
   const [loading, setLoading] = useState(true)
 
@@ -38,8 +47,15 @@ export default function ShopHome() {
     const fetchStatus = async () => {
       const { data, error } = await supabase
         .from('handover_notes')
-        .select('parti, shift_date, read_by, receiver_name, created_at')
-        .eq('department', 'shop')
+        .select(`
+          parti,
+          shift_date,
+          read_by,
+          receiver_name,
+          created_at,
+          handover_comments(id)
+        `)
+        .eq('department', department)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -50,8 +66,8 @@ export default function ShopHome() {
       const RESET_DAYS = 14
       const result: StatusMap = {}
 
-      for (const outlet of OUTLETS) {
-        const latest = data?.find(d => d.parti === outlet)
+      for (const item of items) {
+        const latest = data?.find(d => d.parti === item) as any
 
         let isExpired = false
 
@@ -66,8 +82,12 @@ export default function ShopHome() {
           }
         }
 
-        result[outlet] = {
+        result[item] = {
           hasNotes: !!latest && !isExpired,
+          hasComments:
+            !!latest &&
+            !isExpired &&
+            (latest.handover_comments?.length ?? 0) > 0,
           lastDate: latest?.shift_date,
           readBy: isExpired ? null : latest?.read_by ?? null,
           receiverName: isExpired ? null : latest?.receiver_name ?? null,
@@ -79,17 +99,17 @@ export default function ShopHome() {
     }
 
     fetchStatus()
-  }, [])
+  }, [department, items])
 
   if (loading) {
-    return <p className="p-6">Indlæser…</p>
+    return <p className="p-6">{t.loading}</p>
   }
 
   return (
-    <main className="px-4 py-6 max-w-5xl mx-auto">
+    <main className="px-2 py-6 max-w-5xl mx-auto">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {OUTLETS.map((outlet) => {
-          const info = status[outlet]
+        {items.map((item) => {
+          const info = status[item]
 
           const hasNotes = info?.hasNotes
           const isRead = hasNotes && !!info.readBy
@@ -97,30 +117,30 @@ export default function ShopHome() {
 
           return (
             <Link
-              key={outlet}
-              href={`/shop/outlet/${encodeURIComponent(outlet)}`}
-              className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 transition active:scale-[0.98] hover:shadow-lg"
+              key={item}
+              href={`${basePath}/${encodeURIComponent(item)}`}
+              className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition hover:shadow-lg"
             >
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold">
-                  {outlet}
+                  {item}
                 </h2>
 
                 {!hasNotes && (
                   <span className="text-red-600 text-sm font-semibold">
-                    ❌ Mangler
+                    {t.missing}
                   </span>
                 )}
 
                 {isUnread && (
                   <span className="text-yellow-600 text-sm font-semibold">
-                    🕒 Afventer
+                    {t.pending}
                   </span>
                 )}
 
                 {isRead && (
                   <span className="text-green-600 text-sm font-semibold">
-                    ✓ Læst
+                    {t.read}
                   </span>
                 )}
               </div>
@@ -128,7 +148,7 @@ export default function ShopHome() {
               <p className="text-sm text-gray-500 mt-2">
                 {info?.lastDate ? (
                   <>
-                    Sidst: {formatDanishDate(info.lastDate)}
+                    {t.last}: {formatDate(info.lastDate, lang)}
 
                     {isUnread && info.receiverName && (
                       <>
@@ -147,9 +167,18 @@ export default function ShopHome() {
                         </span>
                       </>
                     )}
+
+                    {info?.hasComments && (
+                      <>
+                        {' '}
+                        <span className="text-gray-400">
+                          💬
+                        </span>
+                      </>
+                    )}
                   </>
                 ) : (
-                  'Ingen overleveringer endnu'
+                  t.noHandover
                 )}
               </p>
             </Link>

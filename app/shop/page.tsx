@@ -1,5 +1,18 @@
-import ShopHome from '@/components/ShopHome'
+import DepartmentHome from '@/components/department/DepartmentHome'
+
+const OUTLETS = [
+  'Tøj',
+  'Sprut',
+  'Slik',
+  'Parfume',
+]
 
 export default function Page() {
-  return <ShopHome />
+  return (
+    <DepartmentHome
+      department="shop"
+      items={OUTLETS}
+      basePath="/shop/outlet"
+    />
+  )
 }

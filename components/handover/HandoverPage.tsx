@@ -1,8 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import HandoverHistoryItem from '@/components/HandoverHistoryItem'
-import HandoverForm from '@/components/HandoverForm'
+import HandoverHistoryItem from '@/components/handover/HandoverHistoryItem'
+import HandoverForm from '@/components/handover/HandoverForm'
 import { useTranslation } from '@/lib/LanguageContext'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
