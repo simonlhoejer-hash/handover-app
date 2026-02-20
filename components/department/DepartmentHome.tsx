@@ -101,9 +101,82 @@ export default function DepartmentHome({
     fetchStatus()
   }, [department, items])
 
-  if (loading) {
-    return <p className="p-6">{t.loading}</p>
-  }
+return (
+  <main className="px-2 py-6 max-w-5xl mx-auto">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {[...items]
+        .sort((a, b) => {
+          const aInfo = status[a]
+          const bInfo = status[b]
+
+          const getPriority = (info: any) => {
+            if (!info?.hasNotes) return 1
+            if (info?.hasNotes && !info?.readBy) return 2
+            return 3
+          }
+
+          const priorityDiff =
+            getPriority(aInfo) - getPriority(bInfo)
+
+          if (priorityDiff !== 0) return priorityDiff
+
+          const aDate = aInfo?.lastDate
+            ? new Date(aInfo.lastDate).getTime()
+            : 0
+          const bDate = bInfo?.lastDate
+            ? new Date(bInfo.lastDate).getTime()
+            : 0
+
+          return aDate - bDate
+        })
+        .map((item) => {
+          const info = status[item]
+
+          const hasNotes = info?.hasNotes
+          const isRead = hasNotes && !!info?.readBy
+          const isUnread = hasNotes && !info?.readBy
+
+          return (
+            <Link
+              key={item}
+              href={`${basePath}/${encodeURIComponent(item)}`}
+              className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition hover:shadow-lg"
+            >
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">
+                  {item}
+                </h2>
+
+                {loading && (
+                  <span className="text-gray-400 text-sm">
+                    …
+                  </span>
+                )}
+
+                {!loading && !hasNotes && (
+                  <span className="text-red-600 text-sm font-semibold">
+                    {t.missing}
+                  </span>
+                )}
+
+                {!loading && isUnread && (
+                  <span className="text-yellow-600 text-sm font-semibold">
+                    {t.pending}
+                  </span>
+                )}
+
+                {!loading && isRead && (
+                  <span className="text-green-600 text-sm font-semibold">
+                    {t.read}
+                  </span>
+                )}
+              </div>
+            </Link>
+          )
+        })}
+    </div>
+  </main>
+)
 
   return (
     <main className="px-2 py-6 max-w-5xl mx-auto">

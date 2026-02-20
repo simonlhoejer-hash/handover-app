@@ -21,20 +21,40 @@ type Props = {
 }
 
 const cardClass = `
-  bg-white dark:bg-gray-800
-  text-gray-900 dark:text-gray-100
-  rounded-xl shadow
+  w-full
+  rounded-3xl
+  p-6 sm:p-8
+  transition-all duration-300
+
+  bg-white
+  border border-black/5
+  shadow-[0_20px_40px_rgba(0,0,0,0.06)]
+
+  dark:bg-[#101c2f]
+  dark:border-white/10
+  dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)]
 `
 
 const inputClass = `
   w-full
   box-border
-  rounded
-  p-2
-  mb-3
-  bg-gray-100 text-gray-900
-  dark:bg-gray-700 dark:text-gray-100
-  border border-gray-300 dark:border-gray-600
+  rounded-2xl
+  px-4 py-3
+  mb-4
+  transition
+
+  bg-gray-100
+  text-gray-900
+  border border-black/5
+
+  dark:bg-[#162338]
+  dark:text-white
+  dark:border-white/10
+
+  focus:outline-none
+  focus:ring-2
+  focus:ring-black/10
+  dark:focus:ring-white/20
 `
 
 export default function HandoverForm({
@@ -109,13 +129,25 @@ export default function HandoverForm({
       <button
         onClick={onSave}
         disabled={loading}
-        className="
-          w-full py-3 rounded font-semibold transition
-          bg-black text-white
-          dark:bg-white dark:text-black
-          hover:opacity-90
-          disabled:opacity-50
-        "
+className="
+  w-full
+  py-3
+  rounded-2xl
+  font-semibold
+  transition-all duration-200
+  active:scale-[0.98]
+
+  bg-black
+  text-white
+  shadow-md
+
+  dark:bg-white
+  dark:text-black
+  dark:shadow-lg
+
+  hover:opacity-90
+  disabled:opacity-50
+"
       >
         {loading ? t.saving : t.saveHandover}
       </button>
