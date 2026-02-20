@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   title: 'Handover',
   description: 'Intern overlevering',
 
-  manifest: '/manifest.json',
 
   icons: {
     icon: [
