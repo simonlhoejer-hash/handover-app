@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useTranslation } from '@/lib/LanguageContext'
+import Image from 'next/image'
 
 export default function SideMenu() {
   const [open, setOpen] = useState(false)
@@ -44,11 +45,32 @@ const isShop = pathname.startsWith('/shop')
         ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Header i menu */}
-        <div className="px-6 pt-10 pb-6 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
-            HandoverPro
-          </h2>
-        </div>
+<div className="px-6 pt-10 pb-6 border-b border-gray-200 dark:border-gray-800 flex justify-center">
+  <Link
+    href={isGalley ? '/galley' : '/shop'}
+    onClick={() => setOpen(false)}
+  >
+    {/* Light */}
+    <Image
+      src="/logo-light.svg"
+      alt="HandoverPro"
+      width={220}
+      height={60}
+      className="h-10 w-auto dark:hidden"
+      priority
+    />
+
+    {/* Dark */}
+    <Image
+      src="/logo-dark.svg"
+      alt="HandoverPro"
+      width={220}
+      height={60}
+      className="h-10 w-auto hidden dark:block"
+      priority
+    />
+  </Link>
+</div>
 
         {/* Menu links */}
 <div className="p-6 space-y-2 flex-1">

@@ -63,7 +63,7 @@ export default function DepartmentHome({
         return
       }
 
-      const RESET_DAYS = 14
+      const RESET_DAYS = 6
       const result: StatusMap = {}
 
       for (const item of items) {
@@ -108,8 +108,34 @@ export default function DepartmentHome({
   return (
     <main className="px-2 py-6 max-w-5xl mx-auto">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => {
-          const info = status[item]
+{[...items]
+  .sort((a, b) => {
+    const aInfo = status[a]
+    const bInfo = status[b]
+
+    const getPriority = (info: any) => {
+      if (!info?.hasNotes) return 1 // 🔴 Mangler
+      if (info?.hasNotes && !info?.readBy) return 2 // 🟡 Ulæst
+      return 3 // 🟢 Læst
+    }
+
+    const priorityDiff =
+      getPriority(aInfo) - getPriority(bInfo)
+
+    if (priorityDiff !== 0) return priorityDiff
+
+    // Hvis samme status → sorter efter ældste først
+    const aDate = aInfo?.lastDate
+      ? new Date(aInfo.lastDate).getTime()
+      : 0
+    const bDate = bInfo?.lastDate
+      ? new Date(bInfo.lastDate).getTime()
+      : 0
+
+    return aDate - bDate
+  })
+  .map((item) => {
+              const info = status[item]
 
           const hasNotes = info?.hasNotes
           const isRead = hasNotes && !!info.readBy

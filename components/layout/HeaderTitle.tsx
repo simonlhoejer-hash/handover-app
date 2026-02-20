@@ -10,7 +10,7 @@ export default function HeaderTitle() {
   const basePath = isGalley ? '/galley' : '/shop'
 
   return (
-    <div className="w-full flex flex-col items-center py-3">
+    <div className="w-full flex flex-col items-center py-5">
 
       <Link href={basePath} className="flex items-center">
         
@@ -20,7 +20,7 @@ export default function HeaderTitle() {
           alt="HandoverPro"
           width={320}
           height={80}
-          className="h-12 w-auto dark:hidden"
+          className="h-14 w-auto dark:hidden"
           priority
         />
 
@@ -30,13 +30,21 @@ export default function HeaderTitle() {
           alt="HandoverPro"
           width={320}
           height={80}
-          className="h-12 w-auto hidden dark:block"
+          className="h-14 w-auto hidden dark:block"
           priority
         />
 
       </Link>
 
-      <div className="mt-1 text-xs uppercase tracking-[0.25em] text-gray-500 dark:text-gray-400">
+      <div className="
+        mt-3
+        text-[12px]
+        font-medium
+        uppercase
+        tracking-[0.2em]
+        text-gray-500
+        dark:text-gray-400
+      ">
         {isGalley ? 'Galley' : 'Shop'}
       </div>
 
