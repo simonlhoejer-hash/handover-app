@@ -9,16 +9,17 @@ import Placeholder from '@tiptap/extension-placeholder'
 type Props = {
   value: string
   onChange: (value: string) => void
+  placeholder?: string // ✅ NY
 }
 
-export default function HandoverEditor({ value, onChange }: Props) {
+export default function HandoverEditor({ value, onChange, placeholder }: Props) {
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
       Placeholder.configure({
-        placeholder: `Hjælp den næste vagt 👇
+        placeholder: placeholder || `Hjælp den næste vagt 👇
 
 Hvad er anderledes i dag?
 Hvad mangler at blive lavet?
@@ -45,19 +46,17 @@ Skriv hvor tingene står.`,
       if (!html) return
 
       const updated = html
-        // Første bogstav
         .replace(/^<p>([a-zæøå])/, (_, letter) =>
           `<p>${letter.toUpperCase()}`
         )
-        // Efter punktum, ! eller ?
         .replace(/([.!?]\s+)([a-zæøå])/g, (_, punc, letter) =>
           `${punc}${letter.toUpperCase()}`
         )
 
       if (updated !== html) {
-       editor.commands.setContent(updated, {
-  emitUpdate: false,
-})
+        editor.commands.setContent(updated, {
+          emitUpdate: false,
+        })
       }
     }
 
@@ -155,6 +154,7 @@ Skriv hvor tingene står.`,
         spellCheck={true}
         autoCorrect="on"
         autoComplete="on"
+        autoCapitalize="sentences"
         className="
           w-full
           box-border
