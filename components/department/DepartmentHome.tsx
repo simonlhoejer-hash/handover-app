@@ -140,16 +140,22 @@ return (
 <Link
   key={item}
   href={`${basePath}/${encodeURIComponent(item)}`}
- className="
+className="
   block
   rounded-2xl
   p-4
   h-[108px]
   flex items-center justify-center
 
-  bg-[#162338]
-  border border-white/10
-  shadow-[0_12px_30px_rgba(0,0,0,0.35)]
+  bg-white
+  border border-gray-200
+  text-gray-900
+  shadow-[0_8px_20px_rgba(0,0,0,0.06)]
+
+  dark:bg-[#162338]
+  dark:border-white/10
+  dark:text-white
+  dark:shadow-none
 
   transition-all duration-200
   hover:scale-[1.02]
@@ -159,7 +165,7 @@ return (
   <div className="flex flex-col items-center text-center space-y-2.5">
 
     {/* TITLE */}
-    <h2 className="text-lg font-semibold text-white">
+    <h2 className="text-lg font-semibold">
       {item}
     </h2>
 
@@ -183,7 +189,7 @@ return (
     )}
 
 {/* INFO */}
-<div className="text-sm text-white/70">
+<div className="text-sm text-gray-500 dark:text-white/70">
 
   {info?.lastDate ? (
     <div className="flex items-center justify-center gap-2">
