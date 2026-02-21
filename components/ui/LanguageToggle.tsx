@@ -21,16 +21,22 @@ export default function LanguageToggle() {
   return (
     <button
       onClick={() => setLang(isSwedish ? 'da' : 'sv')}
-      className={`
-        relative w-20 h-10
+      className="
+        relative
+        w-20 h-10
         rounded-full
-        cursor-pointer select-none
-        transition-all duration-300 ease-in-out
-        shadow-inner
-        ${isDark 
-          ? 'bg-gray-700 ring-1 ring-gray-600' 
-          : 'bg-gray-200 ring-1 ring-gray-300'}
-      `}
+        transition-all duration-300
+        active:scale-95
+
+        border border-black/5
+        bg-gray-100
+
+        dark:border-white/10
+        dark:bg-[#1d2e46]
+
+        shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)]
+        dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]
+      "
       aria-label="Skift sprog"
     >
       {/* Labels */}
@@ -38,9 +44,9 @@ export default function LanguageToggle() {
         <div className="w-1/2 flex items-center justify-center">
           <span
             className={`
-              transition-opacity duration-200
-              ${!isSwedish ? 'opacity-100' : 'opacity-40'}
-              ${isDark ? 'text-white' : 'text-gray-800'}
+              transition-all duration-200
+              ${!isSwedish ? 'opacity-100 text-gray-700' : 'opacity-40 text-gray-500'}
+              ${isDark ? 'dark:text-white' : ''}
             `}
           >
             DK
@@ -50,9 +56,9 @@ export default function LanguageToggle() {
         <div className="w-1/2 flex items-center justify-center">
           <span
             className={`
-              transition-opacity duration-200
-              ${isSwedish ? 'opacity-100' : 'opacity-40'}
-              ${isDark ? 'text-white' : 'text-gray-800'}
+              transition-all duration-200
+              ${isSwedish ? 'opacity-100 text-gray-700' : 'opacity-40 text-gray-500'}
+              ${isDark ? 'dark:text-white' : ''}
             `}
           >
             SE
@@ -60,16 +66,20 @@ export default function LanguageToggle() {
         </div>
       </div>
 
-      {/* Active ring */}
+      {/* Slider */}
       <span
         className={`
           absolute top-1 left-1
-          w-8 h-8 rounded-full
-          border-[2.5px]
-          transition-all duration-300 ease-in-out
-          ${isDark 
-            ? 'border-white' 
-            : 'border-gray-700 shadow-[0_0_4px_rgba(0,0,0,0.15)]'}
+          w-8 h-8
+          rounded-full
+          transition-all duration-300
+
+          bg-white
+          shadow-md
+
+          dark:bg-white
+          dark:shadow-lg
+
           ${isSwedish ? 'translate-x-10' : 'translate-x-0'}
         `}
       />

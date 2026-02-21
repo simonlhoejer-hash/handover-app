@@ -70,16 +70,36 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+    <div
+      className="
+        w-full
+        rounded-3xl
+        p-6 sm:p-8
+        transition-all duration-300
 
-      {/* ✅ NEW HEADER (mobil-venlig) */}
-      <div className="pb-4 mb-4 border-b border-gray-200 dark:border-gray-700">
+        bg-white
+        border border-black/5
+        shadow-[0_20px_40px_rgba(0,0,0,0.06)]
 
-        {/* Top row: Dato + Edit */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="px-3 py-1 text-xs font-medium rounded-full 
-                           bg-gray-100 text-gray-700 
-                           dark:bg-gray-700 dark:text-gray-300">
+        dark:bg-[#101c2f]
+        dark:border-white/10
+        dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)]
+      "
+    >
+      {/* HEADER */}
+      <div className="pb-6 mb-6 border-b border-black/5 dark:border-white/10">
+
+        <div className="flex items-center justify-between mb-4">
+
+          <span
+            className="
+              px-3 py-1
+              text-xs font-medium
+              rounded-full
+              bg-black/5 text-gray-700
+              dark:bg-white/10 dark:text-white/80
+            "
+          >
             {new Date(item.shift_date).toLocaleDateString(
               lang === 'sv' ? 'sv-SE' : 'da-DK'
             )}
@@ -88,39 +108,44 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
           {!isEditing && !item.read_by && (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-3 py-1 text-xs font-medium rounded-full 
-                         bg-gray-100 text-gray-700 
-                         dark:bg-gray-700 dark:text-gray-300
-                         hover:opacity-80 transition"
+              className="
+                px-3 py-1
+                text-xs font-medium
+                rounded-full
+                bg-black/5 text-gray-700
+                dark:bg-white/10 dark:text-white/80
+                hover:opacity-80 transition
+              "
             >
               {t.edit}
             </button>
           )}
         </div>
-{/* Centered names */}
-<div className="flex flex-col items-center gap-3 text-center">
 
-  <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
-    {item.author_name}
-  </div>
+        {/* Names */}
+        <div className="flex flex-col items-center gap-3 text-center">
 
-  <div className="text-gray-400 opacity-50">
-    <svg width="22" height="22" viewBox="0 0 24 24">
-      <path
-        d="M12 5v14M12 19l-5-5M12 19l5-5"
-        stroke="currentColor"
-        strokeWidth="2"
-        fill="none"
-        strokeLinecap="round"
-      />
-    </svg>
-  </div>
+          <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+            {item.author_name}
+          </div>
 
-  <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
-    {item.receiver_name}
-  </div>
+          <div className="text-gray-400 dark:text-white/30">
+            <svg width="22" height="22" viewBox="0 0 24 24">
+              <path
+                d="M12 5v14M12 19l-5-5M12 19l5-5"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
 
-</div>
+          <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+            {item.receiver_name}
+          </div>
+
+        </div>
       </div>
 
       {isEditing ? (
@@ -131,7 +156,14 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
             <button
               onClick={saveEdit}
               disabled={loading}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition"
+              className="
+                px-4 py-2
+                rounded-2xl
+                font-medium
+                bg-black text-white
+                dark:bg-white dark:text-black
+                transition active:scale-95
+              "
             >
               {t.save}
             </button>
@@ -141,7 +173,12 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
                 setNote(item.note)
                 setIsEditing(false)
               }}
-              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg text-sm"
+              className="
+                px-4 py-2
+                rounded-2xl
+                bg-black/5 text-gray-700
+                dark:bg-white/10 dark:text-white/80
+              "
             >
               {t.cancel}
             </button>
@@ -150,7 +187,14 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
       ) : (
         <>
           <div
-            className="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200"
+            className="
+              prose
+              dark:prose-invert
+              max-w-none
+              text-gray-800
+              dark:text-white/90
+              prose-p:leading-relaxed
+            "
             dangerouslySetInnerHTML={{ __html: item.note }}
           />
 
@@ -161,7 +205,12 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
                   key={url}
                   src={url}
                   onClick={() => setSelectedImage(url)}
-                  className="h-24 w-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition"
+                  className="
+                    h-24 w-full object-cover
+                    rounded-2xl
+                    cursor-pointer
+                    hover:opacity-80 transition
+                  "
                 />
               ))}
             </div>
@@ -169,11 +218,30 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
         </>
       )}
 
-      <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-4">
+      {/* Mark as read */}
+      <div className="border-t border-black/5 dark:border-white/10 mt-6 pt-4">
         {!item.read_by ? (
           <div className="flex gap-3">
             <input
-              className="w-full rounded-lg p-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm"
+              className="
+                w-full
+                rounded-2xl
+                px-4 py-3
+                transition
+
+                bg-gray-100
+                border border-black/5
+                text-gray-900
+
+                dark:bg-[#162338]
+                dark:border-white/10
+                dark:text-white
+
+                focus:outline-none
+                focus:ring-2
+                focus:ring-black/10
+                dark:focus:ring-white/20
+              "
               placeholder={t.firstNamePlaceholder}
               value={readName}
               onChange={(e) => setReadName(e.target.value)}
@@ -182,34 +250,59 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
             <button
               onClick={markAsRead}
               disabled={loading}
-              className="h-[40px] px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-sm transition whitespace-nowrap"
+              className="
+                h-[44px]
+                px-5
+                rounded-2xl
+                font-semibold
+                transition-all duration-200
+                active:scale-[0.97]
+
+                bg-black
+                text-white
+                shadow-md
+
+                dark:bg-white
+                dark:text-black
+                dark:shadow-lg
+
+                hover:opacity-90
+              "
             >
               {t.markAsRead}
             </button>
           </div>
         ) : (
-          <p className="text-green-600 text-sm font-medium">
+          <p className="text-emerald-600 text-sm font-medium">
             {t.readBy} {item.read_by}
           </p>
         )}
       </div>
 
-      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+      {/* Comments */}
+      <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/10 flex justify-center">
         <HandoverComments handoverId={item.id} />
       </div>
 
+      {/* Image modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          className="
+            fixed inset-0
+            backdrop-blur-md
+            bg-black/70
+            flex items-center justify-center
+            z-50
+            p-6
+          "
           onClick={() => setSelectedImage(null)}
         >
           <img
             src={selectedImage}
-            className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl"
+            className="max-h-[90vh] max-w-[90vw] rounded-3xl shadow-2xl"
           />
         </div>
       )}
-
     </div>
   )
 }

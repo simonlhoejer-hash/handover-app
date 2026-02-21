@@ -187,21 +187,21 @@ className="
           `}
         >
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-4">
-            <HandoverForm
-              name={name}
-              setName={setName}
-              receiver={receiver}
-              setReceiver={setReceiver}
-              date={date}
-              setDate={setDate}
-              note={note}
-              setNote={setNote}
-              images={images}
-              setImages={setImages}
-              loading={loading}
-              onSave={saveNote}
-              parti={department}
-            />
+<HandoverForm
+  name={name}
+  setName={setName}
+  receiver={receiver}
+  setReceiver={setReceiver}
+  date={date}
+  setDate={setDate}
+  note={note}
+  setNote={setNote}
+  images={images}
+  setImages={setImages}
+  loading={loading}
+  onSave={saveNote}
+  parti={department}
+/>
           </div>
         </div>
 

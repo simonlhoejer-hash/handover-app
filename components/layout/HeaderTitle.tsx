@@ -9,45 +9,64 @@ export default function HeaderTitle() {
   const isGalley = pathname.startsWith('/galley')
   const basePath = isGalley ? '/galley' : '/shop'
 
-  return (
-    <div className="w-full flex flex-col items-center py-5">
+return (
+  <div
+    className="
+      w-full
+      flex flex-col items-center
+      pt-6 pb-4
+    "
+  >
 
-      <Link href={basePath} className="flex items-center">
-        
-        {/* Light mode */}
-        <Image
-          src="/logo-light.svg"
-          alt="HandoverPro"
-          width={320}
-          height={80}
-          className="h-14 w-auto dark:hidden"
-          priority
-        />
+    <Link
+      href={basePath}
+      className="
+        flex items-center
+        transition-transform duration-200
+        active:scale-95
+      "
+    >
+      {/* Light */}
+      <Image
+        src="/logo-light.svg"
+        alt="HandoverPro"
+        width={320}
+        height={80}
+        className="h-12 sm:h-14 w-auto dark:hidden"
+        priority
+      />
 
-        {/* Dark mode */}
-        <Image
-          src="/logo-dark.svg"
-          alt="HandoverPro"
-          width={320}
-          height={80}
-          className="h-14 w-auto hidden dark:block"
-          priority
-        />
+      {/* Dark */}
+      <Image
+        src="/logo-dark.svg"
+        alt="HandoverPro"
+        width={320}
+        height={80}
+        className="h-12 sm:h-14 w-auto hidden dark:block"
+        priority
+      />
+    </Link>
 
-      </Link>
-
-      <div className="
+    <div
+      className="
         mt-3
-        text-[12px]
-        font-medium
+        px-4 py-1.5
+        rounded-full
+        text-[11px]
+        font-semibold
         uppercase
-        tracking-[0.2em]
-        text-gray-500
-        dark:text-gray-400
-      ">
-        {isGalley ? 'Galley' : 'Shop'}
-      </div>
+        tracking-[0.25em]
 
+        bg-black/5
+        text-gray-600
+
+        dark:bg-white/10
+        dark:text-white/70
+      "
+    >
+      {isGalley ? 'Galley' : 'Shop'}
     </div>
-  )
+
+  </div>
+)
 }

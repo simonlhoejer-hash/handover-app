@@ -18,10 +18,9 @@ export default function ImageUploader({
   parti,
   onUploadComplete,
 }: Props) {
-
   const { t } = useTranslation()
-const pathname = usePathname()
-const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
+  const pathname = usePathname()
+  const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
 
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -105,7 +104,6 @@ const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
       return
     }
 
-    // 🔥 Kun gem hvis ikke annulleret
     if (!cancelled) {
       onUploadComplete(data.publicUrl)
     }
@@ -116,17 +114,29 @@ const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
 
       <div className="flex items-center gap-4 flex-wrap">
 
+        {/* Upload button */}
         <label
           className="
-            px-4 py-2 rounded-lg cursor-pointer
-            bg-gray-200 hover:bg-gray-300
-            dark:bg-gray-700 dark:hover:bg-gray-600
-            text-sm font-medium
-            transition
+            px-5 py-2.5
+            rounded-2xl
+            text-sm font-semibold
+            cursor-pointer
+            transition-all duration-200
+            active:scale-95
+
+            bg-black
+            text-white
+            shadow-md
+
+            dark:bg-white
+            dark:text-black
+            dark:shadow-lg
+
+            hover:opacity-90
           "
         >
           Vælg fil
@@ -144,25 +154,34 @@ const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
               setPreviewUrl(objectUrl)
 
               uploadImage(file)
-
               e.target.value = ''
             }}
           />
         </label>
 
         {uploading && (
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-gray-500 dark:text-white/60">
             {t.uploading}
           </span>
         )}
 
+        {/* Preview */}
         {previewUrl && (
-          <div className="relative w-20 h-20">
+          <div className="relative w-24 h-24">
 
             <img
               src={previewUrl}
               alt="Preview"
-              className="w-20 h-20 object-cover rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm"
+              className="
+                w-24 h-24
+                object-cover
+                rounded-2xl
+
+                border border-black/5
+                shadow-[0_10px_25px_rgba(0,0,0,0.08)]
+
+                dark:border-white/10
+              "
             />
 
             {!uploading && (
@@ -174,10 +193,19 @@ const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
                 }}
                 className="
                   absolute -top-2 -right-2
-                  bg-red-500 text-white
-                  w-6 h-6 rounded-full
-                  text-xs flex items-center justify-center
-                  shadow
+                  w-7 h-7
+                  rounded-full
+                  flex items-center justify-center
+                  text-xs font-bold
+                  transition-all duration-200
+                  active:scale-90
+
+                  bg-black
+                  text-white
+                  shadow-md
+
+                  dark:bg-white
+                  dark:text-black
                 "
               >
                 ✕
@@ -185,7 +213,15 @@ const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
             )}
 
             {uploading && (
-              <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center text-white text-xs">
+              <div
+                className="
+                  absolute inset-0
+                  rounded-2xl
+                  bg-black/60
+                  flex items-center justify-center
+                  text-white text-xs font-medium
+                "
+              >
                 ...
               </div>
             )}
@@ -195,7 +231,7 @@ const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
 
       </div>
 
-      <p className="text-xs text-gray-500 dark:text-gray-400">
+      <p className="text-xs text-gray-500 dark:text-white/50">
         Maks 5MB · Kun JPG eller PNG
       </p>
 

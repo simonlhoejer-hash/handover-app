@@ -102,8 +102,9 @@ export default function DepartmentHome({
   }, [department, items])
 
 return (
-  <main className="px-2 py-6 max-w-5xl mx-auto">
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <main className="px-4 py-6 max-w-5xl mx-auto">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
       {[...items]
         .sort((a, b) => {
           const aInfo = status[a]
@@ -131,49 +132,96 @@ return (
         })
         .map((item) => {
           const info = status[item]
-
           const hasNotes = info?.hasNotes
           const isRead = hasNotes && !!info?.readBy
           const isUnread = hasNotes && !info?.readBy
 
           return (
-            <Link
-              key={item}
-              href={`${basePath}/${encodeURIComponent(item)}`}
-              className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition hover:shadow-lg"
-            >
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">
-                  {item}
-                </h2>
+<Link
+  key={item}
+  href={`${basePath}/${encodeURIComponent(item)}`}
+ className="
+  block
+  rounded-2xl
+  p-4
+  h-[108px]
+  flex items-center justify-center
 
-                {loading && (
-                  <span className="text-gray-400 text-sm">
-                    …
-                  </span>
-                )}
+  bg-[#162338]
+  border border-white/10
+  shadow-[0_12px_30px_rgba(0,0,0,0.35)]
 
-                {!loading && !hasNotes && (
-                  <span className="text-red-600 text-sm font-semibold">
-                    {t.missing}
-                  </span>
-                )}
+  transition-all duration-200
+  hover:scale-[1.02]
+  active:scale-[0.98]
+"
+>
+  <div className="flex flex-col items-center text-center space-y-2.5">
 
-                {!loading && isUnread && (
-                  <span className="text-yellow-600 text-sm font-semibold">
-                    {t.pending}
-                  </span>
-                )}
+    {/* TITLE */}
+    <h2 className="text-lg font-semibold text-white">
+      {item}
+    </h2>
 
-                {!loading && isRead && (
-                  <span className="text-green-600 text-sm font-semibold">
-                    {t.read}
-                  </span>
-                )}
-              </div>
-            </Link>
+    {/* STATUS */}
+    {!hasNotes && (
+      <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-500/15 text-red-400">
+        {t.missing}
+      </span>
+    )}
+
+    {hasNotes && !info?.readBy && (
+      <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-400">
+        {t.pending}
+      </span>
+    )}
+
+    {hasNotes && info?.readBy && (
+      <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/20 text-emerald-400">
+        {t.read}
+      </span>
+    )}
+
+{/* INFO */}
+<div className="text-sm text-white/70">
+
+  {info?.lastDate ? (
+    <div className="flex items-center justify-center gap-2">
+
+      {info?.receiverName && !info?.readBy && (
+        <span className="text-base font-semibold text-yellow-400">
+          {info.receiverName}
+        </span>
+      )}
+
+      {info?.readBy && (
+        <span className="text-base font-semibold text-emerald-400">
+          {info.readBy}
+        </span>
+      )}
+
+      {(info?.receiverName || info?.readBy) && (
+        <span className="opacity-40">·</span>
+      )}
+
+      <span className="text-sm opacity-70">
+        {formatDate(info.lastDate, lang)}
+      </span>
+
+    </div>
+  ) : (
+    <div className="text-xs opacity-50">
+      {t.noHandover}
+    </div>
+  )}
+
+</div>
+
+  </div>
+</Link>
           )
         })}
+
     </div>
   </main>
 )
@@ -220,8 +268,7 @@ return (
               href={`${basePath}/${encodeURIComponent(item)}`}
               className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition hover:shadow-lg"
             >
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">
+<div className="flex justify-between items-start">                <h2 className="text-lg font-semibold">
                   {item}
                 </h2>
 

@@ -43,31 +43,84 @@ export default function IdeasPage({ department }: { department: 'shop' | 'galley
     setContent('')
     setLoading(false)
 
-    await fetchIdeas() // 🔥 vigtig
+    await fetchIdeas()
   }
 
   return (
-    <main className="px-4 py-6 max-w-4xl mx-auto space-y-8">
+    <main className="px-4 py-8 max-w-4xl mx-auto space-y-10">
 
-      <h1 className="text-2xl font-semibold">
+      <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
         Idé parkering
       </h1>
 
       {/* Opret idé */}
-      <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow space-y-4">
+      <div
+        className="
+          w-full
+          rounded-3xl
+          p-6 sm:p-8
+          transition-all duration-300
+
+          bg-white
+          border border-black/5
+          shadow-[0_20px_40px_rgba(0,0,0,0.06)]
+
+          dark:bg-[#162338]
+          dark:border-white/10
+          dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)]
+
+          space-y-5
+        "
+      >
 
         <input
           placeholder="Titel på idé"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border dark:bg-gray-900"
+          className="
+            w-full
+            rounded-2xl
+            px-4 py-3
+            transition
+
+            bg-gray-100
+            text-gray-900
+            border border-black/5
+
+            dark:bg-[#1d2e46]
+            dark:text-white
+            dark:border-white/10
+
+            focus:outline-none
+            focus:ring-2
+            focus:ring-black/10
+            dark:focus:ring-white/20
+          "
         />
 
         <input
           placeholder="Dit navn"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border dark:bg-gray-900"
+          className="
+            w-full
+            rounded-2xl
+            px-4 py-3
+            transition
+
+            bg-gray-100
+            text-gray-900
+            border border-black/5
+
+            dark:bg-[#1d2e46]
+            dark:text-white
+            dark:border-white/10
+
+            focus:outline-none
+            focus:ring-2
+            focus:ring-black/10
+            dark:focus:ring-white/20
+          "
         />
 
         <HandoverEditor
@@ -83,7 +136,25 @@ Er det drift, arbejdsgang eller kundeoplevelse?`}
         <button
           onClick={handleSave}
           disabled={loading}
-          className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition"
+          className="
+            w-full
+            py-3
+            rounded-2xl
+            font-semibold
+            transition-all duration-200
+            active:scale-[0.98]
+
+            bg-black
+            text-white
+            shadow-md
+
+            dark:bg-white
+            dark:text-black
+            dark:shadow-lg
+
+            hover:opacity-90
+            disabled:opacity-50
+          "
         >
           {loading ? 'Gemmer...' : 'Gem idé'}
         </button>
@@ -91,30 +162,53 @@ Er det drift, arbejdsgang eller kundeoplevelse?`}
       </div>
 
       {/* Liste */}
-      <div className="space-y-4">
+      <div className="space-y-5">
+
         {ideas.length === 0 && (
-          <p className="text-gray-500">Ingen idéer endnu</p>
+          <p className="text-gray-500 dark:text-white/50">
+            Ingen idéer endnu
+          </p>
         )}
 
         {ideas.map((idea) => (
           <div
             key={idea.id}
-            className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow"
+            className="
+              rounded-3xl
+              p-6
+              transition-all duration-300
+
+              bg-white
+              border border-black/5
+              shadow-[0_15px_40px_rgba(0,0,0,0.05)]
+
+              dark:bg-[#162338]
+              dark:border-white/10
+              dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)]
+            "
           >
-            <h2 className="font-semibold text-lg">
+            <h2 className="font-semibold text-lg text-gray-900 dark:text-white">
               {idea.title}
             </h2>
 
             <div
-              className="text-sm text-gray-600 dark:text-gray-300 mt-2"
+              className="
+                prose
+                dark:prose-invert
+                max-w-none
+                text-gray-700
+                dark:text-white/90
+                mt-3
+              "
               dangerouslySetInnerHTML={{ __html: idea.description }}
             />
 
-            <div className="mt-3 text-xs text-gray-400">
+            <div className="mt-4 text-xs text-gray-500 dark:text-white/50">
               Af {idea.author} · {new Date(idea.created_at).toLocaleDateString()}
             </div>
           </div>
         ))}
+
       </div>
 
     </main>

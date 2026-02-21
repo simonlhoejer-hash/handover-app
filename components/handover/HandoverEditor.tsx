@@ -9,7 +9,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 type Props = {
   value: string
   onChange: (value: string) => void
-  placeholder?: string // ✅ NY
+  placeholder?: string
 }
 
 export default function HandoverEditor({ value, onChange, placeholder }: Props) {
@@ -18,18 +18,20 @@ export default function HandoverEditor({ value, onChange, placeholder }: Props) 
     extensions: [
       StarterKit,
       Underline,
-      Placeholder.configure({
-        placeholder: placeholder || `Hjælp den næste vagt 👇
+Placeholder.configure({
+  placeholder:
+    placeholder ||
+    `Hjælp den næste vagt 👇
 
 Hvad er anderledes i dag?
 Hvad mangler at blive lavet?
 Er der noget kritisk?
 Skriv tal og mængder.
 Skriv hvor tingene står.`,
-        emptyEditorClass: 'is-editor-empty',
-      }),
-    ],
-    content: value || '',
+  emptyEditorClass: 'is-editor-empty',
+}),
+],
+content: value || '',
     immediatelyRender: false,
     editable: true,
     onUpdate: ({ editor }) => {
@@ -37,37 +39,35 @@ Skriv hvor tingene står.`,
     },
   })
 
-  // 🔥 Word-style auto capitalization
-  useEffect(() => {
-    if (!editor) return
+useEffect(() => {
+  if (!editor) return;
 
-    const handler = () => {
-      const html = editor.getHTML()
-      if (!html) return
+  const handler = () => {
+    const html = editor.getHTML();
+    if (!html) return;
 
-      const updated = html
-        .replace(/^<p>([a-zæøå])/, (_, letter) =>
-          `<p>${letter.toUpperCase()}`
-        )
-        .replace(/([.!?]\s+)([a-zæøå])/g, (_, punc, letter) =>
-          `${punc}${letter.toUpperCase()}`
-        )
+    const updated = html
+      .replace(/^<p>([a-zæøå])/, (_, letter) =>
+        `<p>${letter.toUpperCase()}`
+      )
+      .replace(/([.!?]\s+)([a-zæøå])/g, (_, punc, letter) =>
+        `${punc}${letter.toUpperCase()}`
+      );
 
-      if (updated !== html) {
-        editor.commands.setContent(updated, {
-          emitUpdate: false,
-        })
-      }
+    if (updated !== html) {
+      editor.commands.setContent(updated, {
+        emitUpdate: false,
+      });
     }
+  };
 
-    editor.on('update', handler)
+  editor.on('update', handler);
 
-    return () => {
-      editor.off('update', handler)
-    }
-  }, [editor])
+  return () => {
+    editor.off('update', handler);
+  };
+}, [editor]);
 
-  // Sync external value
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
       editor.commands.setContent(value || '')
@@ -77,29 +77,44 @@ Skriv hvor tingene står.`,
   if (!editor) return null
 
   const btn = (active: boolean) =>
-    `px-2 py-1.5 text-sm rounded-md transition ${
-      active
-        ? 'bg-emerald-600 text-white'
-        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-    }`
+    `
+      px-3 py-1.5
+      text-sm
+      rounded-full
+      transition-all duration-200
+      active:scale-95
+      ${
+        active
+          ? 'bg-black text-white dark:bg-white dark:text-black'
+          : 'bg-black/5 text-gray-700 dark:bg-white/10 dark:text-white/80'
+      }
+    `
 
   return (
-    <div className="
-      w-full
-      box-border
-      border 
-      border-gray-300 dark:border-gray-700 
-      rounded-xl 
-      bg-white dark:bg-gray-900 
-      transition
-    ">
+    <div
+      className="
+        w-full
+        rounded-3xl
+        transition-all duration-300
+
+        bg-white
+        border border-black/5
+        shadow-[0_15px_40px_rgba(0,0,0,0.05)]
+
+        dark:bg-[#162338]
+        dark:border-white/10
+        dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)]
+      "
+    >
 
       {/* Toolbar */}
-      <div className="
-        flex flex-wrap items-center gap-1 px-3 py-2 
-        border-b border-gray-200 dark:border-gray-700 
-        bg-gray-100 dark:bg-gray-800
-      ">
+      <div
+        className="
+          flex flex-wrap items-center gap-2
+          px-4 py-3
+          border-b border-black/5 dark:border-white/10
+        "
+      >
 
         <button
           type="button"
@@ -125,7 +140,7 @@ Skriv hvor tingene står.`,
           U
         </button>
 
-        <div className="w-px h-6 bg-gray-400 mx-2" />
+        <div className="w-px h-6 bg-black/10 dark:bg-white/10 mx-1" />
 
         <button
           type="button"
@@ -146,21 +161,22 @@ Skriv hvor tingene står.`,
         >
           1. Liste
         </button>
+
       </div>
 
       {/* Editor */}
       <EditorContent
         editor={editor}
-        spellCheck={true}
+        spellCheck
         autoCorrect="on"
         autoComplete="on"
         autoCapitalize="sentences"
         className="
           w-full
-          box-border
-          p-4
+          px-6 py-5
           min-h-[200px]
-          text-gray-900 dark:text-gray-100
+          text-gray-900
+          dark:text-white
           outline-none
 
           [&_.ProseMirror]:w-full
@@ -169,6 +185,7 @@ Skriv hvor tingene står.`,
           [&_.ProseMirror]:break-words
         "
       />
+
     </div>
   )
 }

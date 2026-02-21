@@ -27,8 +27,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0f172a',
-}
+themeColor: '#0f1b2d'}
 
 export default function RootLayout({
   children,
@@ -36,9 +35,19 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="da" suppressHydrationWarning>
-      <body className="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors">
-        <Providers>
+<html lang="da" suppressHydrationWarning className="h-full">
+  <body
+  className="
+    min-h-screen
+    bg-[#f8fafc]
+    text-gray-900
+
+    dark:bg-[#0f1b2d]
+    dark:text-white
+
+    transition-colors
+  "
+>        <Providers>
           <LanguageProvider>
             <ClientLayout>
               {children}

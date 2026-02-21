@@ -20,8 +20,23 @@ const isShop = pathname.startsWith('/shop')
       {/* Burger */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-4 left-4 z-50 h-10 w-10 flex items-center justify-center rounded-xl bg-white/90 text-gray-900 shadow-lg backdrop-blur border border-gray-200 dark:bg-gray-800/90 dark:text-white dark:border-gray-700 transition active:scale-95"
-        aria-label="Åbn menu"
+className="
+  fixed top-4 left-4 z-50
+  h-10 w-10
+  flex items-center justify-center
+  rounded-2xl
+  transition-all duration-200
+  active:scale-95
+
+  bg-white/80
+  border border-black/5
+  backdrop-blur-xl
+  shadow-md
+
+  dark:bg-[#0f1b2d]/80
+  dark:border-white/10
+  dark:text-white
+"        aria-label="Åbn menu"
       >
         ☰
       </button>
@@ -36,16 +51,24 @@ const isShop = pathname.startsWith('/shop')
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-80 z-50 
-        bg-white dark:bg-gray-900 
-        border-r border-gray-200 dark:border-gray-800 
-        shadow-2xl 
-        transform transition-transform duration-300 ease-in-out 
-        flex flex-col
-        ${open ? 'translate-x-0' : '-translate-x-full'}`}
+className={`
+  fixed top-0 left-0 h-screen w-80 z-50
+  transform transition-transform duration-300 ease-in-out
+  flex flex-col
+
+  bg-white
+  border-r border-black/5
+  shadow-[0_25px_60px_rgba(0,0,0,0.15)]
+
+  dark:bg-[#162338]
+  dark:border-white/10
+  dark:shadow-[0_25px_60px_rgba(0,0,0,0.7)]
+
+  ${open ? 'translate-x-0' : '-translate-x-full'}
+`}
       >
         {/* Header i menu */}
-<div className="px-6 pt-10 pb-6 border-b border-gray-200 dark:border-gray-800 flex justify-center">
+<div className="px-6 pt-10 pb-6 border-b border-black/5 dark:border-white/10 flex justify-center">
   <Link
     href={isGalley ? '/galley' : '/shop'}
     onClick={() => setOpen(false)}
@@ -79,11 +102,23 @@ const isShop = pathname.startsWith('/shop')
 <Link
   href={isGalley ? '/galley' : '/shop'}
   onClick={() => setOpen(false)}
-  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-    pathname === (isGalley ? '/galley' : '/shop')
-      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-  }`}
+className={`block px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${
+  pathname === (isGalley ? '/galley' : '/shop')
+    ? `
+      bg-black/5
+      text-gray-900
+
+      dark:bg-white/10
+      dark:text-white
+    `
+    : `
+      text-gray-600
+      hover:bg-black/5
+
+      dark:text-white/60
+      dark:hover:bg-white/10
+    `
+}`}
 >
   {isGalley ? t.partier : t.outlets}
 </Link>
@@ -92,11 +127,23 @@ const isShop = pathname.startsWith('/shop')
 <Link
   href={isGalley ? '/galley/afdelingsmoede' : '/shop/afdelingsmoede'}
   onClick={() => setOpen(false)}
-  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-    pathname.includes('/afdelingsmoede')
-      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-  }`}
+className={`block px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${
+  pathname === (isGalley ? '/galley' : '/shop')
+    ? `
+      bg-black/5
+      text-gray-900
+
+      dark:bg-white/10
+      dark:text-white
+    `
+    : `
+      text-gray-600
+      hover:bg-black/5
+
+      dark:text-white/60
+      dark:hover:bg-white/10
+    `
+}`}
 >
   {isGalley ? t.galleyMoede : t.shopMoede}
 </Link>
@@ -105,11 +152,23 @@ const isShop = pathname.startsWith('/shop')
 <Link
   href={isGalley ? '/galley/kalender' : '/shop/kalender'}
   onClick={() => setOpen(false)}
-  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-    pathname.includes('/kalender')
-      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-  }`}
+className={`block px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${
+  pathname === (isGalley ? '/galley' : '/shop')
+    ? `
+      bg-black/5
+      text-gray-900
+
+      dark:bg-white/10
+      dark:text-white
+    `
+    : `
+      text-gray-600
+      hover:bg-black/5
+
+      dark:text-white/60
+      dark:hover:bg-white/10
+    `
+}`}
 >
   {t.kalender}
 </Link>
@@ -118,11 +177,23 @@ const isShop = pathname.startsWith('/shop')
 <Link
   href={isGalley ? '/galley/ideas' : '/shop/ideas'}
   onClick={() => setOpen(false)}
-  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-    pathname.includes('/ideas')
-      ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white'
-      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-  }`}
+className={`block px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${
+  pathname === (isGalley ? '/galley' : '/shop')
+    ? `
+      bg-black/5
+      text-gray-900
+
+      dark:bg-white/10
+      dark:text-white
+    `
+    : `
+      text-gray-600
+      hover:bg-black/5
+
+      dark:text-white/60
+      dark:hover:bg-white/10
+    `
+}`}
 >
   Idé parkering
 </Link>
@@ -130,7 +201,7 @@ const isShop = pathname.startsWith('/shop')
 
 
 {/* Bottom section */}
-<div className="mt-auto px-6 pb-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+<div className="mt-auto px-6 pb-8 pt-6 border-t border-black/5 dark:border-white/10">
   <div className="flex items-center justify-center gap-6">
     <LanguageToggle />
     <ThemeToggle />
