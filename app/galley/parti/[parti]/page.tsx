@@ -1,4 +1,4 @@
-import HandoverPage from '@/components/handover/HandoverPage'
+import PartiTabs from '@/components/department/PartiTabs'
 
 export default async function Page({
   params,
@@ -7,10 +7,5 @@ export default async function Page({
 }) {
   const { parti } = await params
 
-  return (
-<HandoverPage
-  department="galley"
-  itemName={decodeURIComponent(parti)}
-    />
-  )
+  return <PartiTabs parti={decodeURIComponent(parti)} />
 }

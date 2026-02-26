@@ -110,11 +110,11 @@ return (
           const aInfo = status[a]
           const bInfo = status[b]
 
-          const getPriority = (info: any) => {
-            if (!info?.hasNotes) return 1
-            if (info?.hasNotes && !info?.readBy) return 2
-            return 3
-          }
+const getPriority = (info: any) => {
+  if (info?.hasNotes && !info?.readBy) return 1 // 🟡 Afventer
+  if (info?.hasNotes && info?.readBy) return 2  // 🟢 Læst
+  return 3                                      // 🔴 Mangler
+}
 
           const priorityDiff =
             getPriority(aInfo) - getPriority(bInfo)
@@ -141,7 +141,6 @@ return (
   key={item}
   href={`${basePath}/${encodeURIComponent(item)}`}
 className="
-  block
   rounded-2xl
   p-4
   h-[108px]
@@ -240,11 +239,11 @@ className="
     const aInfo = status[a]
     const bInfo = status[b]
 
-    const getPriority = (info: any) => {
-      if (!info?.hasNotes) return 1 // 🔴 Mangler
-      if (info?.hasNotes && !info?.readBy) return 2 // 🟡 Ulæst
-      return 3 // 🟢 Læst
-    }
+const getPriority = (info: any) => {
+  if (info?.hasNotes && !info?.readBy) return 1 // 🟡 Afventer
+  if (info?.hasNotes && info?.readBy) return 2  // 🟢 Læst
+  return 3                                      // 🔴 Mangler
+}
 
     const priorityDiff =
       getPriority(aInfo) - getPriority(bInfo)

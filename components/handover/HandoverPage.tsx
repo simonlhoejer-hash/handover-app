@@ -200,8 +200,7 @@ className="
   setImages={setImages}
   loading={loading}
   onSave={saveNote}
-  parti={department}
-/>
+parti={itemName}/>
           </div>
         </div>
 
