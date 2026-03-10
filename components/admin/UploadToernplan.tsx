@@ -43,20 +43,9 @@ const month = monthMap[sheetName]
 const sheet = workbook.Sheets[sheetName]
 const rows:any[] = XLSX.utils.sheet_to_json(sheet,{header:1})
 
-let currentHold:string | null = null
-
 for(let r=0;r<rows.length;r++){
 
 const row = rows[r]
-
-// AP kolonne
-const sectionCell =
-String(row[41] || '').trim().toLowerCase()
-
-if(sectionCell.includes('hold 1')) currentHold = 'Hold 1'
-if(sectionCell.includes('hold 2')) currentHold = 'Hold 2'
-if(sectionCell.includes('hold 3')) currentHold = 'Hold 3'
-if(sectionCell.includes('hold 4')) currentHold = 'Hold 4'
 
 // AT kolonne = navn
 const fullName =
@@ -64,11 +53,7 @@ String(row[45] || '').trim()
 
 if(!fullName) continue
 
-const firstName =
-fullName.split(" ")[0]
-
-// hvis ingen hold endnu → skip
-if(!currentHold) continue
+const name = fullName
 
 // AU → frem = dage
 for(let d=46; d<77; d++){
@@ -80,7 +65,7 @@ if(!raw) continue
 const value =
 String(raw).trim().toUpperCase()
 
-if(!(value === "A" || value.includes("DS")))
+if(!["A","+DS","-DS"].includes(value))
 continue
 
 const day = d-45
@@ -96,10 +81,9 @@ const date =
 
 rowsToInsert.push({
 date,
-name:firstName,
+name,
 status:value,
-department,
-section: currentHold
+department
 })
 
 }

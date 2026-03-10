@@ -1,5 +1,9 @@
+'use client'
+
+import { useState } from 'react'
 import { createHolidayEngine } from '@/lib/holidays/holidayEngine'
 import { isWorking } from '@/lib/utils/isWorkingDay'
+import CrewModal from '@/components/calendar/CrewModal'
 
 type CrewMember = {
   date: string
@@ -15,55 +19,31 @@ type Props = {
 
 export default function CalendarInfo({ selectedDate, crew }: Props) {
 
+  const [selectedPerson,setSelectedPerson] = useState<CrewMember | null>(null)
+
   const holidayEngine =
   createHolidayEngine(selectedDate.getFullYear())
 
   const dateString =
   `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`
 
-  const workingCrew =
-  crew.filter((c)=>
-    c.date === dateString &&
-    isWorking(c.status)
-  )
-
-  const sections: Record<string, CrewMember[]> = {}
-
-  workingCrew.forEach((c)=>{
-
-    const section = c.section || "Andet"
-
-    if(!sections[section]){
-      sections[section] = []
-    }
-
-    sections[section].push(c)
-
-  })
-
-  // find de 2 største hold
-  const activeHolds =
-  Object.entries(sections)
-  .sort((a,b)=> b[1].length - a[1].length)
-  .slice(0,2)
-  .map(([section])=>section)
-
-  // fordel alle personer på de 2 hold
-  const holdA: CrewMember[] = []
-  const holdB: CrewMember[] = []
-
-  workingCrew.forEach((person,index)=>{
-
-    if(index % 2 === 0){
-      holdA.push(person)
-    }else{
-      holdB.push(person)
-    }
-
-  })
+const workingCrew =
+crew
+.filter((c)=>
+  c.date === dateString &&
+  ["A","+DS"].includes(c.status?.trim())
+)
+.sort((a,b)=>a.name.localeCompare(b.name))
 
   const holiday =
   holidayEngine.get(selectedDate)
+
+  const firstNameCount: Record<string, number> = {}
+
+  workingCrew.forEach((c)=>{
+    const first = c.name.split(" ")[0]
+    firstNameCount[first] = (firstNameCount[first] || 0) + 1
+  })
 
   return (
 
@@ -85,51 +65,75 @@ export default function CalendarInfo({ selectedDate, crew }: Props) {
 </p>
 )}
 
-<div className="mt-6 space-y-8">
-
-<div className="text-center">
-
-<p className="font-semibold text-gray-800 dark:text-white mb-3">
-{activeHolds[0]}
+{workingCrew.length === 0 && (
+<p className="text-gray-500 mt-4 text-center">
+Ingen på arbejde
 </p>
+)}
 
-<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 justify-items-center">
+{workingCrew.length > 0 && (
 
-{holdA.map((c,i)=>(
+<div className="mt-6">
+
+<div className="
+grid
+grid-cols-2
+sm:grid-cols-3
+md:grid-cols-4
+lg:grid-cols-5
+gap-2
+justify-items-center
+">
+
+{workingCrew.map((c,i)=>{
+
+const parts = c.name.split(" ")
+const first = parts[0]
+const lastInitial = parts[1] ? parts[1][0] : ""
+
+const displayName =
+firstNameCount[first] > 1
+? `${first} ${lastInitial}`
+: first
+
+return (
+
 <p
-key={i}
-className="text-gray-700 dark:text-white/80 px-2 py-1 rounded-lg bg-gray-100 dark:bg-[#1d2e46]"
+key={`${c.name}-${i}`}
+onClick={()=>setSelectedPerson(c)}
+className="
+cursor-pointer
+text-gray-700
+dark:text-white/80
+w-28
+text-center
+py-1
+rounded-lg
+bg-gray-100
+dark:bg-[#1d2e46]
+hover:bg-gray-200
+dark:hover:bg-[#2a3e5e]
+transition
+"
 >
-{c.name}
-</p>
-))}
-
-</div>
-
-</div>
-
-<div className="text-center">
-
-<p className="font-semibold text-gray-800 dark:text-white mb-3">
-{activeHolds[1]}
+{displayName}
 </p>
 
-<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 justify-items-center">
+)
 
-{holdB.map((c,i)=>(
-<p
-key={i}
-className="text-gray-700 dark:text-white/80 px-2 py-1 rounded-lg bg-gray-100 dark:bg-[#1d2e46]"
->
-{c.name}
-</p>
-))}
+})}
 
 </div>
 
 </div>
 
-</div>
+)}
+
+<CrewModal
+person={selectedPerson}
+selectedDate={selectedDate}
+onClose={()=>setSelectedPerson(null)}
+/>
 
 </section>
 

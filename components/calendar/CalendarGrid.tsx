@@ -38,7 +38,7 @@ export default function CalendarGrid({
 
 if(!date){
 return(
-<div key={index} className="aspect-square rounded-2xl bg-gray-100 dark:bg-[#1d2e46]"/>
+<div key={index} className="aspect-square rounded-xl bg-gray-100 dark:bg-[#1d2e46]"/>
 )
 }
 
@@ -51,8 +51,13 @@ c.date === dateString &&
 isWorking(c.status)
 )
 
-const shiftDay =
-isShiftDay(date)
+const shiftCount =
+crew.filter((c)=>
+  c.date === dateString &&
+  (c.status?.includes('+DS') || c.status?.includes('-DS'))
+).length
+
+const shiftDay = shiftCount >= 3
 
 const isSelected =
 selectedDate.toDateString() === date.toDateString()
@@ -64,7 +69,7 @@ key={index}
 onClick={()=>setSelectedDate(date)}
 className={`
 aspect-square
-rounded-2xl
+rounded-xl
 flex flex-col
 items-center
 justify-center
@@ -84,19 +89,13 @@ ${isSelected ? "ring-2 ring-black dark:ring-white scale-105" : ""}
 `}
 >
 
-<span>
+<span className="font-medium">
 {date.getDate()}
 </span>
 
-{workingCrew.length>0 &&(
-<span className="text-[10px] opacity-70 mt-1">
-👨‍🍳 {workingCrew.length}
-</span>
-)}
-
 {shiftDay && (
-<span className="text-[10px] mt-1">
-🔄
+<span className="text-[10px] mt-1 font-semibold">
+Skiftedag
 </span>
 )}
 
