@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export function useCrewSchedule(year:number, month:number){
+export function useCrewSchedule(
+  year:number,
+  month:number,
+  department:'galley' | 'shop'
+){
 
   const [crew,setCrew] = useState<any[]>([])
 
@@ -21,6 +25,7 @@ export function useCrewSchedule(year:number, month:number){
       const { data, error } = await supabase
         .from('crew_schedule')
         .select('*')
+        .eq('department', department)   // 👈 vigtigt
         .gte('date',start)
         .lte('date',end)
 
@@ -37,7 +42,7 @@ export function useCrewSchedule(year:number, month:number){
 
     fetchCrew()
 
-  },[year,month])
+  },[year,month,department])
 
   return crew
 

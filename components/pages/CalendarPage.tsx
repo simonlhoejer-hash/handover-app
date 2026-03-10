@@ -8,7 +8,11 @@ import CalendarGrid from '@/components/calendar/CalendarGrid'
 import CalendarInfo from '@/components/calendar/CalendarInfo'
 import { useCrewSchedule } from '@/lib/hooks/useCrewSchedule'
 
-export default function CalendarPage(){
+type Props = {
+  department: 'galley' | 'shop'
+}
+
+export default function CalendarPage({ department }: Props){
 
 const today = new Date()
 
@@ -32,7 +36,9 @@ for(let i=0;i<startDay;i++) days.push(null)
 for(let d=1;d<=daysInMonth;d++)
 days.push(new Date(year,month,d))
 
-const crew = useCrewSchedule(year,month)
+
+// 👇 nu filtrerer vi på department
+const crew = useCrewSchedule(year,month,department)
 
 return(
 

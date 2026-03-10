@@ -1,10 +1,10 @@
 import { isWorking } from '@/lib/utils/isWorkingDay'
-import { isShiftDay } from '@/lib/utils/isShiftDay'
 
 type CrewMember = {
   date: string
   name: string
   status: string
+  department?: string
   section?: string
 }
 
@@ -12,7 +12,7 @@ type Props = {
   days: (Date | null)[]
   crew: CrewMember[]
   selectedDate: Date
-  setSelectedDate: (date:Date)=>void
+  setSelectedDate: (date: Date) => void
 }
 
 export default function CalendarGrid({
@@ -45,12 +45,16 @@ return(
 const dateString =
 `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
 
+
+// crew på arbejde den dag
 const workingCrew =
 crew.filter((c)=>
 c.date === dateString &&
 isWorking(c.status)
 )
 
+
+// find skiftedag (min 3 +DS eller -DS)
 const shiftCount =
 crew.filter((c)=>
   c.date === dateString &&
@@ -59,8 +63,10 @@ crew.filter((c)=>
 
 const shiftDay = shiftCount >= 3
 
+
 const isSelected =
 selectedDate.toDateString() === date.toDateString()
+
 
 return(
 
@@ -80,7 +86,7 @@ transition-all
 ${
 shiftDay
 ? "bg-blue-200 text-blue-900 dark:bg-blue-900/40 dark:text-blue-200"
-: workingCrew.length>0
+: workingCrew.length > 0
 ? "bg-green-500/20 text-green-600"
 : "bg-gray-100 dark:bg-[#1d2e46]"
 }

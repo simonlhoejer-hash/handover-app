@@ -28,7 +28,7 @@ export default function Page(){
   for(let d=1;d<=daysInMonth;d++)
     days.push(new Date(year,month,d))
 
-  const crew = useCrewSchedule(year,month)
+  const crew = useCrewSchedule(year,month,'galley')
 
   return(
 
