@@ -110,11 +110,24 @@ export default function UploadMaterials() {
           className="w-full rounded-xl p-3 bg-gray-100 dark:bg-[#1d2e46]"
         />
 
-        <input
-          type="file"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-          className="w-full"
-        />
+        {/* PRO FILE UPLOAD */}
+        <label className="w-full flex items-center justify-between rounded-xl p-3 bg-gray-100 dark:bg-[#1d2e46] cursor-pointer">
+
+          <span className="text-sm truncate">
+            {file ? file.name : 'Vælg fil'}
+          </span>
+
+          <span className="px-3 py-1 rounded-lg bg-black text-white dark:bg-white dark:text-black text-sm">
+            Upload
+          </span>
+
+          <input
+            type="file"
+            className="hidden"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+
+        </label>
 
         <button
           onClick={handleUpload}

@@ -47,7 +47,6 @@ for(let r=0;r<rows.length;r++){
 
 const row = rows[r]
 
-// AT kolonne = navn
 const fullName =
 String(row[45] || '').trim()
 
@@ -55,7 +54,6 @@ if(!fullName) continue
 
 const name = fullName
 
-// AU → frem = dage
 for(let d=46; d<77; d++){
 
 const raw = row[d]
@@ -151,12 +149,25 @@ className="w-full rounded-xl p-3 bg-gray-100 dark:bg-[#1d2e46]"
 <option value="shop">Shop</option>
 </select>
 
+{/* PRO FILE SELECT */}
+<label className="w-full flex items-center justify-between rounded-xl p-3 bg-gray-100 dark:bg-[#1d2e46] cursor-pointer">
+
+<span className="text-sm truncate">
+{file ? file.name : "Vælg Excel fil"}
+</span>
+
+<span className="px-3 py-1 rounded-lg bg-black text-white dark:bg-white dark:text-black text-sm">
+Vælg
+</span>
+
 <input
 type="file"
 accept=".xlsx,.xls"
+className="hidden"
 onChange={(e)=>setFile(e.target.files?.[0] || null)}
-className="w-full"
 />
+
+</label>
 
 {loading && (
 <div className="w-full bg-gray-200 rounded-xl overflow-hidden">
