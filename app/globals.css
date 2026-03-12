@@ -121,4 +121,27 @@ input[type="date"] {
   color: #9ca3af; /* gray-400 */
   pointer-events: none;
   height: 0;
+
+/* ---------- GO NORDIC BRAND COLORS ---------- */
+
+:root {
+  --nordic-green: #3f7f7a;
+  --nordic-green-dark: #0f4f4a;
+  --nordic-green-soft: #e6f2f1;
+  --nordic-bg: #f3f5f6;
+}
+
+/* Utility classes */
+
+.bg-nordic {
+  background-color: var(--nordic-green);
+}
+
+.bg-nordic-soft {
+  background-color: var(--nordic-green-soft);
+}
+
+.text-nordic {
+  color: var(--nordic-green-dark);
+}
 }

@@ -7,8 +7,8 @@ import PageTracker from '@/components/statistics/PageTracker'
 import { Suspense } from 'react'
 
 export const metadata: Metadata = {
-  title: 'Handover',
-  description: 'Intern overlevering',
+  title: 'Go Nordic Crew',
+  description: 'Crew overlevering',
 
   icons: {
     icon: [
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Handover',
+    title: 'Crew Handover',
   },
 }
 
@@ -37,17 +37,17 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-<html lang="da" suppressHydrationWarning className="h-full">
-  <body
-  className="
-    min-h-screen
-    bg-[#f8fafc]
-    text-gray-900
-    dark:bg-[#0f1b2d]
-    dark:text-white
-    transition-colors
-  "
->
+    <html lang="da" suppressHydrationWarning className="h-full">
+      <body
+        className="
+          min-h-screen
+          bg-[#f8fafc]
+          text-gray-900
+          dark:bg-[#0f1b2d]
+          dark:text-white
+          transition-colors
+        "
+      >
 
         <Suspense fallback={null}>
           <PageTracker />

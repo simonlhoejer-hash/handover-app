@@ -11,27 +11,30 @@ type Props = {
 }
 
 export default function PartiTabs({ parti }: Props) {
-  const [page, setPage] = useState(0) // 0 = overlevering, 1 = materiale
+  const [page, setPage] = useState(0)
 
   return (
     <div className="w-full">
 
       {/* PAGE INDICATOR – MOBILE ONLY */}
       <div className="flex justify-center gap-2 mt-4 mb-4 md:hidden">
+
         <div
           className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
             page === 0
-              ? 'bg-gray-900 dark:bg-white scale-110'
-              : 'bg-gray-400/40 dark:bg-white/30'
+              ? 'bg-[#3f7f7a] scale-110'
+              : 'bg-gray-300 dark:bg-white/20'
           }`}
         />
+
         <div
           className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
             page === 1
-              ? 'bg-gray-900 dark:bg-white scale-110'
-              : 'bg-gray-400/40 dark:bg-white/30'
+              ? 'bg-[#3f7f7a] scale-110'
+              : 'bg-gray-300 dark:bg-white/20'
           }`}
         />
+
       </div>
 
       {/* SLIDER WRAPPER */}
@@ -49,6 +52,7 @@ export default function PartiTabs({ parti }: Props) {
             else if (info.offset.x > 80) setPage(0)
           }}
         >
+
           {/* OVERLEVERING */}
           <div className="w-1/2">
             <HandoverPage
@@ -64,11 +68,13 @@ export default function PartiTabs({ parti }: Props) {
               parti={parti}
             />
           </div>
+
         </motion.div>
 
       </div>
 
       {/* DESKTOP ARROWS */}
+
       {page === 0 && (
         <button
           onClick={() => setPage(1)}
@@ -79,14 +85,16 @@ export default function PartiTabs({ parti }: Props) {
             w-14 h-14
             items-center justify-center
             rounded-full
-            bg-white/80 dark:bg-white/10
+            bg-[#e6f2f1]
+            dark:bg-[#0f4f4a]/40
             backdrop-blur
             shadow-xl
+            hover:bg-[#d6e9e7]
             hover:scale-110
             transition
           "
         >
-          <ChevronRight className="w-7 h-7" />
+          <ChevronRight className="w-7 h-7 text-[#0f4f4a] dark:text-white" />
         </button>
       )}
 
@@ -100,14 +108,16 @@ export default function PartiTabs({ parti }: Props) {
             w-14 h-14
             items-center justify-center
             rounded-full
-            bg-white/80 dark:bg-white/10
+            bg-[#e6f2f1]
+            dark:bg-[#0f4f4a]/40
             backdrop-blur
             shadow-xl
+            hover:bg-[#d6e9e7]
             hover:scale-110
             transition
           "
         >
-          <ChevronLeft className="w-7 h-7" />
+          <ChevronLeft className="w-7 h-7 text-[#0f4f4a] dark:text-white" />
         </button>
       )}
 

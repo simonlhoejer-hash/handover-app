@@ -45,7 +45,7 @@ export default function DepartmentHome({
 
   useEffect(() => {
     const fetchStatus = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('handover_notes')
         .select(`
           parti,
@@ -57,11 +57,6 @@ export default function DepartmentHome({
         `)
         .eq('department', department)
         .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error(error)
-        return
-      }
 
       const RESET_DAYS = 6
       const result: StatusMap = {}
@@ -101,240 +96,140 @@ export default function DepartmentHome({
     fetchStatus()
   }, [department, items])
 
-return (
-  <main className="px-4 py-6 max-w-5xl mx-auto">
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-
-      {[...items]
-        .sort((a, b) => {
-          const aInfo = status[a]
-          const bInfo = status[b]
-
-const getPriority = (info: any) => {
-  if (info?.hasNotes && !info?.readBy) return 1 // 🟡 Afventer
-  if (info?.hasNotes && info?.readBy) return 2  // 🟢 Læst
-  return 3                                      // 🔴 Mangler
-}
-
-          const priorityDiff =
-            getPriority(aInfo) - getPriority(bInfo)
-
-          if (priorityDiff !== 0) return priorityDiff
-
-          const aDate = aInfo?.lastDate
-            ? new Date(aInfo.lastDate).getTime()
-            : 0
-          const bDate = bInfo?.lastDate
-            ? new Date(bInfo.lastDate).getTime()
-            : 0
-
-          return aDate - bDate
-        })
-        .map((item) => {
-          const info = status[item]
-          const hasNotes = info?.hasNotes
-          const isRead = hasNotes && !!info?.readBy
-          const isUnread = hasNotes && !info?.readBy
-
-          return (
-<Link
-  key={item}
-  href={`${basePath}/${encodeURIComponent(item)}`}
-className="
-  rounded-2xl
-  p-4
-  h-[108px]
-  flex items-center justify-center
-
-  bg-white
-  border border-gray-200
-  text-gray-900
-  shadow-[0_8px_20px_rgba(0,0,0,0.06)]
-
-  dark:bg-[#162338]
-  dark:border-white/10
-  dark:text-white
-  dark:shadow-none
-
-  transition-all duration-200
-  hover:scale-[1.02]
-  active:scale-[0.98]
-"
->
-  <div className="flex flex-col items-center text-center space-y-2.5">
-
-    {/* TITLE */}
-    <h2 className="text-lg font-semibold">
-      {item}
-    </h2>
-
-    {/* STATUS */}
-    {!hasNotes && (
-      <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-500/15 text-red-400">
-        {t.missing}
-      </span>
-    )}
-
-    {hasNotes && !info?.readBy && (
-      <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-400">
-        {t.pending}
-      </span>
-    )}
-
-    {hasNotes && info?.readBy && (
-      <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/20 text-emerald-400">
-        {t.read}
-      </span>
-    )}
-
-{/* INFO */}
-<div className="text-sm text-gray-500 dark:text-white/70">
-
-  {info?.lastDate ? (
-    <div className="flex items-center justify-center gap-2">
-
-      {info?.receiverName && !info?.readBy && (
-        <span className="text-base font-semibold text-yellow-400">
-          {info.receiverName}
-        </span>
-      )}
-
-      {info?.readBy && (
-        <span className="text-base font-semibold text-emerald-400">
-          {info.readBy}
-        </span>
-      )}
-
-      {(info?.receiverName || info?.readBy) && (
-        <span className="opacity-40">·</span>
-      )}
-
-      <span className="text-sm opacity-70">
-        {formatDate(info.lastDate, lang)}
-      </span>
-
-    </div>
-  ) : (
-    <div className="text-xs opacity-50">
-      {t.noHandover}
-    </div>
-  )}
-
-</div>
-
-  </div>
-</Link>
-          )
-        })}
-
-    </div>
-  </main>
-)
-
   return (
-    <main className="px-2 py-6 max-w-5xl mx-auto">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-{[...items]
-  .sort((a, b) => {
-    const aInfo = status[a]
-    const bInfo = status[b]
+    <main className="px-4 py-8 max-w-5xl mx-auto">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 
-const getPriority = (info: any) => {
-  if (info?.hasNotes && !info?.readBy) return 1 // 🟡 Afventer
-  if (info?.hasNotes && info?.readBy) return 2  // 🟢 Læst
-  return 3                                      // 🔴 Mangler
-}
+        {[...items]
+          .sort((a, b) => {
+            const aInfo = status[a]
+            const bInfo = status[b]
 
-    const priorityDiff =
-      getPriority(aInfo) - getPriority(bInfo)
+            const getPriority = (info: any) => {
+              if (info?.hasNotes && !info?.readBy) return 1
+              if (info?.hasNotes && info?.readBy) return 2
+              return 3
+            }
 
-    if (priorityDiff !== 0) return priorityDiff
+            const priorityDiff =
+              getPriority(aInfo) - getPriority(bInfo)
 
-    // Hvis samme status → sorter efter ældste først
-    const aDate = aInfo?.lastDate
-      ? new Date(aInfo.lastDate).getTime()
-      : 0
-    const bDate = bInfo?.lastDate
-      ? new Date(bInfo.lastDate).getTime()
-      : 0
+            if (priorityDiff !== 0) return priorityDiff
 
-    return aDate - bDate
-  })
-  .map((item) => {
-              const info = status[item]
+            const aDate = aInfo?.lastDate
+              ? new Date(aInfo.lastDate).getTime()
+              : 0
+            const bDate = bInfo?.lastDate
+              ? new Date(bInfo.lastDate).getTime()
+              : 0
 
-          const hasNotes = info?.hasNotes
-          const isRead = hasNotes && !!info.readBy
-          const isUnread = hasNotes && !info.readBy
+            return aDate - bDate
+          })
+          .map((item) => {
 
-          return (
-            <Link
-              key={item}
-              href={`${basePath}/${encodeURIComponent(item)}`}
-              className="block rounded-xl bg-white dark:bg-gray-800 shadow p-4 active:scale-[0.98] transition hover:shadow-lg"
-            >
-<div className="flex justify-between items-start">                <h2 className="text-lg font-semibold">
-                  {item}
-                </h2>
+            const info = status[item]
+            const hasNotes = info?.hasNotes
 
-                {!hasNotes && (
-                  <span className="text-red-600 text-sm font-semibold">
-                    {t.missing}
-                  </span>
-                )}
+            return (
+              <Link
+                key={item}
+                href={`${basePath}/${encodeURIComponent(item)}`}
+                className="
+                  rounded-xl
+                  p-5
+                  h-[110px]
 
-                {isUnread && (
-                  <span className="text-yellow-600 text-sm font-semibold">
-                    {t.pending}
-                  </span>
-                )}
+                  flex items-center justify-center
 
-                {isRead && (
-                  <span className="text-green-600 text-sm font-semibold">
-                    {t.read}
-                  </span>
-                )}
-              </div>
+                  bg-[#ffffff]
+                  border border-gray-200/70
 
-              <p className="text-sm text-gray-500 mt-2">
-                {info?.lastDate ? (
-                  <>
-                    {t.last}: {formatDate(info.lastDate, lang)}
+                  text-gray-900
+                  shadow-sm
 
-                    {isUnread && info.receiverName && (
-                      <>
-                        {' · '}
-                        <span className="font-semibold text-yellow-500">
-                          {info.receiverName}
+                  hover:shadow-md
+                  hover:-translate-y-[1px]
+
+                  transition-all duration-200
+
+                  dark:bg-[#162338]
+                  dark:border-white/10
+                  dark:text-white
+                "
+              >
+
+                <div className="flex flex-col items-center text-center space-y-2">
+
+                  <h2 className="text-lg font-semibold tracking-tight">
+                    {item}
+                  </h2>
+
+                  {/* STATUS */}
+
+                  {!hasNotes && (
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-500/15 text-red-500">
+                      {t.missing}
+                    </span>
+                  )}
+
+                  {hasNotes && !info?.readBy && (
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-amber-400/20 text-amber-600">
+                      {t.pending}
+                    </span>
+                  )}
+
+                  {hasNotes && info?.readBy && (
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-400/20 text-emerald-600">
+                      {t.read}
+                    </span>
+                  )}
+
+                  {/* INFO */}
+
+                  <div className="text-sm text-gray-500 dark:text-white/60">
+
+                    {info?.lastDate ? (
+
+                      <div className="flex items-center justify-center gap-2">
+
+                        {info?.receiverName && !info?.readBy && (
+                          <span className="font-semibold text-amber-600">
+                            {info.receiverName}
+                          </span>
+                        )}
+
+                        {info?.readBy && (
+                          <span className="font-semibold text-emerald-600">
+                            {info.readBy}
+                          </span>
+                        )}
+
+                        {(info?.receiverName || info?.readBy) && (
+                          <span className="opacity-40">·</span>
+                        )}
+
+                        <span className="opacity-70">
+                          {formatDate(info.lastDate, lang)}
                         </span>
-                      </>
+
+                      </div>
+
+                    ) : (
+
+                      <div className="text-xs opacity-50">
+                        {t.noHandover}
+                      </div>
+
                     )}
 
-                    {isRead && info.readBy && (
-                      <>
-                        {' · '}
-                        <span className="font-semibold text-green-600">
-                          {info.readBy}
-                        </span>
-                      </>
-                    )}
+                  </div>
 
-                    {info?.hasComments && (
-                      <>
-                        {' '}
-                        <span className="text-gray-400">
-                          💬
-                        </span>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  t.noHandover
-                )}
-              </p>
-            </Link>
-          )
-        })}
+                </div>
+
+              </Link>
+            )
+          })}
+
       </div>
     </main>
   )
