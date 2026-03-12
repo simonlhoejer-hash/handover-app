@@ -3,10 +3,13 @@ import { PARTIS } from '@/lib/partis'
 
 export default function Page() {
   return (
-    <DepartmentHome
-      department="galley"
-      items={PARTIS.galley}
-      basePath="/galley/parti"
-    />
+    <>
+
+      <DepartmentHome
+        department="galley"
+        items={PARTIS.galley}
+        basePath="/galley/parti"
+      />
+    </>
   )
 }

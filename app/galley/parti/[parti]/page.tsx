@@ -7,5 +7,9 @@ export default async function Page({
 }) {
   const { parti } = await params
 
-  return <PartiTabs parti={decodeURIComponent(parti)} />
+  return (
+    <>
+      <PartiTabs parti={decodeURIComponent(parti)} />
+    </>
+  )
 }

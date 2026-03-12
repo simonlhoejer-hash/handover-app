@@ -3,11 +3,11 @@ import './globals.css'
 import { Providers } from './providers'
 import { LanguageProvider } from '@/lib/LanguageContext'
 import ClientLayout from './ClientLayout'
+import PageTracker from '@/components/statistics/PageTracker'
 
 export const metadata: Metadata = {
   title: 'Handover',
   description: 'Intern overlevering',
-
 
   icons: {
     icon: [
@@ -27,7 +27,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-themeColor: '#0f1b2d'}
+  themeColor: '#0f1b2d'
+}
 
 export default function RootLayout({
   children,
@@ -47,13 +48,17 @@ export default function RootLayout({
 
     transition-colors
   "
->        <Providers>
+>
+        <PageTracker />
+
+        <Providers>
           <LanguageProvider>
             <ClientLayout>
               {children}
             </ClientLayout>
           </LanguageProvider>
         </Providers>
+
       </body>
     </html>
   )

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import UploadMaterials from '@/components/admin/UploadMaterials'
 import UploadToernplan from '@/components/admin/UploadToernplan'
+import Accordion from '@/components/ui/Accordion'
+import AdminStats from '@/components/statistics/AdminStats'
 
 export default function Page() {
   const [password, setPassword] = useState('')
@@ -63,6 +65,7 @@ export default function Page() {
   return (
     <main className="min-h-screen px-4 pt-10 pb-24 space-y-10">
 
+      {/* HEADER */}
       <section className="rounded-3xl p-6 flex justify-between items-center bg-white border border-black/5 shadow-md dark:bg-[#162338] dark:border-white/10">
         <h1 className="text-xl font-semibold">
           HandoverPro Admin
@@ -76,7 +79,7 @@ export default function Page() {
         </button>
       </section>
 
-      {/* Navigation */}
+      {/* NAVIGATION */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <Link
@@ -95,11 +98,20 @@ export default function Page() {
 
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* ADMIN SECTIONS */}
+      <div className="space-y-6">
 
-        <UploadMaterials />
+        <Accordion title="Upload materiale">
+          <UploadMaterials />
+        </Accordion>
 
-        <UploadToernplan />
+        <Accordion title="Upload tørnplan">
+          <UploadToernplan />
+        </Accordion>
+
+        <Accordion title="Statistik">
+          <AdminStats />
+        </Accordion>
 
       </div>
 
