@@ -65,22 +65,15 @@ export default function Page() {
   return (
     <main className="min-h-screen px-4 pt-10 pb-24 space-y-10">
 
-      {/* HEADER */}
-      <section className="rounded-3xl p-6 flex justify-between items-center bg-white border border-black/5 shadow-md dark:bg-[#162338] dark:border-white/10">
-        <h1 className="text-xl font-semibold">
-          HandoverPro Admin
-        </h1>
-
-        <button
-          onClick={handleLogout}
-          className="px-5 py-2 rounded-2xl bg-black text-white dark:bg-white dark:text-black"
-        >
-          Log ud
-        </button>
-      </section>
-
       {/* NAVIGATION */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <Link
+          href="/kalkulation"
+          className="rounded-3xl p-6 bg-white border border-black/5 shadow-md dark:bg-[#162338] dark:border-white/10 text-center font-medium hover:scale-[1.02] transition"
+        >
+          Kalkulation
+        </Link>
 
         <Link
           href="/galley"

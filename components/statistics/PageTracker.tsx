@@ -17,8 +17,16 @@ export default function PageTracker(){
 
       let page = decodeURIComponent(pathname)
 
-      if(page === "/") return
+      // ignorer interne sider
+      if(
+        page === "/" ||
+        page.startsWith("/admin") ||
+        page.startsWith("/kalkulation")
+      ){
+        return
+      }
 
+      // saml alle parti sider
       if(page.startsWith("/galley/parti")){
         page = "/galley/parti"
       }
@@ -32,12 +40,16 @@ export default function PageTracker(){
 
       console.log("TRACKING PAGE:", page)
 
-      await supabase
+      const { error } = await supabase
         .from("page_visits")
         .insert({
           page,
           session_id: session
         })
+
+      if(error){
+        console.error("Supabase tracking error:", error)
+      }
 
     }
 

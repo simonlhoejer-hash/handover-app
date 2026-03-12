@@ -10,9 +10,16 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode
 }) {
-  const pathname = usePathname()
-  const isAdmin = pathname === '/'
+const pathname = usePathname()
 
+const isAdmin =
+  pathname === '/' ||
+  pathname.startsWith('/admin') ||
+  pathname.startsWith('/kalkulation')
+
+if (isAdmin) {
+  return <div className="min-h-screen">{children}</div>
+}
   const isPartiPage =
     pathname.startsWith('/galley/') ||
     pathname.startsWith('/shop/')

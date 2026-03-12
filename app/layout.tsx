@@ -4,6 +4,7 @@ import { Providers } from './providers'
 import { LanguageProvider } from '@/lib/LanguageContext'
 import ClientLayout from './ClientLayout'
 import PageTracker from '@/components/statistics/PageTracker'
+import { Suspense } from 'react'
 
 export const metadata: Metadata = {
   title: 'Handover',
@@ -42,14 +43,15 @@ export default function RootLayout({
     min-h-screen
     bg-[#f8fafc]
     text-gray-900
-
     dark:bg-[#0f1b2d]
     dark:text-white
-
     transition-colors
   "
 >
-        <PageTracker />
+
+        <Suspense fallback={null}>
+          <PageTracker />
+        </Suspense>
 
         <Providers>
           <LanguageProvider>
