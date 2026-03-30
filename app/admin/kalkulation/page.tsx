@@ -6,7 +6,7 @@ export default function KalkulationPage() {
 
       <h1>Kalkulation</h1>
 
-      <Link href="/kalkulation/ny">
+      <Link href="/admin/kalkulation/ny">
         <button>+ Ny kalkulation</button>
       </Link>
 

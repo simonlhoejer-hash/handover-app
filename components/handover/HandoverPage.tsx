@@ -10,11 +10,18 @@ import { ChevronDown } from 'lucide-react'
 import { ChevronLeft } from 'lucide-react'
 
 type Props = {
-  department: 'shop' | 'galley'
+  department: 'galley' | 'shop' | 'admin'
   itemName: string
+  hideHeader?: boolean
+  createLabel?: string
 }
 
-export default function HandoverPage({ department, itemName }: Props) {
+export default function HandoverPage({ 
+  department, 
+  itemName, 
+  hideHeader, 
+  createLabel 
+}: Props) {
   const router = useRouter()
   const { t } = useTranslation()
 
@@ -163,7 +170,7 @@ className="
 "
 >
   <span className="tracking-tight text-gray-900 dark:text-white">
-    Ny overlevering
+{createLabel || 'Ny overlevering'}
   </span>
 
   <ChevronDown
