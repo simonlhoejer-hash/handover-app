@@ -1,9 +1,10 @@
-'use client'
+"use client"
 
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
+import ThemeToggle from '@/components/ui/ThemeToggle' // 🔥 IMPORT
 
 export default function AdminSideMenu() {
   const [open, setOpen] = useState(false)
@@ -21,6 +22,11 @@ export default function AdminSideMenu() {
           dark:text-white/60 dark:hover:bg-white/10
         `
     }`
+
+  function handleLogout() {
+    localStorage.removeItem('admin-auth')
+    window.location.href = '/'
+  }
 
   return (
     <>
@@ -67,7 +73,6 @@ export default function AdminSideMenu() {
         {/* Header */}
         <div className="px-6 pt-10 pb-6 border-b border-black/5 dark:border-white/10 flex justify-center">
           <Link href="/admin" onClick={() => setOpen(false)}>
-            {/* Light */}
             <Image
               src="/logo-light.svg"
               alt="HandoverPro"
@@ -77,7 +82,6 @@ export default function AdminSideMenu() {
               priority
             />
 
-            {/* Dark */}
             <Image
               src="/logo-dark.svg"
               alt="HandoverPro"
@@ -139,9 +143,35 @@ export default function AdminSideMenu() {
 
         </div>
 
-        {/* Bottom */}
-        <div className="mt-auto px-6 pb-8 pt-6 border-t border-black/5 dark:border-white/10 text-center text-xs text-gray-400 dark:text-white/40">
-          Admin panel
+        {/* 🔥 BOTTOM SECTION */}
+        <div className="px-6 pb-8 pt-6 border-t border-black/5 dark:border-white/10 space-y-4">
+
+          {/* Theme toggle */}
+          <div className="flex justify-center">
+            <ThemeToggle />
+          </div>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="
+              w-full
+              px-4 py-3
+              rounded-2xl
+              text-sm font-medium
+              bg-red-500 text-white
+              hover:bg-red-600
+              transition
+            "
+          >
+            Log ud
+          </button>
+
+          {/* Footer text */}
+          <div className="text-center text-xs text-gray-400 dark:text-white/40">
+            Admin panel
+          </div>
+
         </div>
 
       </aside>

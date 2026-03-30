@@ -6,7 +6,10 @@ import { usePathname } from 'next/navigation'
 
 export default function HeaderTitle() {
   const pathname = usePathname()
+
   const isGalley = pathname.startsWith('/galley')
+  const isOpskrift = pathname.startsWith('/opskrift')
+
   const basePath = isGalley ? '/galley' : '/shop'
 
   return (
@@ -16,7 +19,6 @@ export default function HeaderTitle() {
         href={basePath}
         className="flex items-center transition-transform duration-200 active:scale-95"
       >
-
         <Image
           src="/go-nordic-logo.png"
           alt="Go Nordic Cruiseline"
@@ -28,30 +30,32 @@ export default function HeaderTitle() {
           "
           priority
         />
-
       </Link>
 
-      <div
-className="
-mt-4
-px-5 py-2
-rounded-full
-text-[12px]
-font-semibold
-uppercase
-tracking-[0.35em]
+      {/* 🔥 SKJUL PÅ OPSKRIFT */}
+      {!isOpskrift && (
+        <div
+          className="
+            mt-4
+            px-5 py-2
+            rounded-full
+            text-[12px]
+            font-semibold
+            uppercase
+            tracking-[0.35em]
 
-bg-[#e8f0ef]
-text-[#1f5c58]
+            bg-[#e8f0ef]
+            text-[#1f5c58]
 
-border border-[#1f5c58]/20
+            border border-[#1f5c58]/20
 
-dark:bg-[#1f5c58]/25
-dark:text-[#a6d2cd]
-"
-      >
-        {isGalley ? 'Galley' : 'Crew'}
-      </div>
+            dark:bg-[#1f5c58]/25
+            dark:text-[#a6d2cd]
+          "
+        >
+          {isGalley ? 'Galley' : 'Crew'}
+        </div>
+      )}
 
     </div>
   )

@@ -1,25 +1,27 @@
 "use client"
 
 import { useState } from "react"
+import { supabase } from "@/lib/supabase"
 
 type Ingredient = {
   name: string
-  price: number // kr/kg
-  waste: number // %
-  amount: number // kg
+  price: string
+  waste: string
+  amount: string
 }
 
 export default function NyKalkulation() {
 
   const [name, setName] = useState("")
-  const [salePrice, setSalePrice] = useState(0)
-  const [portions, setPortions] = useState(1)
+  const [salePrice, setSalePrice] = useState("")
+  const [portions, setPortions] = useState("")
+  const [steps, setSteps] = useState("") // 🔥 NY
 
   const [ingredients, setIngredients] = useState<Ingredient[]>([
-    { name: "", price: 0, waste: 0, amount: 0 }
+    { name: "", price: "", waste: "", amount: "" }
   ])
 
-  const updateIngredient = (index: number, field: keyof Ingredient, value: any) => {
+  const updateIngredient = (index: number, field: keyof Ingredient, value: string) => {
     const updated = [...ingredients]
     updated[index] = { ...updated[index], [field]: value }
     setIngredients(updated)
@@ -28,7 +30,7 @@ export default function NyKalkulation() {
   const addIngredient = () => {
     setIngredients([
       ...ingredients,
-      { name: "", price: 0, waste: 0, amount: 0 }
+      { name: "", price: "", waste: "", amount: "" }
     ])
   }
 
@@ -36,17 +38,59 @@ export default function NyKalkulation() {
     setIngredients(ingredients.filter((_, i) => i !== index))
   }
 
+  const toNumber = (val: string) => Number(val) || 0
+
   // 📊 Beregninger
   const total = ingredients.reduce((sum, i) => {
-    const wasteFactor = 1 + i.waste / 100
-    const realPrice = i.price * wasteFactor
-    return sum + realPrice * i.amount
+    const wasteFactor = 1 + toNumber(i.waste) / 100
+    const realPrice = toNumber(i.price) * wasteFactor
+    return sum + realPrice * toNumber(i.amount)
   }, 0)
 
-  const pricePerPortion = portions > 0 ? total / portions : 0
+  const pricePerPortion =
+    toNumber(portions) > 0 ? total / toNumber(portions) : 0
 
   const foodCost =
-    salePrice > 0 ? (pricePerPortion / salePrice) * 100 : 0
+    toNumber(salePrice) > 0
+      ? (pricePerPortion / toNumber(salePrice)) * 100
+      : 0
+
+  // 💾 GEM
+  async function saveCalculation() {
+    if (!name) {
+      alert("Giv retten et navn")
+      return
+    }
+
+    const cleanedIngredients = ingredients.map(i => ({
+      name: i.name,
+      price: toNumber(i.price),
+      waste: toNumber(i.waste),
+      amount: toNumber(i.amount)
+    }))
+
+    const { data, error } = await supabase
+      .from("recipes")
+      .insert([
+        {
+          name,
+          portions: toNumber(portions),
+          sale_price: toNumber(salePrice),
+          ingredients: cleanedIngredients,
+          steps // 🔥 NU GEMMER VI DEN
+        }
+      ])
+      .select()
+      .single()
+
+    if (error) {
+      console.error(error)
+      alert("Fejl ved gem")
+      return
+    }
+
+    window.location.href = `/opskrift/${data.id}`
+  }
 
   return (
     <div className="space-y-6">
@@ -70,7 +114,7 @@ export default function NyKalkulation() {
           <input
             type="number"
             value={salePrice}
-            onChange={(e) => setSalePrice(Number(e.target.value))}
+            onChange={(e) => setSalePrice(e.target.value)}
             className="w-full p-3 bg-gray-100 dark:bg-[#1d2e46] rounded-xl"
           />
         </div>
@@ -80,7 +124,7 @@ export default function NyKalkulation() {
           <input
             type="number"
             value={portions}
-            onChange={(e) => setPortions(Number(e.target.value))}
+            onChange={(e) => setPortions(e.target.value)}
             className="w-full p-3 bg-gray-100 dark:bg-[#1d2e46] rounded-xl"
           />
         </div>
@@ -92,7 +136,6 @@ export default function NyKalkulation() {
 
         <h2 className="font-medium">Ingredienser</h2>
 
-        {/* HEADER */}
         <div className="hidden md:grid grid-cols-5 gap-2 text-sm text-gray-500">
           <span>Navn</span>
           <span>Pris (kr/kg)</span>
@@ -122,7 +165,7 @@ export default function NyKalkulation() {
               placeholder="kr/kg"
               value={ing.price}
               onChange={(e) =>
-                updateIngredient(index, "price", Number(e.target.value))
+                updateIngredient(index, "price", e.target.value)
               }
               className="p-2 bg-gray-100 dark:bg-[#1d2e46] rounded-xl"
             />
@@ -133,7 +176,7 @@ export default function NyKalkulation() {
               placeholder="%"
               value={ing.waste}
               onChange={(e) =>
-                updateIngredient(index, "waste", Number(e.target.value))
+                updateIngredient(index, "waste", e.target.value)
               }
               className="p-2 bg-gray-100 dark:bg-[#1d2e46] rounded-xl"
             />
@@ -144,7 +187,7 @@ export default function NyKalkulation() {
               placeholder="kg"
               value={ing.amount}
               onChange={(e) =>
-                updateIngredient(index, "amount", Number(e.target.value))
+                updateIngredient(index, "amount", e.target.value)
               }
               className="p-2 bg-gray-100 dark:bg-[#1d2e46] rounded-xl"
             />
@@ -166,6 +209,18 @@ export default function NyKalkulation() {
           + Tilføj ingrediens
         </button>
 
+      </div>
+
+      {/* 🔥 FREMGANGSMÅDE */}
+      <div>
+        <h2 className="font-medium mb-2">Fremgangsmåde</h2>
+
+        <textarea
+          placeholder="Skriv hvordan retten laves..."
+          value={steps}
+          onChange={(e) => setSteps(e.target.value)}
+          className="w-full p-3 rounded-xl bg-gray-100 dark:bg-[#1d2e46] min-h-[120px]"
+        />
       </div>
 
       {/* RESULTAT */}
@@ -190,7 +245,10 @@ export default function NyKalkulation() {
 
       </div>
 
-      <button className="px-6 py-3 bg-black text-white rounded-2xl">
+      <button
+        onClick={saveCalculation}
+        className="px-6 py-3 bg-black text-white rounded-2xl"
+      >
         Gem kalkulation
       </button>
 

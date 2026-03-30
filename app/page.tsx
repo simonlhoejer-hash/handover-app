@@ -1,9 +1,14 @@
-'use client'
+"use client"
 
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 
-export default function Home() {
+export default function Page() {
   const router = useRouter()
+
+  function handleLogin() {
+    localStorage.setItem("admin-auth", "true")
+    router.push("/admin")
+  }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
@@ -17,7 +22,7 @@ export default function Home() {
       </p>
 
       <button
-        onClick={() => router.push('/admin')}
+        onClick={handleLogin}
         className="bg-black text-white px-6 py-3 rounded-2xl"
       >
         Log ind
