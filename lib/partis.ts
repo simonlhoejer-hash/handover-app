@@ -1,6 +1,5 @@
 export const PARTIS: Record<string, string[]> = {
   galley: [
-    'NORD',
     'SYD',
     'KULL varmt',
     'KULL koldt',
