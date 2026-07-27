@@ -7,21 +7,38 @@ import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import {
   LayoutGrid,
+  Calculator,
+  Upload,
   MoreHorizontal,
 } from 'lucide-react'
 
-export default function BottomNav() {
+export default function AdminBottomNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const tabs = [
-    { icon: LayoutGrid, href: '/galley', exact: true },
+    {
+      icon: LayoutGrid,
+      href: '/admin',
+      exact: true,
+    },
+    {
+      icon: Calculator,
+      href: '/admin/kalkulationer',
+    },
+    {
+      icon: Upload,
+      href: '/admin/upload',
+    },
   ]
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
         setOpen(false)
       }
     }
@@ -40,8 +57,10 @@ export default function BottomNav() {
         fixed bottom-0 left-0 right-0
         backdrop-blur-xl
         z-40
+
         bg-white/80
         border-t border-black/5
+
         dark:bg-[#0f1b2d]/80
         dark:border-white/10
       "
@@ -70,18 +89,21 @@ export default function BottomNav() {
                 rounded-2xl
                 transition-all duration-200
                 active:scale-95
+
                 ${
                   active
                     ? `
                       bg-black/5
                       text-gray-900
                       shadow-sm
+
                       dark:bg-white/10
                       dark:text-white
                     `
                     : `
                       text-gray-400
                       hover:bg-black/5
+
                       dark:text-white/50
                       dark:hover:bg-white/10
                     `
@@ -102,18 +124,21 @@ export default function BottomNav() {
               rounded-2xl
               transition-all duration-200
               active:scale-95
+
               ${
                 open
                   ? `
                     bg-black/5
                     text-gray-900
                     shadow-sm
+
                     dark:bg-white/10
                     dark:text-white
                   `
                   : `
                     text-gray-400
                     hover:bg-black/5
+
                     dark:text-white/50
                     dark:hover:bg-white/10
                   `
@@ -130,9 +155,11 @@ export default function BottomNav() {
                 w-64
                 rounded-3xl
                 p-5
+
                 bg-white
                 border border-black/5
                 shadow-[0_20px_50px_rgba(0,0,0,0.08)]
+
                 dark:bg-[#162338]
                 dark:border-white/10
                 dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)]

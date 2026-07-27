@@ -3,8 +3,6 @@ import './globals.css'
 import { Providers } from './providers'
 import { LanguageProvider } from '@/lib/LanguageContext'
 import ClientLayout from './ClientLayout'
-import PageTracker from '@/components/statistics/PageTracker'
-import { Suspense } from 'react'
 
 export const metadata: Metadata = {
   title: 'Go Nordic Crew',
@@ -48,11 +46,6 @@ export default function RootLayout({
           transition-colors
         "
       >
-
-        <Suspense fallback={null}>
-          <PageTracker />
-        </Suspense>
-
         <Providers>
           <LanguageProvider>
             <ClientLayout>
@@ -60,7 +53,6 @@ export default function RootLayout({
             </ClientLayout>
           </LanguageProvider>
         </Providers>
-
       </body>
     </html>
   )
