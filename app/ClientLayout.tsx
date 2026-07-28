@@ -17,7 +17,7 @@ export default function ClientLayout({
     pathname.startsWith('/admin')
 
   const isPartiPage =
-    pathname.startsWith('/galley/')
+    pathname.startsWith('/galley/parti/')
 
   return (
     <>
