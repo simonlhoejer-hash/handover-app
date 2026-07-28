@@ -7,6 +7,7 @@ import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import {
   LayoutGrid,
+  Trash2,
   MoreHorizontal,
 } from 'lucide-react'
 
@@ -17,6 +18,7 @@ export default function BottomNav() {
 
   const tabs = [
     { icon: LayoutGrid, href: '/galley', exact: true },
+    { icon: Trash2, href: '/galley/food-waste' },
   ]
 
   useEffect(() => {
