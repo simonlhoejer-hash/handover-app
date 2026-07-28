@@ -173,7 +173,6 @@ export default function FoodWasteStatsPage() {
 
       if (guestsError) {
         setGuestTableError(true)
-        setGuestCounts([])
       } else {
         setGuestTableError(false)
         const nextGuests = guests ?? []
