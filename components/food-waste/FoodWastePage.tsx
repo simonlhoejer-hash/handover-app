@@ -86,7 +86,11 @@ export default function FoodWastePage() {
 
   return (
     <main className="px-4 py-8 max-w-5xl mx-auto">
-      <header className="mb-8 flex items-center justify-between gap-4">
+      <header className="mb-8 flex flex-col items-center gap-3 text-center">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-nordic-soft text-nordic">
+          <Trash2 size={22} strokeWidth={1.8} />
+        </div>
+
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
             Food waste
@@ -94,10 +98,6 @@ export default function FoodWastePage() {
           <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
             Vælg sted og registrer vægten for i dag.
           </p>
-        </div>
-
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-nordic-soft text-nordic">
-          <Trash2 size={22} strokeWidth={1.8} />
         </div>
       </header>
 
