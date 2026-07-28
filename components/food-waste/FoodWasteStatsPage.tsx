@@ -1,5 +1,6 @@
 'use client'
 
+import { Download } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import { supabase } from '@/lib/supabase'
@@ -100,6 +101,7 @@ export default function FoodWasteStatsPage() {
   const [guestCount, setGuestCount] = useState('')
   const [loading, setLoading] = useState(true)
   const [savingGuests, setSavingGuests] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [error, setError] = useState('')
   const [guestMessage, setGuestMessage] = useState('')
   const [guestTableError, setGuestTableError] = useState(false)
@@ -259,6 +261,76 @@ export default function FoodWasteStatsPage() {
     setSavingGuests(false)
   }
 
+  async function exportOverview() {
+    setExporting(true)
+
+    const XLSX = await import('xlsx')
+    const workbook = XLSX.utils.book_new()
+
+    const overviewRows = [
+      ['Periode fra', fromDate],
+      ['Periode til', toDate],
+      ['Kg i perioden', stats.totalKg],
+      ['Gæster', stats.guestsTotal],
+      ['Kg pr. gæst', stats.kgPerGuest],
+      ['Gns. kg pr. dag', stats.averagePerDay],
+    ]
+
+    const locationRows = stats.locations.map((location) => ({
+      Sted: location.name,
+      'Kg i perioden': location.total,
+      'Gns. kg pr. dag': location.averagePerDay,
+    }))
+
+    const chartRows = stats.chartPoints.map((point) => ({
+      Periode: point.label,
+      Kg: point.total,
+    }))
+
+    const entryRows = entries.map((entry) => ({
+      Dato: entry.waste_date,
+      Sted: entry.location_name,
+      Kg: getEntryAmount(entry),
+      Kommentar: entry.comment ?? '',
+      Oprettet: entry.created_at,
+    }))
+
+    const guestRows = guestCounts.map((guest) => ({
+      Dato: guest.service_date,
+      Gæster: guest.guest_count,
+      Kommentar: guest.comment ?? '',
+    }))
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet(overviewRows),
+      'Overblik'
+    )
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(locationRows),
+      'Pr sted'
+    )
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(chartRows),
+      'Graf data'
+    )
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(entryRows),
+      'Registreringer'
+    )
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(guestRows),
+      'Gæster'
+    )
+
+    XLSX.writeFile(workbook, `food-waste-${fromDate}-til-${toDate}.xlsx`)
+    setExporting(false)
+  }
+
   const maxChartValue = Math.max(
     ...stats.chartPoints.map((point) => point.total),
     1
@@ -312,6 +384,15 @@ export default function FoodWasteStatsPage() {
           />
         </label>
       </section>
+
+      <button
+        onClick={() => void exportOverview()}
+        disabled={loading || exporting}
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-black px-5 font-semibold text-white transition active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-black sm:w-auto"
+      >
+        <Download size={18} />
+        {exporting ? 'Eksporterer...' : 'Eksporter Excel'}
+      </button>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
