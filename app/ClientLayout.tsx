@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import BottomNav from '@/components/layout/BottomNav'
 import AdminBottomNav from '@/components/layout/AdminBottomNav'
 import HeaderTitle from '@/components/layout/HeaderTitle'
+import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration'
 
 export default function ClientLayout({
   children,
@@ -21,6 +22,8 @@ export default function ClientLayout({
 
   return (
     <>
+      <ServiceWorkerRegistration />
+
       <div className="min-h-screen flex flex-col">
 
         <header
