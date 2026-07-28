@@ -56,10 +56,10 @@ export function readCachedFoodWasteEntries() {
 }
 
 export function cacheFoodWasteEntries(entries: CachedFoodWasteEntry[]) {
-  const pending = readPendingFoodWasteEntries()
   const byId = new Map<string, CachedFoodWasteEntry>()
 
-  for (const entry of [...pending, ...entries, ...readCachedFoodWasteEntries()]) {
+  for (const entry of [...entries, ...readCachedFoodWasteEntries()]) {
+    if (entry.pending || entry.id.startsWith('local-')) continue
     byId.set(entry.id, entry)
   }
 
