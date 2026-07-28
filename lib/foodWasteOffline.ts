@@ -41,6 +41,10 @@ function readStorageArray<T>(key: string): T[] {
 function writeStorageArray<T>(key: string, rows: T[]) {
   if (!canUseStorage()) return
   window.localStorage.setItem(key, JSON.stringify(rows))
+
+  if (key === FOOD_WASTE_PENDING_KEY) {
+    window.dispatchEvent(new Event('food-waste-pending-updated'))
+  }
 }
 
 export function readPendingFoodWasteEntries() {
