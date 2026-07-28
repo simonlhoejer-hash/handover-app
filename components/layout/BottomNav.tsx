@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import {
+  BarChart3,
   LayoutGrid,
   Trash2,
   MoreHorizontal,
@@ -17,8 +18,29 @@ export default function BottomNav() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const tabs = [
-    { icon: LayoutGrid, href: '/galley', exact: true },
-    { icon: Trash2, href: '/galley/food-waste' },
+    {
+      icon: LayoutGrid,
+      href: '/galley',
+      active: pathname === '/galley',
+      label: 'Overlevering',
+    },
+    {
+      icon: Trash2,
+      href: '/galley/food-waste',
+      active:
+        pathname === '/galley/food-waste' ||
+        (
+          pathname.startsWith('/galley/food-waste/') &&
+          pathname !== '/galley/food-waste/overblik'
+        ),
+      label: 'Food waste',
+    },
+    {
+      icon: BarChart3,
+      href: '/galley/food-waste/overblik',
+      active: pathname === '/galley/food-waste/overblik',
+      label: 'Overblik',
+    },
   ]
 
   useEffect(() => {
@@ -57,15 +79,13 @@ export default function BottomNav() {
       >
         {tabs.map((tab) => {
           const Icon = tab.icon
-
-          const active = tab.exact
-            ? pathname === tab.href
-            : pathname.startsWith(tab.href)
+          const active = tab.active
 
           return (
             <Link
               key={tab.href}
               href={tab.href}
+              aria-label={tab.label}
               className={`
                 flex items-center justify-center
                 w-12 h-12
