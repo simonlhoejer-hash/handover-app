@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from '@/lib/LanguageContext'
+import { ClipboardList } from 'lucide-react'
 
 type Props = {
   department: 'admin' |'shop' | 'galley'
@@ -21,6 +22,15 @@ type StatusMap = Record<
     receiverName?: string | null
   }
 >
+
+type HandoverStatusRow = {
+  parti: string
+  shift_date?: string
+  read_by?: string | null
+  receiver_name?: string | null
+  created_at?: string
+  handover_comments?: { id: string }[]
+}
 
 function formatDate(dateString?: string, lang?: string) {
   if (!dateString) return ''
@@ -62,7 +72,8 @@ export default function DepartmentHome({
       const result: StatusMap = {}
 
       for (const item of items) {
-        const latest = data?.find(d => d.parti === item) as any
+        const rows = (data ?? []) as HandoverStatusRow[]
+        const latest = rows.find((row) => row.parti === item)
 
         let isExpired = false
 
@@ -93,19 +104,33 @@ export default function DepartmentHome({
       setLoading(false)
     }
 
-    fetchStatus()
+    void fetchStatus()
   }, [department, items])
 
   return (
     <main className="px-4 py-8 max-w-5xl mx-auto">
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <header className="mb-8 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Overlevering
+          </h1>
+          <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
+            Vælg parti og læs eller skriv dagens overlevering.
+          </p>
+        </div>
 
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 dark:bg-sky-400/15 dark:text-sky-300">
+          <ClipboardList size={22} strokeWidth={1.8} />
+        </div>
+      </header>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {[...items]
           .sort((a, b) => {
             const aInfo = status[a]
             const bInfo = status[b]
 
-            const getPriority = (info: any) => {
+            const getPriority = (info?: StatusMap[string]) => {
               if (info?.hasNotes && !info?.readBy) return 1
               if (info?.hasNotes && info?.readBy) return 2
               return 3
@@ -126,7 +151,6 @@ export default function DepartmentHome({
             return aDate - bDate
           })
           .map((item) => {
-
             const info = status[item]
             const hasNotes = info?.hasNotes
 
@@ -157,41 +181,42 @@ export default function DepartmentHome({
                   dark:text-white
                 "
               >
-
                 <div className="flex flex-col items-center text-center space-y-2">
-
                   <h2 className="text-lg font-semibold tracking-tight">
                     {item}
                   </h2>
 
-                  {/* STATUS */}
+                  {loading && (
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-500/10 text-gray-500 dark:text-white/60">
+                      {t.loading}
+                    </span>
+                  )}
 
-                  {!hasNotes && (
+                  {!loading && !hasNotes && (
                     <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-500/15 text-red-500">
                       {t.missing}
                     </span>
                   )}
 
-                  {hasNotes && !info?.readBy && (
+                  {!loading && hasNotes && !info?.readBy && (
                     <span className="px-3 py-1 text-xs font-medium rounded-full bg-amber-400/20 text-amber-600">
                       {t.pending}
                     </span>
                   )}
 
-                  {hasNotes && info?.readBy && (
+                  {!loading && hasNotes && info?.readBy && (
                     <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-400/20 text-emerald-600">
                       {t.read}
                     </span>
                   )}
 
-                  {/* INFO */}
-
                   <div className="text-sm text-gray-500 dark:text-white/60">
-
-                    {info?.lastDate ? (
-
+                    {loading ? (
+                      <div className="text-xs opacity-50">
+                        {t.loading}
+                      </div>
+                    ) : info?.lastDate ? (
                       <div className="flex items-center justify-center gap-2">
-
                         {info?.receiverName && !info?.readBy && (
                           <span className="font-semibold text-amber-600">
                             {info.receiverName}
@@ -211,25 +236,17 @@ export default function DepartmentHome({
                         <span className="opacity-70">
                           {formatDate(info.lastDate, lang)}
                         </span>
-
                       </div>
-
                     ) : (
-
                       <div className="text-xs opacity-50">
                         {t.noHandover}
                       </div>
-
                     )}
-
                   </div>
-
                 </div>
-
               </Link>
             )
           })}
-
       </div>
     </main>
   )
