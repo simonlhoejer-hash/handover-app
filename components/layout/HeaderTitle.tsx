@@ -5,7 +5,7 @@ import Image from 'next/image'
 
 export default function HeaderTitle() {
   return (
-    <div className="w-full flex flex-col items-center pt-8 pb-6">
+    <div className="w-full flex flex-col items-center pt-1 pb-1">
 
       <Link
         href="/admin"
@@ -17,7 +17,7 @@ export default function HeaderTitle() {
           width={420}
           height={120}
           className="
-            h-16 sm:h-20 lg:h-24 w-auto
+            h-12 sm:h-16 lg:h-20 w-auto
             dark:invert
           "
           priority
