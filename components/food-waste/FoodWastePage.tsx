@@ -93,6 +93,12 @@ export default function FoodWastePage() {
           <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
             Vælg sted og registrer vægten for i dag.
           </p>
+          <Link
+            href="/galley/food-waste/overblik"
+            className="mt-3 inline-flex rounded-full bg-nordic-soft px-4 py-2 text-sm font-semibold text-nordic transition active:scale-[0.98]"
+          >
+            Se overblik
+          </Link>
         </div>
       </header>
 
