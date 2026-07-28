@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { CalendarDays, ClipboardList, Plus, Scale, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { CalendarDays, Plus, Scale, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -11,12 +11,6 @@ type FoodWasteEntry = {
   location_name: string
   quantity_kg: number
   comment: string | null
-}
-
-type FoodWasteForm = {
-  location_name: string
-  quantity_kg: string
-  comment: string
 }
 
 const locations = [
@@ -33,12 +27,13 @@ const locations = [
   'Produktion Proviant dæk 1',
 ]
 
-const today = new Date().toISOString().slice(0, 10)
+function getToday() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
 
-const emptyForm: FoodWasteForm = {
-  location_name: locations[0],
-  quantity_kg: '',
-  comment: '',
+  return `${year}-${month}-${day}`
 }
 
 function formatDate(value: string) {
@@ -56,10 +51,15 @@ function formatAmount(value: number) {
 
 export default function FoodWastePage() {
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
-  const [form, setForm] = useState<FoodWasteForm>(emptyForm)
+  const [selectedLocation, setSelectedLocation] = useState(locations[0])
+  const [quantityKg, setQuantityKg] = useState('')
+  const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const kgInputRef = useRef<HTMLInputElement>(null)
+
+  const today = getToday()
 
   useEffect(() => {
     let isCurrent = true
@@ -70,7 +70,7 @@ export default function FoodWastePage() {
         .select('*')
         .order('waste_date', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(40)
+        .limit(60)
 
       if (!isCurrent) return
 
@@ -101,6 +101,8 @@ export default function FoodWastePage() {
       (acc, entry) => {
         if (entry.waste_date === today) {
           acc.today += entry.quantity_kg
+          acc.byLocation[entry.location_name] =
+            (acc.byLocation[entry.location_name] ?? 0) + entry.quantity_kg
         }
 
         if (entry.waste_date.startsWith(month)) {
@@ -109,14 +111,24 @@ export default function FoodWastePage() {
 
         return acc
       },
-      { today: 0, month: 0 }
+      {
+        today: 0,
+        month: 0,
+        byLocation: {} as Record<string, number>,
+      }
     )
-  }, [entries])
+  }, [entries, today])
+
+  function chooseLocation(location: string) {
+    setSelectedLocation(location)
+    setError('')
+    window.setTimeout(() => kgInputRef.current?.focus(), 80)
+  }
 
   async function saveEntry() {
-    const quantity = Number(form.quantity_kg.replace(',', '.'))
+    const quantity = Number(quantityKg.replace(',', '.'))
 
-    if (!form.location_name || !quantity || quantity <= 0) {
+    if (!selectedLocation || !quantity || quantity <= 0) {
       setError('Vælg sted og skriv kg.')
       return
     }
@@ -126,9 +138,9 @@ export default function FoodWastePage() {
 
     const payload = {
       waste_date: today,
-      location_name: form.location_name,
+      location_name: selectedLocation,
       quantity_kg: quantity,
-      comment: form.comment.trim() || null,
+      comment: comment.trim() || null,
     }
 
     const { data, error: saveError } = await supabase
@@ -141,11 +153,8 @@ export default function FoodWastePage() {
       setError('Kunne ikke gemme registreringen. Tjek Supabase-tabellen.')
     } else if (data) {
       setEntries((current) => [data, ...current])
-      setForm((current) => ({
-        location_name: current.location_name,
-        quantity_kg: '',
-        comment: '',
-      }))
+      setQuantityKg('')
+      setComment('')
     }
 
     setSaving(false)
@@ -177,7 +186,7 @@ export default function FoodWastePage() {
               Food waste
             </h1>
             <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
-              Vælg sted, skriv kg og gem. Datoen er automatisk i dag.
+              Tryk på sted, skriv kg og gem.
             </p>
           </div>
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-nordic-soft text-nordic">
@@ -186,7 +195,7 @@ export default function FoodWastePage() {
         </div>
       </header>
 
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-white/60">
             <Scale size={16} />
@@ -206,68 +215,117 @@ export default function FoodWastePage() {
             {formatAmount(totals.month)}
           </div>
         </div>
+      </section>
 
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-white/60">
-            <ClipboardList size={16} />
-            Registreringer
-          </div>
-          <div className="mt-2 text-2xl font-semibold">
-            {entries.length}
-          </div>
-        </div>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {locations.map((location) => {
+          const isSelected = selectedLocation === location
+          const todayAmount = totals.byLocation[location] ?? 0
+
+          return (
+            <button
+              key={location}
+              onClick={() => chooseLocation(location)}
+              className={`
+                rounded-xl
+                p-5
+                h-[118px]
+                flex items-center justify-center
+                border
+                text-center
+                shadow-sm
+                transition-all duration-200
+                active:scale-[0.98]
+                ${
+                  isSelected
+                    ? `
+                      bg-nordic-soft
+                      border-[var(--nordic-green)]
+                      text-nordic
+                      shadow-md
+                    `
+                    : `
+                      bg-white
+                      border-gray-200/70
+                      text-gray-900
+                      hover:shadow-md
+                      hover:-translate-y-[1px]
+                      dark:bg-[#162338]
+                      dark:border-white/10
+                      dark:text-white
+                    `
+                }
+              `}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <h2 className="text-base font-semibold tracking-tight">
+                  {location}
+                </h2>
+                <span
+                  className={`
+                    px-3 py-1
+                    text-xs font-medium
+                    rounded-full
+                    ${
+                      todayAmount > 0
+                        ? 'bg-emerald-400/20 text-emerald-600'
+                        : 'bg-gray-500/10 text-gray-500 dark:text-white/60'
+                    }
+                  `}
+                >
+                  {todayAmount > 0 ? formatAmount(todayAmount) : '0 kg i dag'}
+                </span>
+              </div>
+            </button>
+          )
+        })}
       </section>
 
       <section className="rounded-3xl bg-white p-5 sm:p-6 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-        <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
-          <select
-            className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 border border-black/5 dark:bg-[#0f1b2d] dark:text-white dark:border-white/10"
-            value={form.location_name}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                location_name: event.target.value,
-              }))
-            }
-          >
-            {locations.map((location) => (
-              <option key={location}>{location}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-gray-500 dark:text-white/60">
+              Valgt sted
+            </p>
+            <h2 className="text-xl font-semibold">
+              {selectedLocation}
+            </h2>
+          </div>
+          <span className="rounded-full bg-nordic-soft px-3 py-1 text-sm font-medium text-nordic">
+            {formatDate(today)}
+          </span>
+        </div>
 
+        <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
           <div className="relative">
             <input
+              ref={kgInputRef}
               inputMode="decimal"
-              className="w-full rounded-2xl bg-gray-100 px-4 py-3 pr-12 text-gray-900 border border-black/5 dark:bg-[#0f1b2d] dark:text-white dark:border-white/10"
-              placeholder="Kg"
-              value={form.quantity_kg}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  quantity_kg: event.target.value,
-                }))
-              }
+              className="w-full rounded-2xl bg-gray-100 px-4 py-4 pr-14 text-2xl font-semibold text-gray-900 border border-black/5 dark:bg-[#0f1b2d] dark:text-white dark:border-white/10"
+              placeholder="0,0"
+              value={quantityKg}
+              onChange={(event) => setQuantityKg(event.target.value)}
             />
             <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-500 dark:text-white/60">
               kg
             </span>
           </div>
-        </div>
 
-        <div className="mt-3 rounded-2xl bg-nordic-soft px-4 py-3 text-sm font-medium text-nordic">
-          Dato: {formatDate(today)}
+          <button
+            onClick={saveEntry}
+            disabled={saving}
+            className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-black px-7 font-semibold text-white shadow-md transition active:scale-[0.98] hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
+          >
+            <Plus size={18} />
+            {saving ? 'Gemmer...' : 'Gem'}
+          </button>
         </div>
 
         <textarea
-          className="mt-3 min-h-20 w-full rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 border border-black/5 dark:bg-[#0f1b2d] dark:text-white dark:border-white/10"
+          className="mt-3 min-h-16 w-full rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 border border-black/5 dark:bg-[#0f1b2d] dark:text-white dark:border-white/10"
           placeholder="Kommentar"
-          value={form.comment}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              comment: event.target.value,
-            }))
-          }
+          value={comment}
+          onChange={(event) => setComment(event.target.value)}
         />
 
         {error && (
@@ -275,15 +333,6 @@ export default function FoodWastePage() {
             {error}
           </p>
         )}
-
-        <button
-          onClick={saveEntry}
-          disabled={saving}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-black py-3 font-semibold text-white shadow-md transition active:scale-[0.98] hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
-        >
-          <Plus size={18} />
-          {saving ? 'Gemmer...' : 'Gem kg'}
-        </button>
       </section>
 
       <section className="space-y-3">
@@ -303,7 +352,7 @@ export default function FoodWastePage() {
           </div>
         )}
 
-        {entries.map((entry) => (
+        {entries.slice(0, 12).map((entry) => (
           <article
             key={entry.id}
             className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
