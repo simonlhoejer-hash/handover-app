@@ -109,18 +109,18 @@ export default function DepartmentHome({
 
   return (
     <main className="px-4 py-8 max-w-5xl mx-auto">
-      <header className="mb-8 flex items-center justify-between gap-4">
+      <header className="mb-8 flex flex-col items-center gap-3 text-center">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 dark:bg-sky-400/15 dark:text-sky-300">
+          <ClipboardList size={22} strokeWidth={1.8} />
+        </div>
+
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
             Overlevering
           </h1>
           <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
-            Vælg parti og læs eller skriv dagens overlevering.
+            Vælg parti og læs eller skriv overlevering.
           </p>
-        </div>
-
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 dark:bg-sky-400/15 dark:text-sky-300">
-          <ClipboardList size={22} strokeWidth={1.8} />
         </div>
       </header>
 
