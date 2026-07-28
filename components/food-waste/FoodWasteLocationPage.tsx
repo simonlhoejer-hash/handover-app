@@ -248,7 +248,6 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
 
     const pendingEntries = readPendingFoodWasteEntries()
     writePendingFoodWasteEntries([localEntry, ...pendingEntries])
-    cacheFoodWasteEntries([localEntry])
 
     setEntries((current) => [localEntry, ...current])
     setQuantityKg('')
