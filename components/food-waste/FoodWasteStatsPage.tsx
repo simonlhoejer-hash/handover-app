@@ -3,6 +3,13 @@
 import { Download } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
+import {
+  cacheFoodWasteEntries,
+  cacheFoodWasteGuestCounts,
+  readCachedFoodWasteEntries,
+  readCachedFoodWasteGuestCounts,
+  readPendingFoodWasteEntries,
+} from '@/lib/foodWasteOffline'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -112,6 +119,28 @@ export default function FoodWasteStatsPage() {
     async function loadOverview() {
       setLoading(true)
 
+      const cachedEntries = readCachedFoodWasteEntries()
+      const pendingEntries = readPendingFoodWasteEntries()
+      const cachedGuests = readCachedFoodWasteGuestCounts()
+
+      if (
+        cachedEntries.length > 0 ||
+        pendingEntries.length > 0 ||
+        cachedGuests.length > 0
+      ) {
+        setEntries(
+          [...pendingEntries, ...cachedEntries].filter(
+            (entry) => entry.waste_date >= fromDate && entry.waste_date <= toDate
+          )
+        )
+        setGuestCounts(
+          cachedGuests.filter(
+            (count) => count.service_date >= fromDate && count.service_date <= toDate
+          )
+        )
+        setLoading(false)
+      }
+
       const { data, error: loadError } = await supabase
         .from('food_waste_entries')
         .select('*')
@@ -130,11 +159,16 @@ export default function FoodWasteStatsPage() {
       if (!isCurrent) return
 
       if (loadError) {
-        setError('Kunne ikke hente food waste-overblik.')
-        setEntries([])
+        setError('Offline. Viser seneste gemte tal.')
       } else {
         setError('')
-        setEntries(data ?? [])
+        const nextEntries = data ?? []
+        cacheFoodWasteEntries(nextEntries)
+        setEntries(
+          [...readPendingFoodWasteEntries(), ...nextEntries].filter(
+            (entry) => entry.waste_date >= fromDate && entry.waste_date <= toDate
+          )
+        )
       }
 
       if (guestsError) {
@@ -142,7 +176,9 @@ export default function FoodWasteStatsPage() {
         setGuestCounts([])
       } else {
         setGuestTableError(false)
-        setGuestCounts(guests ?? [])
+        const nextGuests = guests ?? []
+        cacheFoodWasteGuestCounts(nextGuests)
+        setGuestCounts(nextGuests)
       }
 
       setLoading(false)
@@ -256,6 +292,7 @@ export default function FoodWasteStatsPage() {
         data,
         ...current.filter((count) => count.service_date !== data.service_date),
       ])
+      cacheFoodWasteGuestCounts([data])
     }
 
     setSavingGuests(false)
