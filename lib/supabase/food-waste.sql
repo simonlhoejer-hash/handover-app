@@ -7,6 +7,14 @@ create table if not exists public.food_waste_entries (
   comment text
 );
 
+create table if not exists public.food_waste_guest_counts (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  service_date date not null unique default current_date,
+  guest_count integer not null,
+  comment text
+);
+
 alter table public.food_waste_entries enable row level security;
 
 create policy "Food waste entries are readable"
@@ -21,5 +29,28 @@ with check (true);
 
 create policy "Food waste entries can be deleted"
 on public.food_waste_entries
+for delete
+using (true);
+
+alter table public.food_waste_guest_counts enable row level security;
+
+create policy "Food waste guest counts are readable"
+on public.food_waste_guest_counts
+for select
+using (true);
+
+create policy "Food waste guest counts can be created"
+on public.food_waste_guest_counts
+for insert
+with check (true);
+
+create policy "Food waste guest counts can be updated"
+on public.food_waste_guest_counts
+for update
+using (true)
+with check (true);
+
+create policy "Food waste guest counts can be deleted"
+on public.food_waste_guest_counts
 for delete
 using (true);
