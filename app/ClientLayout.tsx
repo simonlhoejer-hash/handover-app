@@ -29,12 +29,12 @@ export default function ClientLayout({
             max-w-3xl
             mx-auto
             px-4
-            pt-8
-            pb-4
+            pt-2
+            pb-1
             flex
             flex-col
             items-center
-            gap-4
+            gap-1
           "
         >
           {!isPartiPage && <HeaderTitle />}
