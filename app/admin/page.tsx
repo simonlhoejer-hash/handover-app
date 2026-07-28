@@ -1,4 +1,7 @@
+﻿'use client'
+
 import Link from 'next/link'
+import { useTranslation } from '@/lib/LanguageContext'
 
 const outlets = [
   {
@@ -28,17 +31,19 @@ const outlets = [
 ]
 
 export default function AdminPage() {
+  const { t } = useTranslation()
+
   return (
     <main className="max-w-5xl mx-auto px-4 pb-24">
    
 
       <div className="text-center mb-10">
         <h1 className="text-3xl font-semibold tracking-tight">
-          Administration
+          {t.administration}
         </h1>
 
         <p className="text-gray-500 mt-2">
-          Vælg outlet
+          {t.chooseOutlet}
         </p>
       </div>
 
@@ -80,7 +85,7 @@ export default function AdminPage() {
                 dark:text-white/60
               "
             >
-              kalkulationer
+              {t.calculations}
             </p>
           </Link>
         ))}
@@ -88,3 +93,5 @@ export default function AdminPage() {
     </main>
   )
 }
+
+

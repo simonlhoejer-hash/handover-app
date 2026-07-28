@@ -111,15 +111,16 @@ export default function DepartmentHome({
       <header className="mb-6 flex flex-col items-center text-center">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
-            Overlevering
+            {t.handoverTitle}
           </h1>
           <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
-            Vælg parti og læs eller skriv overlevering.
+            {t.handoverSubtitle}
           </p>
         </div>
       </header>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
         {[...items]
           .sort((a, b) => {
             const aInfo = status[a]
@@ -146,6 +147,7 @@ export default function DepartmentHome({
             return aDate - bDate
           })
           .map((item) => {
+
             const info = status[item]
             const hasNotes = info?.hasNotes
 
@@ -176,10 +178,14 @@ export default function DepartmentHome({
                   dark:text-white
                 "
               >
+
                 <div className="flex flex-col items-center text-center space-y-2">
+
                   <h2 className="text-lg font-semibold tracking-tight">
                     {item}
                   </h2>
+
+                  {/* STATUS */}
 
                   {loading && (
                     <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-500/10 text-gray-500 dark:text-white/60">
@@ -205,13 +211,20 @@ export default function DepartmentHome({
                     </span>
                   )}
 
+                  {/* INFO */}
+
                   <div className="text-sm text-gray-500 dark:text-white/60">
+
                     {loading ? (
+
                       <div className="text-xs opacity-50">
                         {t.loading}
                       </div>
+
                     ) : info?.lastDate ? (
+
                       <div className="flex items-center justify-center gap-2">
+
                         {info?.receiverName && !info?.readBy && (
                           <span className="font-semibold text-amber-600">
                             {info.receiverName}
@@ -231,17 +244,25 @@ export default function DepartmentHome({
                         <span className="opacity-70">
                           {formatDate(info.lastDate, lang)}
                         </span>
+
                       </div>
+
                     ) : (
+
                       <div className="text-xs opacity-50">
                         {t.noHandover}
                       </div>
+
                     )}
+
                   </div>
+
                 </div>
+
               </Link>
             )
           })}
+
       </div>
     </main>
   )

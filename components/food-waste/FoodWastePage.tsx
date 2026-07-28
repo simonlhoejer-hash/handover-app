@@ -8,6 +8,7 @@ import {
   readCachedFoodWasteEntries,
   readPendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
+import { useTranslation } from '@/lib/LanguageContext'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -28,8 +29,8 @@ function getToday() {
   return `${year}-${month}-${day}`
 }
 
-function formatAmount(value: number) {
-  return `${value.toLocaleString('da-DK', {
+function formatAmount(value: number, lang: string) {
+  return `${value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
     maximumFractionDigits: 2,
   })} kg`
 }
@@ -39,6 +40,7 @@ function getEntryAmount(entry: FoodWasteEntry) {
 }
 
 export default function FoodWastePage() {
+  const { t, lang } = useTranslation()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -67,7 +69,7 @@ export default function FoodWastePage() {
       if (!isCurrent) return
 
       if (loadError) {
-        setError('Offline. Viser seneste gemte tal.')
+        setError(t.offlineShowingCached)
       } else {
         setError('')
         const nextEntries = data ?? []
@@ -83,7 +85,7 @@ export default function FoodWastePage() {
     return () => {
       isCurrent = false
     }
-  }, [today])
+  }, [t.offlineShowingCached, today])
 
   const totals = useMemo(() => {
     return entries.reduce(
@@ -106,10 +108,10 @@ export default function FoodWastePage() {
       <header className="mb-6 flex flex-col items-center text-center">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
-            Food waste
+            {t.foodWaste}
           </h1>
           <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
-            Vælg sted og registrer vægten for i dag.
+            {t.foodWasteSubtitle}
           </p>
         </div>
       </header>
@@ -163,7 +165,11 @@ export default function FoodWastePage() {
                     }
                   `}
                 >
-                  {loading ? 'Henter...' : todayAmount > 0 ? formatAmount(todayAmount) : '0 kg i dag'}
+                  {loading
+                    ? t.loadingShort
+                    : todayAmount > 0
+                      ? formatAmount(todayAmount, lang)
+                      : t.zeroKgToday}
                 </span>
               </div>
             </Link>

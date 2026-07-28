@@ -1,10 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
+import { useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
   value: string
@@ -13,21 +14,14 @@ type Props = {
 }
 
 export default function HandoverEditor({ value, onChange, placeholder }: Props) {
+  const { t } = useTranslation()
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
 Placeholder.configure({
-  placeholder:
-    placeholder ||
-    `Hjælp den næste vagt 👇
-
-Hvad er anderledes i dag?
-Hvad mangler at blive lavet?
-Er der noget kritisk?
-Skriv tal og mængder.
-Skriv hvor tingene står.`,
+  placeholder: placeholder || t.editorPlaceholder,
   emptyEditorClass: 'is-editor-empty',
 }),
 ],
@@ -47,10 +41,10 @@ useEffect(() => {
     if (!html) return;
 
     const updated = html
-      .replace(/^<p>([a-zæøå])/, (_, letter) =>
+      .replace(/^<p>([a-zÃ¦Ã¸Ã¥])/, (_, letter) =>
         `<p>${letter.toUpperCase()}`
       )
-      .replace(/([.!?]\s+)([a-zæøå])/g, (_, punc, letter) =>
+      .replace(/([.!?]\s+)([a-zÃ¦Ã¸Ã¥])/g, (_, punc, letter) =>
         `${punc}${letter.toUpperCase()}`
       );
 
@@ -149,7 +143,7 @@ useEffect(() => {
           }
           className={btn(editor.isActive('bulletList'))}
         >
-          • Liste
+          {t.bulletList}
         </button>
 
         <button
@@ -159,7 +153,7 @@ useEffect(() => {
           }
           className={btn(editor.isActive('orderedList'))}
         >
-          1. Liste
+          {t.numberedList}
         </button>
 
       </div>
@@ -189,3 +183,5 @@ useEffect(() => {
     </div>
   )
 }
+
+

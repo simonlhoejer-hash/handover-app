@@ -1,3 +1,7 @@
+﻿'use client'
+
+import { useTranslation } from '@/lib/LanguageContext'
+
 type Props = {
   department: string
   setDepartment: (value: string) => void
@@ -21,15 +25,17 @@ export default function RecipeHeader({
   salePrice,
   setSalePrice,
 }: Props) {
+  const { t } = useTranslation()
+
   return (
     <>
 <div className="text-center mb-10">
   <h1 className="text-4xl font-semibold tracking-tight">
-    Kalkulation
+    {t.calculation}
   </h1>
 
   <p className="text-gray-500 mt-2">
-    Opret ny ret eller grundkalkulation
+    {t.createCalculationSubtitle}
   </p>
 </div>
 
@@ -39,7 +45,7 @@ export default function RecipeHeader({
 
           <div>
             <label className="block text-sm mb-2">
-              Afdeling
+              {t.department}
             </label>
 
             <select
@@ -67,7 +73,7 @@ export default function RecipeHeader({
 
           <div>
             <label className="block text-sm mb-2">
-              Type
+              {t.type}
             </label>
 
             <select
@@ -88,18 +94,18 @@ export default function RecipeHeader({
               "
             >
               <option value="ret">
-                Ret
+                {t.dish}
               </option>
 
               <option value="grund">
-                Grundkalkulation
+                {t.baseCalculation}
               </option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm mb-2">
-              Navn
+              {t.name}
             </label>
 
             <input
@@ -124,7 +130,7 @@ export default function RecipeHeader({
 
           <div>
             <label className="block text-sm mb-2">
-              Salgspris
+              {t.salesPrice}
             </label>
 
             <input
@@ -154,3 +160,5 @@ export default function RecipeHeader({
     </>
   )
 }
+
+

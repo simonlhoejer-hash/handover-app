@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Download } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -10,6 +10,7 @@ import {
   readCachedFoodWasteGuestCounts,
   readPendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
+import { useTranslation } from '@/lib/LanguageContext'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -76,18 +77,18 @@ function getIsoWeek(dateString: string) {
   return Math.ceil((((target.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
 }
 
-function formatAmount(value: number, decimals = 1) {
-  return `${value.toLocaleString('da-DK', {
+function formatAmount(value: number, lang: string, decimals = 1) {
+  return `${value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
     maximumFractionDigits: decimals,
   })} kg`
 }
 
-function formatNumber(value: number) {
-  return value.toLocaleString('da-DK')
+function formatNumber(value: number, lang: string) {
+  return value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK')
 }
 
-function formatDate(value: string) {
-  return parseLocalDate(value).toLocaleDateString('da-DK', {
+function formatDate(value: string, lang: string) {
+  return parseLocalDate(value).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
     day: 'numeric',
     month: 'short',
   })
@@ -98,6 +99,7 @@ function getEntryAmount(entry: FoodWasteEntry) {
 }
 
 export default function FoodWasteStatsPage() {
+  const { t, lang } = useTranslation()
   const today = getToday()
 
   const [fromDate, setFromDate] = useState(getMonthStart(today))
@@ -159,7 +161,7 @@ export default function FoodWasteStatsPage() {
       if (!isCurrent) return
 
       if (loadError) {
-        setError('Offline. Viser seneste gemte tal.')
+        setError(t.offlineShowingCached)
       } else {
         setError('')
         const nextEntries = data ?? []
@@ -188,7 +190,7 @@ export default function FoodWasteStatsPage() {
     return () => {
       isCurrent = false
     }
-  }, [fromDate, toDate])
+  }, [fromDate, t.offlineShowingCached, toDate])
 
   const stats = useMemo(() => {
     const byLocation = new Map<string, number>()
@@ -235,13 +237,13 @@ export default function FoodWasteStatsPage() {
     const chartPoints: ChartPoint[] = useWeeks
       ? Array.from(weeklyTotals.entries())
           .map(([week, total]) => ({
-            label: `Uge ${week}`,
+            label: `${t.week} ${week}`,
             total,
           }))
-          .sort((a, b) => Number(a.label.replace('Uge ', '')) - Number(b.label.replace('Uge ', '')))
+          .sort((a, b) => Number(a.label.replace(`${t.week} `, '')) - Number(b.label.replace(`${t.week} `, '')))
       : Array.from(dailyTotals.entries())
           .map(([date, total]) => ({
-            label: formatDate(date),
+            label: formatDate(date, lang),
             total,
           }))
           .reverse()
@@ -254,13 +256,13 @@ export default function FoodWasteStatsPage() {
       locations,
       chartPoints,
     }
-  }, [entries, fromDate, guestCounts, toDate])
+  }, [entries, fromDate, guestCounts, lang, t.week, toDate])
 
   async function saveGuestCount() {
     const guests = Number(guestCount)
 
     if (!guests || guests <= 0) {
-      setGuestMessage('Skriv antal gæster.')
+      setGuestMessage(t.guestCountRequired)
       return
     }
 
@@ -282,10 +284,10 @@ export default function FoodWasteStatsPage() {
 
     if (saveError || !data) {
       setGuestTableError(true)
-      setGuestMessage('Kunne ikke gemme gæster endnu.')
+      setGuestMessage(t.couldNotSaveGuests)
     } else {
       setGuestTableError(false)
-      setGuestMessage('Gæster gemt.')
+      setGuestMessage(t.guestsSaved)
       setGuestCount('')
       setGuestCounts((current) => [
         data,
@@ -304,63 +306,63 @@ export default function FoodWasteStatsPage() {
     const workbook = XLSX.utils.book_new()
 
     const overviewRows = [
-      ['Periode fra', fromDate],
-      ['Periode til', toDate],
-      ['Kg i perioden', stats.totalKg],
-      ['Gæster', stats.guestsTotal],
-      ['Kg pr. gæst', stats.kgPerGuest],
-      ['Gns. kg pr. dag', stats.averagePerDay],
+      [t.periodFrom, fromDate],
+      [t.periodTo, toDate],
+      [t.kgInPeriod, stats.totalKg],
+      [t.guests, stats.guestsTotal],
+      [t.kgPerGuest, stats.kgPerGuest],
+      [t.averageKgPerDay, stats.averagePerDay],
     ]
 
     const locationRows = stats.locations.map((location) => ({
-      Sted: location.name,
-      'Kg i perioden': location.total,
-      'Gns. kg pr. dag': location.averagePerDay,
+      [t.location]: location.name,
+      [t.kgInPeriod]: location.total,
+      [t.averageKgPerDay]: location.averagePerDay,
     }))
 
     const chartRows = stats.chartPoints.map((point) => ({
-      Periode: point.label,
-      Kg: point.total,
+      [t.period]: point.label,
+      [t.kg]: point.total,
     }))
 
     const entryRows = entries.map((entry) => ({
-      Dato: entry.waste_date,
-      Sted: entry.location_name,
-      Kg: getEntryAmount(entry),
-      Kommentar: entry.comment ?? '',
-      Oprettet: entry.created_at,
+      [t.date]: entry.waste_date,
+      [t.location]: entry.location_name,
+      [t.kg]: getEntryAmount(entry),
+      [t.comment]: entry.comment ?? '',
+      [t.created]: entry.created_at,
     }))
 
     const guestRows = guestCounts.map((guest) => ({
-      Dato: guest.service_date,
-      Gæster: guest.guest_count,
-      Kommentar: guest.comment ?? '',
+      [t.date]: guest.service_date,
+      [t.guests]: guest.guest_count,
+      [t.comment]: guest.comment ?? '',
     }))
 
     XLSX.utils.book_append_sheet(
       workbook,
       XLSX.utils.aoa_to_sheet(overviewRows),
-      'Overblik'
+      t.sheetOverview
     )
     XLSX.utils.book_append_sheet(
       workbook,
       XLSX.utils.json_to_sheet(locationRows),
-      'Pr sted'
+      t.sheetPerLocation
     )
     XLSX.utils.book_append_sheet(
       workbook,
       XLSX.utils.json_to_sheet(chartRows),
-      'Graf data'
+      t.sheetChartData
     )
     XLSX.utils.book_append_sheet(
       workbook,
       XLSX.utils.json_to_sheet(entryRows),
-      'Registreringer'
+      t.sheetRegistrations
     )
     XLSX.utils.book_append_sheet(
       workbook,
       XLSX.utils.json_to_sheet(guestRows),
-      'Gæster'
+      t.sheetGuests
     )
 
     XLSX.writeFile(workbook, `food-waste-${fromDate}-til-${toDate}.xlsx`)
@@ -376,10 +378,10 @@ export default function FoodWasteStatsPage() {
     <main className="max-w-5xl mx-auto px-4 pt-4 pb-24 space-y-6">
       <header className="text-center">
         <h1 className="text-3xl font-semibold tracking-tight">
-          Food waste overblik
+          {t.foodWasteOverview}
         </h1>
         <p className="text-sm text-gray-500 mt-1 dark:text-white/60">
-          Vælg periode, se vægt og skriv gæster.
+          {t.foodWasteOverviewSubtitle}
         </p>
       </header>
 
@@ -391,14 +393,14 @@ export default function FoodWasteStatsPage() {
 
       {guestTableError && (
         <p className="rounded-2xl bg-amber-400/15 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-          Gæstetal kræver den nye Supabase SQL, før de kan gemmes.
+          {t.guestCountsNeedSql}
         </p>
       )}
 
       <section className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-2">
           <span className="text-sm font-medium text-gray-500 dark:text-white/60">
-            Fra dato
+            {t.fromDate}
           </span>
           <input
             type="date"
@@ -410,7 +412,7 @@ export default function FoodWasteStatsPage() {
 
         <label className="space-y-2">
           <span className="text-sm font-medium text-gray-500 dark:text-white/60">
-            Til dato
+            {t.toDate}
           </span>
           <input
             type="date"
@@ -427,37 +429,37 @@ export default function FoodWasteStatsPage() {
         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-black px-5 font-semibold text-white transition active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-black sm:w-auto"
       >
         <Download size={18} />
-        {exporting ? 'Eksporterer...' : 'Eksporter Excel'}
+        {exporting ? t.exporting : t.exportExcel}
       </button>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">Kg i perioden</p>
-          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.totalKg)}</div>
+          <p className="text-sm text-gray-500 dark:text-white/60">{t.kgInPeriod}</p>
+          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.totalKg, lang)}</div>
         </div>
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">Gæster</p>
-          <div className="mt-2 text-2xl font-semibold">{formatNumber(stats.guestsTotal)}</div>
+          <p className="text-sm text-gray-500 dark:text-white/60">{t.guests}</p>
+          <div className="mt-2 text-2xl font-semibold">{formatNumber(stats.guestsTotal, lang)}</div>
         </div>
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">Kg pr. gæst</p>
-          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.kgPerGuest, 2)}</div>
+          <p className="text-sm text-gray-500 dark:text-white/60">{t.kgPerGuest}</p>
+          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.kgPerGuest, lang, 2)}</div>
         </div>
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">Gns. pr. dag</p>
-          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.averagePerDay)}</div>
+          <p className="text-sm text-gray-500 dark:text-white/60">{t.averagePerDay}</p>
+          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.averagePerDay, lang)}</div>
         </div>
       </section>
 
       <section className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Vægt graf</h2>
+          <h2 className="text-lg font-semibold">{t.weightChart}</h2>
           {loading && (
             <span className="text-sm text-gray-500 dark:text-white/60">
-              Henter...
+              {t.loadingShort}
             </span>
           )}
         </div>
@@ -465,7 +467,7 @@ export default function FoodWasteStatsPage() {
         <div className="mt-5 flex h-48 items-end gap-2 overflow-x-auto pb-2">
           {!loading && stats.chartPoints.length === 0 && (
             <p className="self-center text-sm text-gray-500 dark:text-white/60">
-              Ingen registreringer i perioden.
+              {t.noRegistrationsInPeriod}
             </p>
           )}
 
@@ -475,7 +477,7 @@ export default function FoodWasteStatsPage() {
               className="flex h-full min-w-12 flex-col items-center justify-end gap-2"
             >
               <span className="text-xs font-medium text-gray-500 dark:text-white/60">
-                {formatAmount(point.total)}
+                {formatAmount(point.total, lang)}
               </span>
               <div
                 className="w-8 rounded-t-xl bg-nordic"
@@ -493,7 +495,7 @@ export default function FoodWasteStatsPage() {
 
       <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <h2 className="text-lg font-semibold">Skriv gæster</h2>
+          <h2 className="text-lg font-semibold">{t.writeGuests}</h2>
 
           <div className="mt-4 grid gap-3">
             <input
@@ -507,14 +509,14 @@ export default function FoodWasteStatsPage() {
               value={guestCount}
               onChange={(event) => setGuestCount(event.target.value)}
               className="h-14 w-full rounded-2xl bg-gray-100 px-4 text-2xl font-semibold border border-black/5 dark:bg-[#0f1b2d] dark:border-white/10"
-              placeholder="Antal gæster"
+              placeholder={t.guestCountPlaceholder}
             />
             <button
               onClick={saveGuestCount}
               disabled={savingGuests}
               className="min-h-12 rounded-2xl bg-black px-5 font-semibold text-white transition active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-black"
             >
-              {savingGuests ? 'Gemmer...' : 'Gem gæster'}
+              {savingGuests ? t.saving : t.saveGuests}
             </button>
           </div>
 
@@ -526,7 +528,7 @@ export default function FoodWasteStatsPage() {
         </div>
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <h2 className="text-lg font-semibold">Oversigt pr. sted</h2>
+          <h2 className="text-lg font-semibold">{t.overviewByLocation}</h2>
 
           <div className="mt-4 space-y-3">
             {stats.locations.map((location) => (
@@ -534,11 +536,11 @@ export default function FoodWasteStatsPage() {
                 <div className="min-w-0">
                   <p className="font-medium truncate">{location.name}</p>
                   <p className="text-xs text-gray-500 dark:text-white/60">
-                    {formatAmount(location.averagePerDay)} pr. dag
+                    {formatAmount(location.averagePerDay, lang)} {t.perDay}
                   </p>
                 </div>
                 <span className="rounded-full bg-nordic-soft px-3 py-1 text-sm font-semibold text-nordic">
-                  {formatAmount(location.total)}
+                  {formatAmount(location.total, lang)}
                 </span>
               </div>
             ))}
@@ -547,7 +549,7 @@ export default function FoodWasteStatsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Seneste registreringer</h2>
+        <h2 className="text-lg font-semibold">{t.latestRegistrations}</h2>
 
         {entries.slice(0, 10).map((entry) => (
           <article
@@ -558,11 +560,11 @@ export default function FoodWasteStatsPage() {
               <div>
                 <h3 className="font-semibold">{entry.location_name}</h3>
                 <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
-                  {formatDate(entry.waste_date)}
+                  {formatDate(entry.waste_date, lang)}
                 </p>
               </div>
               <span className="rounded-full bg-black px-3 py-1 text-sm font-semibold text-white dark:bg-white dark:text-black">
-                {formatAmount(getEntryAmount(entry))}
+                {formatAmount(getEntryAmount(entry), lang)}
               </span>
             </div>
           </article>
@@ -571,3 +573,8 @@ export default function FoodWasteStatsPage() {
     </main>
   )
 }
+
+
+
+
+

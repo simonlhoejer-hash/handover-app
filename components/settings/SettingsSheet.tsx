@@ -2,6 +2,7 @@
 
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import { useTranslation } from '@/lib/LanguageContext'
 
 type SettingsSheetProps = {
   open: boolean
@@ -9,6 +10,8 @@ type SettingsSheetProps = {
 }
 
 export default function SettingsSheet({ open, onClose }: SettingsSheetProps) {
+  const { t } = useTranslation()
+
   if (!open) return null
 
 return (
@@ -39,19 +42,19 @@ return (
         <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-6" />
 
         <h2 className="text-xl font-semibold mb-6">
-          Indstillinger
+          {t.indstillinger}
         </h2>
 
 <div className="flex items-center justify-end gap-6">
   <span className="text-sm text-gray-600 dark:text-gray-400">
-    Sprog
+    {t.language}
   </span>
   <LanguageToggle />
 </div>
 
 <div className="flex items-center justify-end gap-6">
   <span className="text-sm text-gray-600 dark:text-gray-400">
-    Tema
+    {t.theme}
   </span>
   <ThemeToggle />
 </div>

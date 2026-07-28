@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 
 export default function LanguageToggle() {
-  const { lang, setLang } = useTranslation()
+  const { lang, setLang, t } = useTranslation()
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -37,7 +37,7 @@ export default function LanguageToggle() {
         shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)]
         dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]
       "
-      aria-label="Skift sprog"
+      aria-label={t.switchLanguage}
     >
       {/* Labels */}
       <div className="absolute inset-0 flex text-sm font-medium">

@@ -3,9 +3,11 @@
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
+import { useTranslation } from '@/lib/LanguageContext'
 
 export default function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
+  const { t } = useTranslation()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function ThemeToggle() {
         shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)]
         dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]
       `}
-      aria-label="Skift tema"
+      aria-label={t.switchTheme}
     >
       {/* Icons */}
       <div className="absolute inset-0 flex items-center justify-between px-3">

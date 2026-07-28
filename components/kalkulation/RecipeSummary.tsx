@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslation } from '@/lib/LanguageContext'
+
 type Props = {
   salePrice: string
 }
@@ -5,20 +9,22 @@ type Props = {
 export default function RecipeSummary({
   salePrice,
 }: Props) {
+  const { t } = useTranslation()
+
   return (
     <div>
-      <h2>Resultat</h2>
+      <h2>{t.result}</h2>
 
       <div>
-        Food Cost
+        {t.foodCost}
       </div>
 
       <div>
-        Kostpris
+        {t.costPrice}
       </div>
 
       <div>
-        Salgspris: {salePrice}
+        {t.salesPrice}: {salePrice}
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -10,6 +10,7 @@ import {
   removeCachedFoodWasteEntry,
   writePendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
+import { useTranslation } from '@/lib/LanguageContext'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -42,15 +43,15 @@ function getToday() {
   return `${year}-${month}-${day}`
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('da-DK', {
+function formatDate(value: string, lang: string) {
+  return new Date(value).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
     day: 'numeric',
     month: 'short',
   })
 }
 
-function formatAmount(value: number) {
-  return `${value.toLocaleString('da-DK', {
+function formatAmount(value: number, lang: string) {
+  return `${value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
     maximumFractionDigits: 2,
   })} kg`
 }
@@ -60,6 +61,7 @@ function getEntryAmount(entry: FoodWasteEntry) {
 }
 
 export default function FoodWasteLocationPage({ locationName }: Props) {
+  const { t, lang } = useTranslation()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [quantityKg, setQuantityKg] = useState('')
   const [comment, setComment] = useState('')
@@ -113,9 +115,11 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     setSyncMessage(
       remaining.length === 0
         ? ''
-        : `${remaining.length} registrering venter på net.`
+        : `${remaining.length} ${
+            remaining.length === 1 ? t.registrationWaiting : t.registrationsWaiting
+          }`
     )
-  }, [locationName])
+  }, [locationName, t.registrationWaiting, t.registrationsWaiting])
 
   useEffect(() => {
     function updateOnlineStatus() {
@@ -163,7 +167,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       if (!isCurrent) return
 
       if (loadError) {
-        setError('Offline. Viser seneste gemte tal.')
+        setError(t.offlineShowingCached)
       } else {
         setError('')
         cacheFoodWasteEntries(data ?? [])
@@ -183,7 +187,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     return () => {
       isCurrent = false
     }
-  }, [locationName, syncPendingEntries])
+  }, [locationName, syncPendingEntries, t.offlineShowingCached])
 
   const todayTotal = useMemo(() => {
     return entries.reduce((total, entry) => {
@@ -196,7 +200,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     const quantity = Number(quantityKg.replace(',', '.'))
 
     if (!quantity || quantity <= 0) {
-      setError('Skriv kg.')
+      setError(t.writeKg)
       return
     }
 
@@ -252,7 +256,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     setEntries((current) => [localEntry, ...current])
     setQuantityKg('')
     setComment('')
-    setSyncMessage('Gemt lokalt. Sendes automatisk, når der er net.')
+    setSyncMessage(t.savedLocally)
     kgInputRef.current?.focus()
   }
 
@@ -272,7 +276,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       .eq('id', id)
 
     if (deleteError) {
-      setError('Kunne ikke slette registreringen.')
+      setError(t.couldNotDeleteRegistration)
       return
     }
 
@@ -296,7 +300,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
             dark:bg-[#162338]
             dark:border-white/10
           "
-          aria-label="Tilbage"
+          aria-label={t.back}
         >
           <ChevronLeft className="w-5 h-5" />
         </Link>
@@ -306,7 +310,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
             {locationName}
           </h1>
           <p className="text-sm text-gray-500 mt-1 dark:text-white/60">
-            Food waste
+            {t.foodWaste}
           </p>
         </div>
       </header>
@@ -315,14 +319,14 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500 dark:text-white/60">
-              I dag
+              {t.today}
             </p>
             <div className="mt-1 text-2xl font-semibold">
-              {formatAmount(todayTotal)}
+              {formatAmount(todayTotal, lang)}
             </div>
           </div>
           <span className="rounded-full bg-nordic-soft px-3 py-1 text-sm font-medium text-nordic">
-            {formatDate(today)}
+            {formatDate(today, lang)}
           </span>
         </div>
 
@@ -342,7 +346,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
 
         <textarea
           className="mt-3 min-h-16 w-full rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 border border-black/5 dark:bg-[#0f1b2d] dark:text-white dark:border-white/10"
-          placeholder="Kommentar"
+          placeholder={t.comment}
           value={comment}
           onChange={(event) => setComment(event.target.value)}
         />
@@ -361,7 +365,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
 
         {!isOnline && (
           <p className="mt-3 rounded-2xl bg-amber-400/15 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-            Offline. Registreringer gemmes lokalt og sendes automatisk senere.
+            {t.offlineEntriesSaved}
           </p>
         )}
 
@@ -371,24 +375,24 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
           className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-black px-7 font-semibold text-white shadow-md transition active:scale-[0.98] hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
         >
           <Plus size={18} />
-          {saving ? 'Gemmer...' : 'Gem'}
+          {saving ? t.saving : t.save}
         </button>
       </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">
-          Seneste for stedet
+          {t.latestForLocation}
         </h2>
 
         {loading && (
           <div className="rounded-2xl bg-white p-5 text-sm text-gray-500 border border-black/5 dark:bg-[#162338] dark:border-white/10 dark:text-white/60">
-            Indlæser...
+            {t.loading}
           </div>
         )}
 
         {!loading && entries.length === 0 && (
           <div className="rounded-2xl bg-white p-5 text-sm text-gray-500 border border-black/5 dark:bg-[#162338] dark:border-white/10 dark:text-white/60">
-            Ingen registreringer endnu.
+            {t.noRegistrations}
           </div>
         )}
 
@@ -400,7 +404,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="font-semibold">
-                  {formatDate(entry.waste_date)}
+                  {formatDate(entry.waste_date, lang)}
                 </h3>
                 {entry.comment && (
                   <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
@@ -411,17 +415,17 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
 
               <div className="flex shrink-0 items-center gap-2">
                 <span className="rounded-full bg-black px-3 py-1 text-sm font-semibold text-white dark:bg-white dark:text-black">
-                  {formatAmount(getEntryAmount(entry))}
+                  {formatAmount(getEntryAmount(entry), lang)}
                 </span>
                 {entry.pending && (
                   <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                    Venter
+                    {t.waiting}
                   </span>
                 )}
                 <button
                   onClick={() => void deleteEntry(entry.id)}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-red-500/10 hover:text-red-500"
-                  aria-label="Slet registrering"
+                  aria-label={t.deleteRegistration}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -433,3 +437,5 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     </main>
   )
 }
+
+

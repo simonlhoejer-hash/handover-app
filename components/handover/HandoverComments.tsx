@@ -1,7 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from '@/lib/LanguageContext'
 
 type HandoverComment = {
   id: string
@@ -15,6 +16,7 @@ export default function HandoverComments({
 }: {
   handoverId: string
 }) {
+  const { t, lang } = useTranslation()
   const [comments, setComments] = useState<HandoverComment[]>([])
   const [count, setCount] = useState(0)
   const [open, setOpen] = useState(false)
@@ -59,7 +61,7 @@ export default function HandoverComments({
     setLoading(false)
 
     if (error) {
-      alert('Kunne ikke gemme kommentar')
+      alert(t.couldNotSaveComment)
       return
     }
 
@@ -91,7 +93,7 @@ export default function HandoverComments({
             hover:opacity-80
           "
         >
-          Kommentarer ({count})
+          {t.comments} ({count})
         </button>
       </div>
 
@@ -109,7 +111,7 @@ export default function HandoverComments({
 
           {comments.length === 0 && (
             <p className="text-center text-sm text-gray-500 dark:text-white/50">
-              Ingen kommentarer endnu
+              {t.noComments}
             </p>
           )}
 
@@ -138,11 +140,11 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
                 </div>
 
                 <div className="text-xs text-gray-500 dark:text-white/50">
-                  {new Date(c.created_at).toLocaleDateString('da-DK', {
+                  {new Date(c.created_at).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
                     day: '2-digit',
                     month: '2-digit',
                   })}{' '}
-                  kl.{new Date(c.created_at).toLocaleTimeString('da-DK', {
+                  {t.timePrefix}{new Date(c.created_at).toLocaleTimeString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
@@ -179,7 +181,7 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
                 focus:ring-black/10
                 dark:focus:ring-white/20
               "
-              placeholder="Dit navn"
+              placeholder={t.yourName}
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
             />
@@ -205,7 +207,7 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
                 focus:ring-black/10
                 dark:focus:ring-white/20
               "
-              placeholder="Skriv kommentar..."
+              placeholder={t.writeComment}
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={4}
@@ -234,7 +236,7 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
                 disabled:opacity-50
               "
             >
-              {loading ? 'Gemmer...' : 'Tilføj kommentar'}
+              {loading ? t.saving : t.addComment}
             </button>
 
           </div>
@@ -243,3 +245,5 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
     </div>
   )
 }
+
+

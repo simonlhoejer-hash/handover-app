@@ -170,7 +170,7 @@ className="
 "
 >
   <span className="tracking-tight text-gray-900 dark:text-white">
-{createLabel || 'Ny overlevering'}
+{createLabel || t.newHandover}
   </span>
 
   <ChevronDown

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import { useTranslation } from '@/lib/LanguageContext'
 import {
   BarChart3,
   LayoutGrid,
@@ -14,6 +15,7 @@ import {
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -22,7 +24,7 @@ export default function BottomNav() {
       icon: LayoutGrid,
       href: '/galley',
       active: pathname === '/galley',
-      label: 'Overlevering',
+      label: t.handoverTitle,
     },
     {
       icon: Trash2,
@@ -33,13 +35,13 @@ export default function BottomNav() {
           pathname.startsWith('/galley/food-waste/') &&
           pathname !== '/galley/food-waste/overblik'
         ),
-      label: 'Food waste',
+      label: t.foodWaste,
     },
     {
       icon: BarChart3,
       href: '/galley/food-waste/overblik',
       active: pathname === '/galley/food-waste/overblik',
-      label: 'Overblik',
+      label: t.overview,
     },
   ]
 
@@ -79,6 +81,7 @@ export default function BottomNav() {
       >
         {tabs.map((tab) => {
           const Icon = tab.icon
+
           const active = tab.active
 
           return (
@@ -164,14 +167,14 @@ export default function BottomNav() {
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-white/70">
-                    Sprog
+                    {t.language}
                   </span>
                   <LanguageToggle />
                 </div>
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-white/70">
-                    Tema
+                    {t.theme}
                   </span>
                   <ThemeToggle />
                 </div>

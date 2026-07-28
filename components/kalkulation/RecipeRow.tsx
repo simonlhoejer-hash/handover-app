@@ -1,9 +1,10 @@
-// RecipeRow.tsx
+﻿// RecipeRow.tsx
 
 'use client'
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from '@/lib/LanguageContext'
 
 type Ingredient = {
   id: string
@@ -22,6 +23,7 @@ type Props = {
 export default function RecipeRow({
   row,
 }: Props) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [quantity, setQuantity] =
     useState('')
@@ -89,7 +91,7 @@ export default function RecipeRow({
               e.target.value
             )
           }
-          placeholder="Søg råvare..."
+          placeholder={t.searchIngredient}
           className="
             w-full
             border
@@ -143,9 +145,9 @@ export default function RecipeRow({
                   "
                 >
                   {item.supplier}
-                  {' • '}
+                  {' â€¢ '}
                   {item.price} kr
-                  {' • '}
+                  {' â€¢ '}
                   {item.unit}
                 </div>
               </button>
@@ -195,3 +197,5 @@ export default function RecipeRow({
     </tr>
   )
 }
+
+

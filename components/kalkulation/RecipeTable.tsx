@@ -1,5 +1,8 @@
-// RecipeTable.tsx
+﻿// RecipeTable.tsx
 
+'use client'
+
+import { useTranslation } from '@/lib/LanguageContext'
 import RecipeRow from './RecipeRow'
 
 type Props = {
@@ -11,6 +14,8 @@ type Props = {
 export default function RecipeTable({
   rows,
 }: Props) {
+  const { t } = useTranslation()
+
   return (
     <table className="w-full">
       <thead>
@@ -20,23 +25,23 @@ export default function RecipeTable({
           </th>
 
           <th className="text-left py-4">
-            Råvare
+            {t.rawIngredient}
           </th>
 
           <th className="w-32 text-left py-4">
-            Mængde
+            {t.amount}
           </th>
 
           <th className="w-24 text-left py-4">
-            Enhed
+            {t.unit}
           </th>
 
           <th className="w-32 text-left py-4">
-            Pris
+            {t.price}
           </th>
 
           <th className="w-32 text-left py-4">
-            I alt
+            {t.total}
           </th>
         </tr>
       </thead>
@@ -52,3 +57,5 @@ export default function RecipeTable({
     </table>
   )
 }
+
+

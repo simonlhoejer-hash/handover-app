@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import { useTranslation } from '@/lib/LanguageContext'
 import {
   LayoutGrid,
   Calculator,
@@ -14,6 +15,7 @@ import {
 
 export default function AdminBottomNav() {
   const pathname = usePathname()
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -169,14 +171,14 @@ export default function AdminBottomNav() {
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-white/70">
-                    Sprog
+                    {t.language}
                   </span>
                   <LanguageToggle />
                 </div>
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-white/70">
-                    Tema
+                    {t.theme}
                   </span>
                   <ThemeToggle />
                 </div>

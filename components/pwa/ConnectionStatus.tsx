@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { Cloud, CloudOff } from 'lucide-react'
 import { readPendingFoodWasteEntries } from '@/lib/foodWasteOffline'
+import { useTranslation } from '@/lib/LanguageContext'
 
 function getPendingCount() {
   return readPendingFoodWasteEntries().length
 }
 
 export default function ConnectionStatus() {
+  const { t } = useTranslation()
   const [isOnline, setIsOnline] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
 
@@ -37,8 +39,8 @@ export default function ConnectionStatus() {
   }, [])
 
   const hasPending = pendingCount > 0
-  const label = isOnline ? 'Online' : 'Offline'
-  const detail = hasPending ? `${pendingCount} venter` : 'Synkroniseret'
+  const label = isOnline ? t.online : t.offline
+  const detail = hasPending ? `${pendingCount} ${t.waitingShort}` : t.synced
   const Icon = isOnline ? Cloud : CloudOff
 
   return (

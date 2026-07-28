@@ -1,9 +1,11 @@
-"use client"
+﻿"use client"
 
 import { useRouter } from "next/navigation"
+import { useTranslation } from "@/lib/LanguageContext"
 
 export default function Page() {
   const router = useRouter()
+  const { t } = useTranslation()
 
   function handleLogin() {
     localStorage.setItem("admin-auth", "true")
@@ -18,16 +20,18 @@ export default function Page() {
       </h1>
 
       <p className="text-gray-600 max-w-md mb-8">
-        Digital overlevering til køkken og ledelse.
+        {t.loginTagline}
       </p>
 
       <button
         onClick={handleLogin}
         className="bg-black text-white px-6 py-3 rounded-2xl"
       >
-        Log ind
+        {t.login}
       </button>
 
     </main>
   )
 }
+
+

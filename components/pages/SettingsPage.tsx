@@ -50,7 +50,7 @@ export default function SettingsPage() {
           "
         >
           <span className="tracking-tight text-gray-900 dark:text-white">
-            App
+            {t.app}
           </span>
 
           <ChevronDown
@@ -75,14 +75,14 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-white/70">
-                Sprog
+                {t.language}
               </span>
               <LanguageToggle />
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-white/70">
-                Tema
+                {t.theme}
               </span>
               <ThemeToggle />
             </div>

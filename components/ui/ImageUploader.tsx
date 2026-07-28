@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
@@ -28,12 +28,12 @@ export default function ImageUploader({
 
   async function validateImage(file: File) {
     if (!['image/png', 'image/jpeg'].includes(file.type)) {
-      alert('Kun PNG og JPG er tilladt')
+      alert(t.onlyPngJpg)
       return false
     }
 
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      alert(`Billedet må max være ${MAX_SIZE_MB}MB`)
+      alert(`${t.imageMaxSize} ${MAX_SIZE_MB}MB`)
       return false
     }
 
@@ -45,7 +45,7 @@ export default function ImageUploader({
         URL.revokeObjectURL(objectUrl)
 
         if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
-          alert(`Billedet må max være ${MAX_WIDTH}x${MAX_HEIGHT}px`)
+          alert(`${t.imageMaxSize} ${MAX_WIDTH}x${MAX_HEIGHT}px`)
           resolve(false)
         } else {
           resolve(true)
@@ -53,7 +53,7 @@ export default function ImageUploader({
       }
 
       img.onerror = () => {
-        alert('Kunne ikke læse billedet')
+        alert(t.couldNotReadImage)
         resolve(false)
       }
 
@@ -139,7 +139,7 @@ export default function ImageUploader({
             hover:opacity-90
           "
         >
-          Vælg fil
+          {t.chooseFile}
           <input
             type="file"
             accept="image/png,image/jpeg"
@@ -171,7 +171,7 @@ export default function ImageUploader({
 
             <img
               src={previewUrl}
-              alt="Preview"
+              alt={t.preview}
               className="
                 w-24 h-24
                 object-cover
@@ -208,7 +208,7 @@ export default function ImageUploader({
                   dark:text-black
                 "
               >
-                ✕
+                âœ•
               </button>
             )}
 
@@ -232,9 +232,11 @@ export default function ImageUploader({
       </div>
 
       <p className="text-xs text-gray-500 dark:text-white/50">
-        Maks 5MB · Kun JPG eller PNG
+        {t.imageHelp}
       </p>
 
     </div>
   )
 }
+
+
