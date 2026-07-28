@@ -3,6 +3,11 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
+import {
+  cacheFoodWasteEntries,
+  readCachedFoodWasteEntries,
+  readPendingFoodWasteEntries,
+} from '@/lib/foodWasteOffline'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -10,7 +15,7 @@ type FoodWasteEntry = {
   created_at: string
   waste_date: string
   location_name: string
-  quantity_kg: number
+  quantity_kg: number | string
   comment: string | null
 }
 
@@ -29,6 +34,10 @@ function formatAmount(value: number) {
   })} kg`
 }
 
+function getEntryAmount(entry: FoodWasteEntry) {
+  return Number(entry.quantity_kg) || 0
+}
+
 export default function FoodWastePage() {
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,6 +49,14 @@ export default function FoodWastePage() {
     let isCurrent = true
 
     async function loadEntries() {
+      const cachedEntries = readCachedFoodWasteEntries()
+      const pendingEntries = readPendingFoodWasteEntries()
+
+      if (cachedEntries.length > 0 || pendingEntries.length > 0) {
+        setEntries([...pendingEntries, ...cachedEntries])
+        setLoading(false)
+      }
+
       const { data, error: loadError } = await supabase
         .from('food_waste_entries')
         .select('*')
@@ -50,11 +67,12 @@ export default function FoodWastePage() {
       if (!isCurrent) return
 
       if (loadError) {
-        setError('Kunne ikke hente food waste.')
-        setEntries([])
+        setError('Offline. Viser seneste gemte tal.')
       } else {
         setError('')
-        setEntries(data ?? [])
+        const nextEntries = data ?? []
+        cacheFoodWasteEntries(nextEntries)
+        setEntries([...readPendingFoodWasteEntries(), ...nextEntries])
       }
 
       setLoading(false)
@@ -72,7 +90,7 @@ export default function FoodWastePage() {
       (acc, entry) => {
         if (entry.waste_date === today) {
           acc.byLocation[entry.location_name] =
-            (acc.byLocation[entry.location_name] ?? 0) + entry.quantity_kg
+            (acc.byLocation[entry.location_name] ?? 0) + getEntryAmount(entry)
         }
 
         return acc
