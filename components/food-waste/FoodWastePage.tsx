@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { Trash2 } from 'lucide-react'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import { supabase } from '@/lib/supabase'
 
@@ -85,12 +84,8 @@ export default function FoodWastePage() {
   }, [entries, today])
 
   return (
-    <main className="px-4 py-8 max-w-5xl mx-auto">
-      <header className="mb-8 flex flex-col items-center gap-3 text-center">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-nordic-soft text-nordic">
-          <Trash2 size={22} strokeWidth={1.8} />
-        </div>
-
+    <main className="px-4 pt-4 pb-8 max-w-5xl mx-auto">
+      <header className="mb-6 flex flex-col items-center text-center">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
             Food waste
