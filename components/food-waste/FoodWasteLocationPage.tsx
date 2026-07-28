@@ -3,6 +3,13 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react'
+import {
+  cacheFoodWasteEntries,
+  readCachedFoodWasteEntries,
+  readPendingFoodWasteEntries,
+  removeCachedFoodWasteEntry,
+  writePendingFoodWasteEntries,
+} from '@/lib/foodWasteOffline'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -10,7 +17,7 @@ type FoodWasteEntry = {
   created_at: string
   waste_date: string
   location_name: string
-  quantity_kg: number
+  quantity_kg: number | string
   comment: string | null
   pending?: boolean
 }
@@ -25,8 +32,6 @@ type FoodWastePayload = {
   quantity_kg: number
   comment: string | null
 }
-
-const PENDING_STORAGE_KEY = 'foodWastePendingEntries'
 
 function getToday() {
   const now = new Date()
@@ -50,20 +55,8 @@ function formatAmount(value: number) {
   })} kg`
 }
 
-function readPendingEntries(): FoodWasteEntry[] {
-  try {
-    const saved = window.localStorage.getItem(PENDING_STORAGE_KEY)
-    if (!saved) return []
-
-    const parsed = JSON.parse(saved) as FoodWasteEntry[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function writePendingEntries(entries: FoodWasteEntry[]) {
-  window.localStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(entries))
+function getEntryAmount(entry: FoodWasteEntry) {
+  return Number(entry.quantity_kg) || 0
 }
 
 export default function FoodWasteLocationPage({ locationName }: Props) {
@@ -82,7 +75,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
   const today = getToday()
 
   const syncPendingEntries = useCallback(async () => {
-    const pendingEntries = readPendingEntries()
+    const pendingEntries = readPendingFoodWasteEntries()
     if (pendingEntries.length === 0) {
       setSyncMessage('')
       return
@@ -94,7 +87,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       const payload: FoodWastePayload = {
         waste_date: pendingEntry.waste_date,
         location_name: pendingEntry.location_name,
-        quantity_kg: pendingEntry.quantity_kg,
+        quantity_kg: Number(pendingEntry.quantity_kg) || 0,
         comment: pendingEntry.comment,
       }
 
@@ -107,6 +100,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       if (syncError || !data) {
         remaining.push(pendingEntry)
       } else if (pendingEntry.location_name === locationName) {
+        cacheFoodWasteEntries([data])
         setEntries((current) => [
           data,
           ...current.filter((entry) => entry.id !== pendingEntry.id),
@@ -114,7 +108,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       }
     }
 
-    writePendingEntries(remaining)
+    writePendingFoodWasteEntries(remaining)
 
     setSyncMessage(
       remaining.length === 0
@@ -146,6 +140,18 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     let isCurrent = true
 
     async function loadEntries() {
+      const pending = readPendingFoodWasteEntries().filter(
+        (entry) => entry.location_name === locationName
+      )
+      const cached = readCachedFoodWasteEntries().filter(
+        (entry) => entry.location_name === locationName
+      )
+
+      if (pending.length > 0 || cached.length > 0) {
+        setEntries([...pending, ...cached])
+        setLoading(false)
+      }
+
       const { data, error: loadError } = await supabase
         .from('food_waste_entries')
         .select('*')
@@ -157,18 +163,10 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       if (!isCurrent) return
 
       if (loadError) {
-        setError('Kunne ikke hente food waste.')
-        setEntries(
-          readPendingEntries().filter(
-            (entry) => entry.location_name === locationName
-          )
-        )
+        setError('Offline. Viser seneste gemte tal.')
       } else {
         setError('')
-        const pending = readPendingEntries().filter(
-          (entry) => entry.location_name === locationName
-        )
-
+        cacheFoodWasteEntries(data ?? [])
         setEntries([...pending, ...(data ?? [])])
       }
 
@@ -190,7 +188,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
   const todayTotal = useMemo(() => {
     return entries.reduce((total, entry) => {
       if (entry.waste_date !== today) return total
-      return total + entry.quantity_kg
+      return total + getEntryAmount(entry)
     }, 0)
   }, [entries, today])
 
@@ -227,6 +225,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     if (saveError) {
       saveEntryLocally(payload)
     } else if (data) {
+      cacheFoodWasteEntries([data])
       setEntries((current) => [data, ...current])
       setQuantityKg('')
       setComment('')
@@ -247,8 +246,9 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       pending: true,
     }
 
-    const pendingEntries = readPendingEntries()
-    writePendingEntries([localEntry, ...pendingEntries])
+    const pendingEntries = readPendingFoodWasteEntries()
+    writePendingFoodWasteEntries([localEntry, ...pendingEntries])
+    cacheFoodWasteEntries([localEntry])
 
     setEntries((current) => [localEntry, ...current])
     setQuantityKg('')
@@ -259,9 +259,10 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
 
   async function deleteEntry(id: string) {
     if (id.startsWith('local-')) {
-      writePendingEntries(
-        readPendingEntries().filter((entry) => entry.id !== id)
+      writePendingFoodWasteEntries(
+        readPendingFoodWasteEntries().filter((entry) => entry.id !== id)
       )
+      removeCachedFoodWasteEntry(id)
       setEntries((current) => current.filter((entry) => entry.id !== id))
       return
     }
@@ -276,6 +277,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       return
     }
 
+    removeCachedFoodWasteEntry(id)
     setEntries((current) => current.filter((entry) => entry.id !== id))
   }
 
@@ -410,7 +412,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
 
               <div className="flex shrink-0 items-center gap-2">
                 <span className="rounded-full bg-black px-3 py-1 text-sm font-semibold text-white dark:bg-white dark:text-black">
-                  {formatAmount(entry.quantity_kg)}
+                  {formatAmount(getEntryAmount(entry))}
                 </span>
                 {entry.pending && (
                   <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
