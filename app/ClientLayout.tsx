@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import BottomNav from '@/components/layout/BottomNav'
 import AdminBottomNav from '@/components/layout/AdminBottomNav'
 import HeaderTitle from '@/components/layout/HeaderTitle'
+import ConnectionStatus from '@/components/pwa/ConnectionStatus'
 import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration'
 
 export default function ClientLayout({
@@ -23,6 +24,7 @@ export default function ClientLayout({
   return (
     <>
       <ServiceWorkerRegistration />
+      {!isAdmin && <ConnectionStatus />}
 
       <div className="min-h-screen flex flex-col">
 
