@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarDays, Scale, Trash2 } from 'lucide-react'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import { supabase } from '@/lib/supabase'
 
@@ -72,75 +71,27 @@ export default function FoodWastePage() {
     return entries.reduce(
       (acc, entry) => {
         if (entry.waste_date === today) {
-          acc.today += entry.quantity_kg
           acc.byLocation[entry.location_name] =
             (acc.byLocation[entry.location_name] ?? 0) + entry.quantity_kg
-        }
-
-        if (entry.waste_date.startsWith(today.slice(0, 7))) {
-          acc.month += entry.quantity_kg
         }
 
         return acc
       },
       {
-        today: 0,
-        month: 0,
         byLocation: {} as Record<string, number>,
       }
     )
   }, [entries, today])
 
   return (
-    <main className="max-w-5xl mx-auto px-4 pt-2 pb-24 space-y-6">
-      <header className="space-y-2">
-        <p className="text-sm font-medium text-nordic">
-          Galley
-        </p>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Food waste
-            </h1>
-            <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
-              Vælg sted og registrer vægten på næste side.
-            </p>
-          </div>
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-nordic-soft text-nordic">
-            <Trash2 size={22} strokeWidth={1.8} />
-          </div>
-        </div>
-      </header>
-
-      <section className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-white/60">
-            <Scale size={16} />
-            I dag
-          </div>
-          <div className="mt-2 text-2xl font-semibold">
-            {formatAmount(totals.today)}
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-white/60">
-            <CalendarDays size={16} />
-            Denne måned
-          </div>
-          <div className="mt-2 text-2xl font-semibold">
-            {formatAmount(totals.month)}
-          </div>
-        </div>
-      </section>
-
+    <main className="px-4 py-8 max-w-5xl mx-auto">
       {error && (
-        <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-300">
+        <p className="mb-6 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-300">
           {error}
         </p>
       )}
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {FOOD_WASTE_LOCATIONS.map((location) => {
           const todayAmount = totals.byLocation[location.name] ?? 0
 
@@ -151,7 +102,7 @@ export default function FoodWastePage() {
               className="
                 rounded-xl
                 p-5
-                h-[118px]
+                h-[110px]
                 flex items-center justify-center
                 bg-white
                 border border-gray-200/70
@@ -168,7 +119,7 @@ export default function FoodWastePage() {
               "
             >
               <div className="flex flex-col items-center gap-2">
-                <h2 className="text-base font-semibold tracking-tight">
+                <h2 className="text-lg font-semibold tracking-tight">
                   {location.name}
                 </h2>
                 <span
