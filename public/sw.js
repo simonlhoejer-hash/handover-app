@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v1'
+const CACHE_NAME = 'handover-offline-v2'
 
 const APP_SHELL = [
   '/',
@@ -55,23 +55,39 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
-          return response
-        })
-        .catch(async () => {
-          const cached = await caches.match(request)
-          return cached || caches.match('/galley/food-waste')
-        })
+      caches.match(request).then((cached) => {
+        const fetchAndCache = fetch(request)
+          .then((response) => {
+            const copy = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+            return response
+          })
+          .catch(() => cached || caches.match('/galley/food-waste'))
+
+        return cached || fetchAndCache
+      })
     )
     return
   }
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) return cached
+      if (cached) {
+        event.waitUntil(
+          fetch(request)
+            .then((response) => {
+              if (!response || response.status !== 200) return
+
+              const copy = response.clone()
+              return caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, copy)
+              })
+            })
+            .catch(() => undefined)
+        )
+
+        return cached
+      }
 
       return fetch(request).then((response) => {
         if (!response || response.status !== 200) return response
