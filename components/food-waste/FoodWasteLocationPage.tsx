@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -12,11 +12,21 @@ type FoodWasteEntry = {
   location_name: string
   quantity_kg: number
   comment: string | null
+  pending?: boolean
 }
 
 type Props = {
   locationName: string
 }
+
+type FoodWastePayload = {
+  waste_date: string
+  location_name: string
+  quantity_kg: number
+  comment: string | null
+}
+
+const PENDING_STORAGE_KEY = 'foodWastePendingEntries'
 
 function getToday() {
   const now = new Date()
@@ -40,6 +50,22 @@ function formatAmount(value: number) {
   })} kg`
 }
 
+function readPendingEntries(): FoodWasteEntry[] {
+  try {
+    const saved = window.localStorage.getItem(PENDING_STORAGE_KEY)
+    if (!saved) return []
+
+    const parsed = JSON.parse(saved) as FoodWasteEntry[]
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writePendingEntries(entries: FoodWasteEntry[]) {
+  window.localStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(entries))
+}
+
 export default function FoodWasteLocationPage({ locationName }: Props) {
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [quantityKg, setQuantityKg] = useState('')
@@ -47,9 +73,74 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [syncMessage, setSyncMessage] = useState('')
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator === 'undefined' ? true : navigator.onLine
+  )
   const kgInputRef = useRef<HTMLInputElement>(null)
 
   const today = getToday()
+
+  const syncPendingEntries = useCallback(async () => {
+    const pendingEntries = readPendingEntries()
+    if (pendingEntries.length === 0) {
+      setSyncMessage('')
+      return
+    }
+
+    const remaining: FoodWasteEntry[] = []
+
+    for (const pendingEntry of pendingEntries) {
+      const payload: FoodWastePayload = {
+        waste_date: pendingEntry.waste_date,
+        location_name: pendingEntry.location_name,
+        quantity_kg: pendingEntry.quantity_kg,
+        comment: pendingEntry.comment,
+      }
+
+      const { data, error: syncError } = await supabase
+        .from('food_waste_entries')
+        .insert(payload)
+        .select('*')
+        .single()
+
+      if (syncError || !data) {
+        remaining.push(pendingEntry)
+      } else if (pendingEntry.location_name === locationName) {
+        setEntries((current) => [
+          data,
+          ...current.filter((entry) => entry.id !== pendingEntry.id),
+        ])
+      }
+    }
+
+    writePendingEntries(remaining)
+
+    setSyncMessage(
+      remaining.length === 0
+        ? ''
+        : `${remaining.length} registrering venter på net.`
+    )
+  }, [locationName])
+
+  useEffect(() => {
+    function updateOnlineStatus() {
+      const online = navigator.onLine
+      setIsOnline(online)
+
+      if (online) {
+        void syncPendingEntries()
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus)
+    window.addEventListener('offline', updateOnlineStatus)
+
+    return () => {
+      window.removeEventListener('online', updateOnlineStatus)
+      window.removeEventListener('offline', updateOnlineStatus)
+    }
+  }, [syncPendingEntries])
 
   useEffect(() => {
     let isCurrent = true
@@ -67,14 +158,26 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
 
       if (loadError) {
         setError('Kunne ikke hente food waste.')
-        setEntries([])
+        setEntries(
+          readPendingEntries().filter(
+            (entry) => entry.location_name === locationName
+          )
+        )
       } else {
         setError('')
-        setEntries(data ?? [])
+        const pending = readPendingEntries().filter(
+          (entry) => entry.location_name === locationName
+        )
+
+        setEntries([...pending, ...(data ?? [])])
       }
 
       setLoading(false)
       window.setTimeout(() => kgInputRef.current?.focus(), 120)
+
+      if (navigator.onLine) {
+        void syncPendingEntries()
+      }
     }
 
     void loadEntries()
@@ -82,7 +185,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     return () => {
       isCurrent = false
     }
-  }, [locationName])
+  }, [locationName, syncPendingEntries])
 
   const todayTotal = useMemo(() => {
     return entries.reduce((total, entry) => {
@@ -102,11 +205,17 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     setSaving(true)
     setError('')
 
-    const payload = {
+    const payload: FoodWastePayload = {
       waste_date: today,
       location_name: locationName,
       quantity_kg: quantity,
       comment: comment.trim() || null,
+    }
+
+    if (!navigator.onLine) {
+      saveEntryLocally(payload)
+      setSaving(false)
+      return
     }
 
     const { data, error: saveError } = await supabase
@@ -116,7 +225,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       .single()
 
     if (saveError) {
-      setError('Kunne ikke gemme registreringen.')
+      saveEntryLocally(payload)
     } else if (data) {
       setEntries((current) => [data, ...current])
       setQuantityKg('')
@@ -127,7 +236,36 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     setSaving(false)
   }
 
+  function saveEntryLocally(payload: FoodWastePayload) {
+    const localEntry: FoodWasteEntry = {
+      id: `local-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      waste_date: payload.waste_date,
+      location_name: payload.location_name,
+      quantity_kg: payload.quantity_kg,
+      comment: payload.comment,
+      pending: true,
+    }
+
+    const pendingEntries = readPendingEntries()
+    writePendingEntries([localEntry, ...pendingEntries])
+
+    setEntries((current) => [localEntry, ...current])
+    setQuantityKg('')
+    setComment('')
+    setSyncMessage('Gemt lokalt. Sendes automatisk, når der er net.')
+    kgInputRef.current?.focus()
+  }
+
   async function deleteEntry(id: string) {
+    if (id.startsWith('local-')) {
+      writePendingEntries(
+        readPendingEntries().filter((entry) => entry.id !== id)
+      )
+      setEntries((current) => current.filter((entry) => entry.id !== id))
+      return
+    }
+
     const { error: deleteError } = await supabase
       .from('food_waste_entries')
       .delete()
@@ -214,6 +352,18 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
           </p>
         )}
 
+        {syncMessage && (
+          <p className="mt-3 rounded-2xl bg-amber-400/15 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+            {syncMessage}
+          </p>
+        )}
+
+        {!isOnline && (
+          <p className="mt-3 rounded-2xl bg-amber-400/15 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+            Offline. Registreringer gemmes lokalt og sendes automatisk senere.
+          </p>
+        )}
+
         <button
           onClick={saveEntry}
           disabled={saving}
@@ -262,6 +412,11 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
                 <span className="rounded-full bg-black px-3 py-1 text-sm font-semibold text-white dark:bg-white dark:text-black">
                   {formatAmount(entry.quantity_kg)}
                 </span>
+                {entry.pending && (
+                  <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                    Venter
+                  </span>
+                )}
                 <button
                   onClick={() => void deleteEntry(entry.id)}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-red-500/10 hover:text-red-500"
