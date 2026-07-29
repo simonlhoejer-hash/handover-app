@@ -156,7 +156,8 @@ export default function FoodWastePage({
       <div className="space-y-9">
         {LOCATION_GROUPS.map((group) => (
           <section key={group.title}>
-            <div className="mb-4 flex items-center gap-4">
+            <div className="mb-4 flex items-center justify-center gap-4">
+              <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/20" />
               <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/55">
                 {group.title}
               </h2>
