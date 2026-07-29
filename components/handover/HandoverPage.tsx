@@ -9,6 +9,17 @@ import { supabase } from '@/lib/supabase'
 import { ChevronDown } from 'lucide-react'
 import { ChevronLeft } from 'lucide-react'
 
+const ORAL_HANDOVER_NOTE =
+  '<p data-handover-type="oral">Mundtlig overlevering</p>'
+
+function isOralHandoverNote(value: string) {
+  return value.includes('data-handover-type="oral"')
+}
+
+function getPlainText(value: string) {
+  return value.replace(/<[^>]*>/g, '').trim()
+}
+
 type Props = {
   department: 'galley' | 'shop' | 'admin'
   itemName: string
@@ -29,6 +40,7 @@ export default function HandoverPage({
   const [receiver, setReceiver] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [note, setNote] = useState('')
+  const [isOral, setIsOral] = useState(false)
   const [items, setItems] = useState<any[]>([])
   const [images, setImages] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
@@ -86,6 +98,7 @@ export default function HandoverPage({
       setReceiver(data.receiver_name ?? '')
       setDate(data.shift_date ?? new Date().toISOString().split('T')[0])
       setNote(data.note ?? '')
+      setIsOral(isOralHandoverNote(data.note ?? ''))
       setImages(data.images ?? [])
       setDraftSavedAt(data.draft_saved_at ?? data.updated_at ?? data.created_at ?? null)
       setDraftStatus('saved')
@@ -95,6 +108,7 @@ export default function HandoverPage({
       setReceiver('')
       setDate(new Date().toISOString().split('T')[0])
       setNote('')
+      setIsOral(false)
       setImages([])
     }
 
@@ -102,8 +116,9 @@ export default function HandoverPage({
   }
 
   async function saveDraft() {
-    const trimmedNote = note.replace(/<[^>]*>/g, '').trim()
-    if (!trimmedNote) return
+    const nextNote = isOral ? ORAL_HANDOVER_NOTE : note
+    const trimmedNote = getPlainText(nextNote)
+    if (!isOral && !trimmedNote) return
 
     setDraftStatus('saving')
     setDraftError('')
@@ -115,7 +130,7 @@ export default function HandoverPage({
       receiver_name: receiver,
       parti: itemName,
       shift_date: date,
-      note,
+      note: nextNote,
       images,
       status: 'draft',
       draft_saved_at: now,
@@ -180,7 +195,9 @@ export default function HandoverPage({
   }
 
   async function saveNote() {
-    if (!name || !receiver || !note) {
+    const nextNote = isOral ? ORAL_HANDOVER_NOTE : note
+
+    if (!name || !receiver || (!isOral && !getPlainText(nextNote))) {
       alert(t.requiredFields)
       return
     }
@@ -195,7 +212,7 @@ export default function HandoverPage({
       author_name: name,
       receiver_name: receiver,
       shift_date: date,
-      note,
+      note: isOral ? ORAL_HANDOVER_NOTE : note,
       images,
       status: 'published',
     }
@@ -225,6 +242,7 @@ export default function HandoverPage({
     }
 
     setNote('')
+    setIsOral(false)
     setImages([])
     setName('')
     setReceiver('')
@@ -239,15 +257,16 @@ export default function HandoverPage({
   useEffect(() => {
     if (!draftHydratedRef.current) return
 
-    const trimmedNote = note.replace(/<[^>]*>/g, '').trim()
-    if (!trimmedNote) return
+    const nextNote = isOral ? ORAL_HANDOVER_NOTE : note
+    const trimmedNote = getPlainText(nextNote)
+    if (!isOral && !trimmedNote) return
 
     const timer = window.setTimeout(() => {
       void saveDraft()
     }, 1800)
 
     return () => window.clearTimeout(timer)
-  }, [name, receiver, date, note, images, department, itemName, draftId])
+  }, [name, receiver, date, note, isOral, images, department, itemName, draftId])
 
   return (
     <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-8">
@@ -353,6 +372,8 @@ className="
   setImages={setImages}
   loading={loading}
   onSave={saveNote}
+  isOral={isOral}
+  setIsOral={setIsOral}
   draftStatus={draftStatus}
   draftSavedAt={draftSavedAt}
   draftError={draftError}

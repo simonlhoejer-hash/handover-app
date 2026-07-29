@@ -5,6 +5,10 @@ import { supabase } from '@/lib/supabase'
 import { useTranslation } from '@/lib/LanguageContext'
 import HandoverComments from './HandoverComments'
 
+function isOralHandoverNote(value: string) {
+  return value.includes('data-handover-type="oral"')
+}
+
 type Props = {
   item: any
   reload: () => void
@@ -16,6 +20,7 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
   const [readName, setReadName] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const isOral = isOralHandoverNote(item.note ?? '')
 
   async function markAsRead() {
     if (!readName) {
@@ -108,17 +113,23 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
         </div>
       </div>
 
-      <div
-        className="
-          prose
-          dark:prose-invert
-          max-w-none
-          text-gray-800
-          dark:text-white/90
-          prose-p:leading-relaxed
-        "
-        dangerouslySetInnerHTML={{ __html: item.note }}
-      />
+      {isOral ? (
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-400/10 px-4 py-4 text-sm font-semibold text-amber-800 dark:text-amber-200">
+          {t.oralHandover}
+        </div>
+      ) : (
+        <div
+          className="
+            prose
+            dark:prose-invert
+            max-w-none
+            text-gray-800
+            dark:text-white/90
+            prose-p:leading-relaxed
+          "
+          dangerouslySetInnerHTML={{ __html: item.note }}
+        />
+      )}
 
       {item.images?.length > 0 && (
         <div className="grid grid-cols-3 gap-3 mt-4">
