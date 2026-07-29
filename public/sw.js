@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v2'
+const CACHE_NAME = 'handover-offline-v3'
 
 const APP_SHELL = [
   '/',
@@ -17,6 +17,10 @@ const APP_SHELL = [
   '/galley/food-waste/produktion-slagteri',
   '/galley/food-waste/produktion-proviant-daek-1',
   '/manifest-galley.json',
+  '/pearl',
+  '/pearl/food-waste',
+  '/pearl/food-waste/overblik',
+  '/manifest-pearl.json',
   '/icon-192.png',
   '/icon-512.png',
   '/go-nordic-logo.png',

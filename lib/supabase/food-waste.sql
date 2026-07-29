@@ -4,16 +4,32 @@ create table if not exists public.food_waste_entries (
   waste_date date not null default current_date,
   location_name text not null,
   quantity_kg numeric not null,
-  comment text
+  comment text,
+  vessel text not null default 'crown'
 );
 
 create table if not exists public.food_waste_guest_counts (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
-  service_date date not null unique default current_date,
+  service_date date not null default current_date,
   guest_count integer not null,
-  comment text
+  comment text,
+  vessel text not null default 'crown',
+  unique (vessel, service_date)
 );
+
+-- Safe migration for databases created before Pearl was added.
+alter table public.food_waste_entries
+add column if not exists vessel text not null default 'crown';
+
+alter table public.food_waste_guest_counts
+add column if not exists vessel text not null default 'crown';
+
+alter table public.food_waste_guest_counts
+drop constraint if exists food_waste_guest_counts_service_date_key;
+
+create unique index if not exists food_waste_guest_counts_vessel_service_date_key
+on public.food_waste_guest_counts (vessel, service_date);
 
 alter table public.food_waste_entries enable row level security;
 

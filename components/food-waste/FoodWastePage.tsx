@@ -39,7 +39,15 @@ function getEntryAmount(entry: FoodWasteEntry) {
   return Number(entry.quantity_kg) || 0
 }
 
-export default function FoodWastePage() {
+type Props = {
+  vessel?: 'crown' | 'pearl'
+  basePath?: string
+}
+
+export default function FoodWastePage({
+  vessel = 'crown',
+  basePath = '/galley',
+}: Props) {
   const { t, lang } = useTranslation()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,8 +59,8 @@ export default function FoodWastePage() {
     let isCurrent = true
 
     async function loadEntries() {
-      const cachedEntries = readCachedFoodWasteEntries()
-      const pendingEntries = readPendingFoodWasteEntries()
+      const cachedEntries = readCachedFoodWasteEntries(vessel)
+      const pendingEntries = readPendingFoodWasteEntries(vessel)
 
       if (cachedEntries.length > 0 || pendingEntries.length > 0) {
         setEntries([...pendingEntries, ...cachedEntries])
@@ -62,6 +70,7 @@ export default function FoodWastePage() {
       const { data, error: loadError } = await supabase
         .from('food_waste_entries')
         .select('*')
+        .eq('vessel', vessel)
         .gte('waste_date', today.slice(0, 7) + '-01')
         .order('waste_date', { ascending: false })
         .order('created_at', { ascending: false })
@@ -73,8 +82,8 @@ export default function FoodWastePage() {
       } else {
         setError('')
         const nextEntries = data ?? []
-        cacheFoodWasteEntries(nextEntries)
-        setEntries([...readPendingFoodWasteEntries(), ...nextEntries])
+        cacheFoodWasteEntries(nextEntries, vessel)
+        setEntries([...readPendingFoodWasteEntries(vessel), ...nextEntries])
       }
 
       setLoading(false)
@@ -85,7 +94,7 @@ export default function FoodWastePage() {
     return () => {
       isCurrent = false
     }
-  }, [t.offlineShowingCached, today])
+  }, [t.offlineShowingCached, today, vessel])
 
   const totals = useMemo(() => {
     return entries.reduce(
@@ -129,7 +138,7 @@ export default function FoodWastePage() {
           return (
             <Link
               key={location.slug}
-              href={`/galley/food-waste/${location.slug}`}
+              href={`${basePath}/food-waste/${location.slug}`}
               className="
                 rounded-xl
                 p-5

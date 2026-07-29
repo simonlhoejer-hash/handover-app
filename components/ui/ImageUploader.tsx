@@ -20,7 +20,11 @@ export default function ImageUploader({
 }: Props) {
   const { t } = useTranslation()
   const pathname = usePathname()
-  const department = pathname.startsWith('/galley') ? 'galley' : 'shop'
+  const department = pathname.startsWith('/pearl')
+    ? 'pearl'
+    : pathname.startsWith('/galley')
+      ? 'galley'
+      : 'shop'
 
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)

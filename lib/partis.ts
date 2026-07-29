@@ -11,6 +11,18 @@ export const PARTIS: Record<string, string[]> = {
     'Stilling 1',
     'Slagter',
   ],
+  pearl: [
+    'SYD',
+    'KULL varmt',
+    'KULL koldt',
+    'Konditor',
+    'Besætning',
+    'Opsætter',
+    'Skagerak',
+    'Stilling 2',
+    'Stilling 1',
+    'Slagter',
+  ],
   shop: [
   'Tøj',
   'Sprut',

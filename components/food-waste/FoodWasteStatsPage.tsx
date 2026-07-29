@@ -27,6 +27,7 @@ type GuestCount = {
   service_date: string
   guest_count: number
   comment: string | null
+  vessel?: 'crown' | 'pearl'
 }
 
 type LocationSummary = {
@@ -98,7 +99,11 @@ function getEntryAmount(entry: FoodWasteEntry) {
   return Number(entry.quantity_kg) || 0
 }
 
-export default function FoodWasteStatsPage() {
+type Props = {
+  vessel?: 'crown' | 'pearl'
+}
+
+export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const { t, lang } = useTranslation()
   const today = getToday()
 
@@ -121,9 +126,9 @@ export default function FoodWasteStatsPage() {
     async function loadOverview() {
       setLoading(true)
 
-      const cachedEntries = readCachedFoodWasteEntries()
-      const pendingEntries = readPendingFoodWasteEntries()
-      const cachedGuests = readCachedFoodWasteGuestCounts()
+      const cachedEntries = readCachedFoodWasteEntries(vessel)
+      const pendingEntries = readPendingFoodWasteEntries(vessel)
+      const cachedGuests = readCachedFoodWasteGuestCounts(vessel)
 
       if (
         cachedEntries.length > 0 ||
@@ -146,6 +151,7 @@ export default function FoodWasteStatsPage() {
       const { data, error: loadError } = await supabase
         .from('food_waste_entries')
         .select('*')
+        .eq('vessel', vessel)
         .gte('waste_date', fromDate)
         .lte('waste_date', toDate)
         .order('waste_date', { ascending: false })
@@ -154,6 +160,7 @@ export default function FoodWasteStatsPage() {
       const { data: guests, error: guestsError } = await supabase
         .from('food_waste_guest_counts')
         .select('*')
+        .eq('vessel', vessel)
         .gte('service_date', fromDate)
         .lte('service_date', toDate)
         .order('service_date', { ascending: false })
@@ -165,9 +172,9 @@ export default function FoodWasteStatsPage() {
       } else {
         setError('')
         const nextEntries = data ?? []
-        cacheFoodWasteEntries(nextEntries)
+        cacheFoodWasteEntries(nextEntries, vessel)
         setEntries(
-          [...readPendingFoodWasteEntries(), ...nextEntries].filter(
+          [...readPendingFoodWasteEntries(vessel), ...nextEntries].filter(
             (entry) => entry.waste_date >= fromDate && entry.waste_date <= toDate
           )
         )
@@ -178,7 +185,7 @@ export default function FoodWasteStatsPage() {
       } else {
         setGuestTableError(false)
         const nextGuests = guests ?? []
-        cacheFoodWasteGuestCounts(nextGuests)
+        cacheFoodWasteGuestCounts(nextGuests, vessel)
         setGuestCounts(nextGuests)
       }
 
@@ -190,7 +197,7 @@ export default function FoodWasteStatsPage() {
     return () => {
       isCurrent = false
     }
-  }, [fromDate, t.offlineShowingCached, toDate])
+  }, [fromDate, t.offlineShowingCached, toDate, vessel])
 
   const stats = useMemo(() => {
     const byLocation = new Map<string, number>()
@@ -276,8 +283,9 @@ export default function FoodWasteStatsPage() {
           service_date: guestDate,
           guest_count: guests,
           comment: null,
+          vessel,
         },
-        { onConflict: 'service_date' }
+        { onConflict: 'vessel,service_date' }
       )
       .select('*')
       .single()
@@ -293,7 +301,7 @@ export default function FoodWasteStatsPage() {
         data,
         ...current.filter((count) => count.service_date !== data.service_date),
       ])
-      cacheFoodWasteGuestCounts([data])
+      cacheFoodWasteGuestCounts([data], vessel)
     }
 
     setSavingGuests(false)

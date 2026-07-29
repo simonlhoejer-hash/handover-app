@@ -21,7 +21,7 @@ function getPlainText(value: string) {
 }
 
 type Props = {
-  department: 'galley' | 'shop' | 'admin'
+  department: 'galley' | 'shop' | 'admin' | 'pearl'
   itemName: string
   hideHeader?: boolean
   createLabel?: string

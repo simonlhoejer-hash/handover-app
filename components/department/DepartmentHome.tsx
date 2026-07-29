@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
-  department: 'admin' |'shop' | 'galley'
+  department: 'admin' | 'shop' | 'galley' | 'pearl'
   items: string[]
   basePath: string
 }

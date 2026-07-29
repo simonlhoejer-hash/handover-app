@@ -18,29 +18,30 @@ export default function BottomNav() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const basePath = pathname.startsWith('/pearl') ? '/pearl' : '/galley'
 
   const tabs = [
     {
       icon: LayoutGrid,
-      href: '/galley',
-      active: pathname === '/galley',
+      href: basePath,
+      active: pathname === basePath,
       label: t.handoverTitle,
     },
     {
       icon: Trash2,
-      href: '/galley/food-waste',
+      href: `${basePath}/food-waste`,
       active:
-        pathname === '/galley/food-waste' ||
+        pathname === `${basePath}/food-waste` ||
         (
-          pathname.startsWith('/galley/food-waste/') &&
-          pathname !== '/galley/food-waste/overblik'
+          pathname.startsWith(`${basePath}/food-waste/`) &&
+          pathname !== `${basePath}/food-waste/overblik`
         ),
       label: t.foodWaste,
     },
     {
       icon: BarChart3,
-      href: '/galley/food-waste/overblik',
-      active: pathname === '/galley/food-waste/overblik',
+      href: `${basePath}/food-waste/overblik`,
+      active: pathname === `${basePath}/food-waste/overblik`,
       label: t.overview,
     },
   ]

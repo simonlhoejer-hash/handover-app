@@ -25,6 +25,8 @@ type FoodWasteEntry = {
 
 type Props = {
   locationName: string
+  vessel?: 'crown' | 'pearl'
+  basePath?: string
 }
 
 type FoodWastePayload = {
@@ -32,6 +34,7 @@ type FoodWastePayload = {
   location_name: string
   quantity_kg: number
   comment: string | null
+  vessel: 'crown' | 'pearl'
 }
 
 function getToday() {
@@ -60,7 +63,11 @@ function getEntryAmount(entry: FoodWasteEntry) {
   return Number(entry.quantity_kg) || 0
 }
 
-export default function FoodWasteLocationPage({ locationName }: Props) {
+export default function FoodWasteLocationPage({
+  locationName,
+  vessel = 'crown',
+  basePath = '/galley',
+}: Props) {
   const { t, lang } = useTranslation()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [quantityKg, setQuantityKg] = useState('')
@@ -77,7 +84,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
   const today = getToday()
 
   const syncPendingEntries = useCallback(async () => {
-    const pendingEntries = readPendingFoodWasteEntries()
+    const pendingEntries = readPendingFoodWasteEntries(vessel)
     if (pendingEntries.length === 0) {
       setSyncMessage('')
       return
@@ -91,6 +98,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
         location_name: pendingEntry.location_name,
         quantity_kg: Number(pendingEntry.quantity_kg) || 0,
         comment: pendingEntry.comment,
+        vessel,
       }
 
       const { data, error: syncError } = await supabase
@@ -102,7 +110,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       if (syncError || !data) {
         remaining.push(pendingEntry)
       } else if (pendingEntry.location_name === locationName) {
-        cacheFoodWasteEntries([data])
+        cacheFoodWasteEntries([data], vessel)
         setEntries((current) => [
           data,
           ...current.filter((entry) => entry.id !== pendingEntry.id),
@@ -110,7 +118,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       }
     }
 
-    writePendingFoodWasteEntries(remaining)
+    writePendingFoodWasteEntries(remaining, vessel)
 
     setSyncMessage(
       remaining.length === 0
@@ -119,7 +127,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
             remaining.length === 1 ? t.registrationWaiting : t.registrationsWaiting
           }`
     )
-  }, [locationName, t.registrationWaiting, t.registrationsWaiting])
+  }, [locationName, t.registrationWaiting, t.registrationsWaiting, vessel])
 
   useEffect(() => {
     function updateOnlineStatus() {
@@ -144,10 +152,10 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     let isCurrent = true
 
     async function loadEntries() {
-      const pending = readPendingFoodWasteEntries().filter(
+      const pending = readPendingFoodWasteEntries(vessel).filter(
         (entry) => entry.location_name === locationName
       )
-      const cached = readCachedFoodWasteEntries().filter(
+      const cached = readCachedFoodWasteEntries(vessel).filter(
         (entry) => entry.location_name === locationName
       )
 
@@ -160,6 +168,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
         .from('food_waste_entries')
         .select('*')
         .eq('location_name', locationName)
+        .eq('vessel', vessel)
         .order('waste_date', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(20)
@@ -170,7 +179,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
         setError(t.offlineShowingCached)
       } else {
         setError('')
-        cacheFoodWasteEntries(data ?? [])
+        cacheFoodWasteEntries(data ?? [], vessel)
         setEntries([...pending, ...(data ?? [])])
       }
 
@@ -187,7 +196,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     return () => {
       isCurrent = false
     }
-  }, [locationName, syncPendingEntries, t.offlineShowingCached])
+  }, [locationName, syncPendingEntries, t.offlineShowingCached, vessel])
 
   const todayTotal = useMemo(() => {
     return entries.reduce((total, entry) => {
@@ -212,6 +221,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       location_name: locationName,
       quantity_kg: quantity,
       comment: comment.trim() || null,
+      vessel,
     }
 
     if (!navigator.onLine) {
@@ -229,7 +239,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     if (saveError) {
       saveEntryLocally(payload)
     } else if (data) {
-      cacheFoodWasteEntries([data])
+      cacheFoodWasteEntries([data], vessel)
       setEntries((current) => [data, ...current])
       setQuantityKg('')
       setComment('')
@@ -250,8 +260,8 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       pending: true,
     }
 
-    const pendingEntries = readPendingFoodWasteEntries()
-    writePendingFoodWasteEntries([localEntry, ...pendingEntries])
+    const pendingEntries = readPendingFoodWasteEntries(vessel)
+    writePendingFoodWasteEntries([localEntry, ...pendingEntries], vessel)
 
     setEntries((current) => [localEntry, ...current])
     setQuantityKg('')
@@ -263,9 +273,10 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
   async function deleteEntry(id: string) {
     if (id.startsWith('local-')) {
       writePendingFoodWasteEntries(
-        readPendingFoodWasteEntries().filter((entry) => entry.id !== id)
+        readPendingFoodWasteEntries(vessel).filter((entry) => entry.id !== id),
+        vessel
       )
-      removeCachedFoodWasteEntry(id)
+      removeCachedFoodWasteEntry(id, vessel)
       setEntries((current) => current.filter((entry) => entry.id !== id))
       return
     }
@@ -280,7 +291,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
       return
     }
 
-    removeCachedFoodWasteEntry(id)
+    removeCachedFoodWasteEntry(id, vessel)
     setEntries((current) => current.filter((entry) => entry.id !== id))
   }
 
@@ -288,7 +299,7 @@ export default function FoodWasteLocationPage({ locationName }: Props) {
     <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-6">
       <header className="relative flex items-center justify-center">
         <Link
-          href="/galley/food-waste"
+          href={`${basePath}/food-waste`}
           className="
             absolute left-0
             flex items-center justify-center

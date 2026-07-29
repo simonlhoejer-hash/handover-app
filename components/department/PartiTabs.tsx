@@ -4,13 +4,14 @@ import HandoverPage from '@/components/handover/HandoverPage'
 
 type Props = {
   parti: string
+  department?: 'galley' | 'pearl'
 }
 
-export default function PartiTabs({ parti }: Props) {
+export default function PartiTabs({ parti, department = 'galley' }: Props) {
   return (
     <div className="w-full">
       <HandoverPage
-        department="galley"
+        department={department}
         itemName={parti}
       />
     </div>

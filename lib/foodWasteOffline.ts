@@ -5,6 +5,7 @@ export type CachedFoodWasteEntry = {
   location_name: string
   quantity_kg: number | string
   comment: string | null
+  vessel?: 'crown' | 'pearl'
   pending?: boolean
 }
 
@@ -14,6 +15,7 @@ export type CachedFoodWasteGuestCount = {
   service_date: string
   guest_count: number
   comment: string | null
+  vessel?: 'crown' | 'pearl'
 }
 
 const FOOD_WASTE_CACHE_KEY = 'foodWasteCachedEntries'
@@ -42,59 +44,63 @@ function writeStorageArray<T>(key: string, rows: T[]) {
   if (!canUseStorage()) return
   window.localStorage.setItem(key, JSON.stringify(rows))
 
-  if (key === FOOD_WASTE_PENDING_KEY) {
+  if (key === FOOD_WASTE_PENDING_KEY || key.startsWith(`${FOOD_WASTE_PENDING_KEY}:`)) {
     window.dispatchEvent(new Event('food-waste-pending-updated'))
   }
 }
 
-export function readPendingFoodWasteEntries() {
-  return readStorageArray<CachedFoodWasteEntry>(FOOD_WASTE_PENDING_KEY)
+function vesselKey(key: string, vessel: 'crown' | 'pearl') {
+  return vessel === 'crown' ? key : `${key}:${vessel}`
 }
 
-export function writePendingFoodWasteEntries(entries: CachedFoodWasteEntry[]) {
-  writeStorageArray(FOOD_WASTE_PENDING_KEY, entries)
+export function readPendingFoodWasteEntries(vessel: 'crown' | 'pearl' = 'crown') {
+  return readStorageArray<CachedFoodWasteEntry>(vesselKey(FOOD_WASTE_PENDING_KEY, vessel))
 }
 
-export function readCachedFoodWasteEntries() {
-  return readStorageArray<CachedFoodWasteEntry>(FOOD_WASTE_CACHE_KEY)
+export function writePendingFoodWasteEntries(entries: CachedFoodWasteEntry[], vessel: 'crown' | 'pearl' = 'crown') {
+  writeStorageArray(vesselKey(FOOD_WASTE_PENDING_KEY, vessel), entries)
 }
 
-export function cacheFoodWasteEntries(entries: CachedFoodWasteEntry[]) {
+export function readCachedFoodWasteEntries(vessel: 'crown' | 'pearl' = 'crown') {
+  return readStorageArray<CachedFoodWasteEntry>(vesselKey(FOOD_WASTE_CACHE_KEY, vessel))
+}
+
+export function cacheFoodWasteEntries(entries: CachedFoodWasteEntry[], vessel: 'crown' | 'pearl' = 'crown') {
   const byId = new Map<string, CachedFoodWasteEntry>()
 
-  for (const entry of [...entries, ...readCachedFoodWasteEntries()]) {
+  for (const entry of [...entries, ...readCachedFoodWasteEntries(vessel)]) {
     if (entry.pending || entry.id.startsWith('local-')) continue
     byId.set(entry.id, entry)
   }
 
   writeStorageArray(
-    FOOD_WASTE_CACHE_KEY,
+    vesselKey(FOOD_WASTE_CACHE_KEY, vessel),
     Array.from(byId.values())
       .sort((a, b) => b.waste_date.localeCompare(a.waste_date))
       .slice(0, 500)
   )
 }
 
-export function removeCachedFoodWasteEntry(id: string) {
+export function removeCachedFoodWasteEntry(id: string, vessel: 'crown' | 'pearl' = 'crown') {
   writeStorageArray(
-    FOOD_WASTE_CACHE_KEY,
-    readCachedFoodWasteEntries().filter((entry) => entry.id !== id)
+    vesselKey(FOOD_WASTE_CACHE_KEY, vessel),
+    readCachedFoodWasteEntries(vessel).filter((entry) => entry.id !== id)
   )
 }
 
-export function readCachedFoodWasteGuestCounts() {
-  return readStorageArray<CachedFoodWasteGuestCount>(FOOD_WASTE_GUEST_CACHE_KEY)
+export function readCachedFoodWasteGuestCounts(vessel: 'crown' | 'pearl' = 'crown') {
+  return readStorageArray<CachedFoodWasteGuestCount>(vesselKey(FOOD_WASTE_GUEST_CACHE_KEY, vessel))
 }
 
-export function cacheFoodWasteGuestCounts(counts: CachedFoodWasteGuestCount[]) {
+export function cacheFoodWasteGuestCounts(counts: CachedFoodWasteGuestCount[], vessel: 'crown' | 'pearl' = 'crown') {
   const byDate = new Map<string, CachedFoodWasteGuestCount>()
 
-  for (const count of [...counts, ...readCachedFoodWasteGuestCounts()]) {
+  for (const count of [...counts, ...readCachedFoodWasteGuestCounts(vessel)]) {
     byDate.set(count.service_date, count)
   }
 
   writeStorageArray(
-    FOOD_WASTE_GUEST_CACHE_KEY,
+    vesselKey(FOOD_WASTE_GUEST_CACHE_KEY, vessel),
     Array.from(byDate.values())
       .sort((a, b) => b.service_date.localeCompare(a.service_date))
       .slice(0, 500)
