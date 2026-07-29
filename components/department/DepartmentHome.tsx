@@ -28,6 +28,7 @@ type HandoverStatusRow = {
   read_by?: string | null
   receiver_name?: string | null
   created_at?: string
+  updated_at?: string
   status?: string | null
   handover_comments?: { id: string }[]
 }
@@ -63,10 +64,13 @@ export default function DepartmentHome({
           read_by,
           receiver_name,
           created_at,
+          updated_at,
           status,
           handover_comments(id)
         `)
         .eq('department', department)
+        .order('shift_date', { ascending: false })
+        .order('updated_at', { ascending: false })
         .order('created_at', { ascending: false })
 
       const RESET_DAYS = 6
@@ -80,9 +84,11 @@ export default function DepartmentHome({
 
         let isExpired = false
 
-        if (latest?.created_at) {
+        const statusDate = latest?.shift_date || latest?.updated_at || latest?.created_at
+
+        if (statusDate) {
           const daysOld = Math.floor(
-            (Date.now() - new Date(latest.created_at).getTime()) /
+            (Date.now() - new Date(statusDate).getTime()) /
               (1000 * 60 * 60 * 24)
           )
 

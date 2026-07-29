@@ -207,6 +207,7 @@ export default function HandoverPage({
 
   async function publishNote() {
     setLoading(true)
+    const publishedAt = new Date().toISOString()
 
     const payload = {
       author_name: name,
@@ -216,7 +217,8 @@ export default function HandoverPage({
       images,
       status: 'published',
       read_by: isOral ? receiver : null,
-      read_at: isOral ? new Date().toISOString() : null,
+      read_at: isOral ? publishedAt : null,
+      created_at: publishedAt,
     }
 
     const result = draftId
