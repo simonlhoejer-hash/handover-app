@@ -22,7 +22,7 @@ export default function ShipsPage() {
     <main className="min-h-screen bg-[var(--nordic-bg)] px-5 py-10 dark:bg-[#082d2d] sm:py-14">
       <div className="mx-auto w-full max-w-2xl">
         <div className="flex justify-center">
-          <Link href="/" aria-label="Tilbage til forsiden">
+          <Link href="/" aria-label="Tilbage til forsiden" className="flex flex-col items-center">
             <Image
               src="/go-nordic-logo.png"
               alt="Go Nordic Cruiseline"
@@ -40,6 +40,9 @@ export default function ShipsPage() {
               className="hidden h-12 w-auto dark:block sm:h-14"
               priority
             />
+            <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#347f7a] dark:text-white/55">
+              Powered by HandoverPro
+            </span>
           </Link>
         </div>
 

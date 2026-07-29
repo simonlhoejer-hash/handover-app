@@ -10,7 +10,7 @@ export default function HeaderTitle() {
       <Link
         href="/"
         aria-label="Go Nordic Cruiseline"
-        className="flex items-center transition-transform duration-200 active:scale-95"
+        className="flex flex-col items-center transition-transform duration-200 active:scale-95"
       >
         <Image
           src="/go-nordic-logo.png"
@@ -35,6 +35,9 @@ export default function HeaderTitle() {
           "
           priority
         />
+        <span className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.16em] text-[#347f7a] dark:text-white/55">
+          Powered by HandoverPro
+        </span>
       </Link>
 
     </div>

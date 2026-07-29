@@ -5,8 +5,8 @@ import { LanguageProvider } from '@/lib/LanguageContext'
 import ClientLayout from './ClientLayout'
 
 export const metadata: Metadata = {
-  title: 'Go Nordic Crew',
-  description: 'Crew overlevering',
+  title: 'HandoverPro · Go Nordic Crew',
+  description: 'HandoverPro crew overlevering for Go Nordic Cruiseline',
 
   icons: {
     icon: [

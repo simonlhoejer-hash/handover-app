@@ -17,14 +17,25 @@ export default function Page() {
   return (
     <main className="min-h-screen grid lg:grid-cols-[1.15fr_.85fr] overflow-hidden bg-white dark:bg-[#082d2d]">
       <section className="nordic-wave relative min-h-[42vh] lg:min-h-screen bg-[#347f7a] px-7 py-10 sm:px-12 lg:px-20 lg:py-16 text-white flex flex-col justify-between">
-        <Image
-          src="/go-nordic-logo-dark.png"
-          alt="Go Nordic Cruiseline"
-          width={420}
-          height={120}
-          className="h-12 sm:h-16 w-auto object-contain object-left"
-          priority
-        />
+        <div className="flex items-center gap-4">
+          <Image
+            src="/go-nordic-logo-dark.png"
+            alt="Go Nordic Cruiseline"
+            width={420}
+            height={120}
+            className="h-12 sm:h-16 w-auto object-contain object-left"
+            priority
+          />
+          <span className="h-9 w-px bg-white/30" aria-hidden="true" />
+          <span className="leading-none">
+            <span className="block text-[9px] font-bold uppercase tracking-[0.18em] text-white/55">
+              Powered by
+            </span>
+            <span className="mt-1 block text-base font-bold tracking-tight text-white">
+              Handover<span className="text-white/65">Pro</span>
+            </span>
+          </span>
+        </div>
         <div className="relative z-10 max-w-2xl py-14 lg:py-0">
           <div className="mb-5 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-white/70">
             <Anchor size={17} />
@@ -59,7 +70,7 @@ export default function Page() {
             <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
           </button>
           <p className="mt-5 text-center text-xs text-gray-400 dark:text-white/35">
-            Kun for Go Nordic Cruiseline crew
+            HandoverPro platform · for Go Nordic Cruiseline crew
           </p>
         </div>
       </section>
