@@ -163,7 +163,16 @@ export default function FoodWastePage({
               <div className="h-px flex-1 bg-gradient-to-r from-gray-300/80 to-transparent dark:from-white/20" />
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div
+              className="
+                -mx-4 flex snap-x snap-mandatory gap-4
+                overflow-x-auto px-4 pb-3
+                [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5
+                sm:overflow-visible sm:px-0 sm:pb-0
+                lg:grid-cols-3
+              "
+            >
               {group.slugs.map((slug) => {
                 const location = FOOD_WASTE_LOCATIONS.find(
                   (candidate) => candidate.slug === slug
@@ -181,6 +190,8 @@ export default function FoodWastePage({
                       rounded-xl
                       p-5
                       h-[110px]
+                      min-w-[85%]
+                      snap-start
                       flex items-center justify-center
                       bg-white
                       border border-gray-200/70
@@ -194,6 +205,7 @@ export default function FoodWastePage({
                       dark:bg-[#162338]
                       dark:border-white/10
                       dark:text-white
+                      sm:min-w-0
                     "
                   >
                     <div className="flex flex-col items-center gap-2">
