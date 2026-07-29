@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Trash2,
   MoreHorizontal,
+  ShieldCheck,
 } from 'lucide-react'
 
 export default function BottomNav() {
@@ -179,6 +180,22 @@ export default function BottomNav() {
                   </span>
                   <ThemeToggle />
                 </div>
+
+                <Link
+                  href={`${basePath}/indstillinger`}
+                  onClick={() => setOpen(false)}
+                  className="
+                    flex items-center gap-3
+                    border-t border-black/5 pt-5
+                    text-sm font-medium text-gray-700
+                    transition hover:text-[#064e4c]
+                    dark:border-white/10 dark:text-white/80
+                    dark:hover:text-white
+                  "
+                >
+                  <ShieldCheck size={18} strokeWidth={1.8} />
+                  <span>{t.privacy}</span>
+                </Link>
 
               </div>
             </div>

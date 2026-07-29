@@ -16,6 +16,21 @@ export const translations = {
     theme: 'Tema',
     switchLanguage: 'Skift sprog',
     switchTheme: 'Skift tema',
+    privacy: 'Privatliv og persondata',
+    privacyIntro:
+      'HandoverPro registrerer fornavne i forbindelse med arbejdsrelaterede overleveringer.',
+    privacyPurposeTitle: 'Formål',
+    privacyPurpose:
+      'Fornavne bruges til at vise, hvem der har skrevet, modtaget og læst en overlevering samt hvem der har skrevet en kommentar.',
+    privacyContentTitle: 'Indhold',
+    privacyContent:
+      'Skriv kun arbejdsrelaterede driftsoplysninger. Skriv ikke CPR-numre, helbredsoplysninger eller andre følsomme eller private oplysninger.',
+    privacyRetentionTitle: 'Opbevaring',
+    privacyRetention:
+      'Overleveringer, fornavne, kommentarer og tilknyttede billeder opbevares i op til 12 måneder og slettes derefter.',
+    privacyResponsibilityTitle: 'Dataansvar',
+    privacyResponsibility:
+      'Arbejdsgiveren er ansvarlig for behandlingen af personoplysninger i HandoverPro. Spørg din nærmeste leder, hvis du ønsker indsigt, rettelse eller sletning.',
 
     // Status
     online: 'Online',
@@ -214,6 +229,21 @@ Skriv hvor tingene står.`,
     theme: 'Tema',
     switchLanguage: 'Byt språk',
     switchTheme: 'Byt tema',
+    privacy: 'Integritet och personuppgifter',
+    privacyIntro:
+      'HandoverPro registrerar förnamn i samband med arbetsrelaterade överlämningar.',
+    privacyPurposeTitle: 'Syfte',
+    privacyPurpose:
+      'Förnamn används för att visa vem som har skrivit, tagit emot och läst en överlämning samt vem som har skrivit en kommentar.',
+    privacyContentTitle: 'Innehåll',
+    privacyContent:
+      'Skriv endast arbetsrelaterad driftinformation. Skriv inte personnummer, hälsouppgifter eller andra känsliga eller privata uppgifter.',
+    privacyRetentionTitle: 'Lagring',
+    privacyRetention:
+      'Överlämningar, förnamn, kommentarer och tillhörande bilder lagras i upp till 12 månader och raderas därefter.',
+    privacyResponsibilityTitle: 'Personuppgiftsansvar',
+    privacyResponsibility:
+      'Arbetsgivaren ansvarar för behandlingen av personuppgifter i HandoverPro. Fråga din närmaste chef om du önskar tillgång, rättelse eller radering.',
 
     // Status
     online: 'Online',

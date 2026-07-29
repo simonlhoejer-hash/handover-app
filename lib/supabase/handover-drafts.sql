@@ -45,6 +45,13 @@ language plpgsql
 as $$
 begin
   if tg_op = 'DELETE' and old.status = 'published' then
+    if
+      current_setting('app.retention_cleanup', true) = 'on' and
+      old.created_at < now() - interval '12 months'
+    then
+      return old;
+    end if;
+
     raise exception 'Published handovers cannot be deleted';
   end if;
 
