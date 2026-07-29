@@ -15,7 +15,6 @@ type StatusMap = Record<
   string,
   {
     hasNotes: boolean
-    hasComments: boolean
     lastDate?: string
     readBy?: string | null
     receiverName?: string | null
@@ -29,8 +28,6 @@ type HandoverStatusRow = {
   receiver_name?: string | null
   created_at?: string
   updated_at?: string
-  status?: string | null
-  handover_comments?: { id: string }[]
 }
 
 function formatDate(dateString?: string, lang?: string) {
@@ -55,8 +52,22 @@ export default function DepartmentHome({
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isCurrent = true
+    const cacheKey = `handover-status:${department}`
+
+    try {
+      const cached = window.localStorage.getItem(cacheKey)
+
+      if (cached) {
+        setStatus(JSON.parse(cached) as StatusMap)
+        setLoading(false)
+      }
+    } catch {
+      // Continue with live data if local storage is unavailable.
+    }
+
     const fetchStatus = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('handover_notes')
         .select(`
           parti,
@@ -64,23 +75,33 @@ export default function DepartmentHome({
           read_by,
           receiver_name,
           created_at,
-          updated_at,
-          status,
-          handover_comments(id)
+          updated_at
         `)
         .eq('department', department)
+        .or('status.eq.published,status.is.null')
         .order('shift_date', { ascending: false })
         .order('updated_at', { ascending: false })
         .order('created_at', { ascending: false })
 
+      if (!isCurrent) return
+
+      if (error) {
+        setLoading(false)
+        return
+      }
+
       const RESET_DAYS = 6
       const result: StatusMap = {}
+      const latestByParti = new Map<string, HandoverStatusRow>()
+
+      for (const row of (data ?? []) as HandoverStatusRow[]) {
+        if (!latestByParti.has(row.parti)) {
+          latestByParti.set(row.parti, row)
+        }
+      }
 
       for (const item of items) {
-        const rows = ((data ?? []) as HandoverStatusRow[]).filter(
-          (row: any) => (row.status ?? 'published') === 'published'
-        )
-        const latest = rows.find((row) => row.parti === item)
+        const latest = latestByParti.get(item)
 
         let isExpired = false
 
@@ -99,10 +120,6 @@ export default function DepartmentHome({
 
         result[item] = {
           hasNotes: !!latest && !isExpired,
-          hasComments:
-            !!latest &&
-            !isExpired &&
-            (latest.handover_comments?.length ?? 0) > 0,
           lastDate: latest?.shift_date,
           readBy: isExpired ? null : latest?.read_by ?? null,
           receiverName: isExpired ? null : latest?.receiver_name ?? null,
@@ -111,9 +128,19 @@ export default function DepartmentHome({
 
       setStatus(result)
       setLoading(false)
+
+      try {
+        window.localStorage.setItem(cacheKey, JSON.stringify(result))
+      } catch {
+        // Live status still works if local storage is unavailable.
+      }
     }
 
     void fetchStatus()
+
+    return () => {
+      isCurrent = false
+    }
   }, [department, items])
 
   return (
