@@ -211,7 +211,16 @@ export default function FoodWastePage({
                   >
                     <div className="flex flex-col items-center gap-2">
                       <h3 className="text-lg font-semibold tracking-tight">
-                        {location.name}
+                        {group.title === 'Produktion' ? (
+                          <>
+                            <span className="block">Produktion</span>
+                            <span className="block">
+                              {location.name.replace(/^Produktion\s+/, '')}
+                            </span>
+                          </>
+                        ) : (
+                          location.name
+                        )}
                       </h3>
                       <span
                         className={`
