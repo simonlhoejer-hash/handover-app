@@ -13,6 +13,7 @@ export default function ConnectionStatus() {
   const { t } = useTranslation()
   const [isOnline, setIsOnline] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
     function updateStatus() {
@@ -44,16 +45,18 @@ export default function ConnectionStatus() {
   const Icon = isOnline ? Cloud : CloudOff
 
   return (
-    <div className="fixed right-3 top-3 z-30 pointer-events-none sm:right-4 sm:top-4">
-      <div
-        role="status"
+    <div className="fixed right-3 top-3 z-30 sm:right-4 sm:top-4">
+      <button
+        type="button"
+        onClick={() => setIsExpanded((current) => !current)}
+        aria-expanded={isExpanded}
         aria-label={`${label}. ${detail}`}
         title={`${label} · ${detail}`}
         className={`
-          flex items-center gap-0
+          flex items-center
           rounded-full
           border
-          p-1.5
+          ${isExpanded ? 'gap-2 px-3 py-2' : 'gap-0 p-1.5'}
           shadow-lg
           backdrop-blur-xl
           sm:gap-2 sm:px-3 sm:py-2
@@ -83,11 +86,11 @@ export default function ConnectionStatus() {
           )}
         </span>
 
-        <span className="hidden leading-tight sm:block">
+        <span className={`${isExpanded ? 'block' : 'hidden'} leading-tight text-left sm:block`}>
           <span className="block text-sm font-semibold">{label}</span>
           <span className="block text-xs opacity-75">{detail}</span>
         </span>
-      </div>
+      </button>
     </div>
   )
 }
