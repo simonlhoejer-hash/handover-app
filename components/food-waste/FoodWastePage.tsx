@@ -44,6 +44,28 @@ type Props = {
   basePath?: string
 }
 
+const LOCATION_GROUPS = [
+  {
+    title: 'Skagerak & Commodore',
+    slugs: ['skagerak-morgen', 'commodore-morgen', 'skagerak-aften'],
+  },
+  {
+    title: 'Messen',
+    slugs: ['messen-morgen', 'messen-frokost', 'messen-aften'],
+  },
+  {
+    title: 'Produktion',
+    slugs: [
+      'produktion-main-galley',
+      'produktion-skagerak-galley',
+      'produktion-kold-galley',
+      'produktion-bageri',
+      'produktion-slagteri',
+      'produktion-proviant-daek-1',
+    ],
+  },
+]
+
 export default function FoodWastePage({
   vessel = 'crown',
   basePath = '/galley',
@@ -131,60 +153,79 @@ export default function FoodWastePage({
         </p>
       )}
 
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {FOOD_WASTE_LOCATIONS.map((location) => {
-          const todayAmount = totals.byLocation[location.name] ?? 0
+      <div className="space-y-9">
+        {LOCATION_GROUPS.map((group) => (
+          <section key={group.title}>
+            <div className="mb-4 flex items-center gap-4">
+              <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/55">
+                {group.title}
+              </h2>
+              <div className="h-px flex-1 bg-gradient-to-r from-gray-300/80 to-transparent dark:from-white/20" />
+            </div>
 
-          return (
-            <Link
-              key={location.slug}
-              href={`${basePath}/food-waste/${location.slug}`}
-              className="
-                rounded-xl
-                p-5
-                h-[110px]
-                flex items-center justify-center
-                bg-white
-                border border-gray-200/70
-                text-center
-                text-gray-900
-                shadow-sm
-                transition-all duration-200
-                hover:shadow-md
-                hover:-translate-y-[1px]
-                active:scale-[0.98]
-                dark:bg-[#162338]
-                dark:border-white/10
-                dark:text-white
-              "
-            >
-              <div className="flex flex-col items-center gap-2">
-                <h2 className="text-lg font-semibold tracking-tight">
-                  {location.name}
-                </h2>
-                <span
-                  className={`
-                    px-3 py-1
-                    text-xs font-medium
-                    rounded-full
-                    ${
-                      todayAmount > 0
-                        ? 'bg-emerald-400/20 text-emerald-600'
-                        : 'bg-gray-500/10 text-gray-500 dark:text-white/60'
-                    }
-                  `}
-                >
-                  {loading
-                    ? t.loadingShort
-                    : todayAmount > 0
-                      ? formatAmount(todayAmount, lang)
-                      : t.zeroKgToday}
-                </span>
-              </div>
-            </Link>
-          )
-        })}
-      </section>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {group.slugs.map((slug) => {
+                const location = FOOD_WASTE_LOCATIONS.find(
+                  (candidate) => candidate.slug === slug
+                )
+
+                if (!location) return null
+
+                const todayAmount = totals.byLocation[location.name] ?? 0
+
+                return (
+                  <Link
+                    key={location.slug}
+                    href={`${basePath}/food-waste/${location.slug}`}
+                    className="
+                      rounded-xl
+                      p-5
+                      h-[110px]
+                      flex items-center justify-center
+                      bg-white
+                      border border-gray-200/70
+                      text-center
+                      text-gray-900
+                      shadow-sm
+                      transition-all duration-200
+                      hover:shadow-md
+                      hover:-translate-y-[1px]
+                      active:scale-[0.98]
+                      dark:bg-[#162338]
+                      dark:border-white/10
+                      dark:text-white
+                    "
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <h3 className="text-lg font-semibold tracking-tight">
+                        {location.name}
+                      </h3>
+                      <span
+                        className={`
+                          px-3 py-1
+                          text-xs font-medium
+                          rounded-full
+                          ${
+                            todayAmount > 0
+                              ? 'bg-emerald-400/20 text-emerald-600'
+                              : 'bg-gray-500/10 text-gray-500 dark:text-white/60'
+                          }
+                        `}
+                      >
+                        {loading
+                          ? t.loadingShort
+                          : todayAmount > 0
+                            ? formatAmount(todayAmount, lang)
+                            : t.zeroKgToday}
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
     </main>
   )
 }
