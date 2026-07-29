@@ -2,7 +2,6 @@
 
 import { usePathname } from 'next/navigation'
 import BottomNav from '@/components/layout/BottomNav'
-import AdminBottomNav from '@/components/layout/AdminBottomNav'
 import HeaderTitle from '@/components/layout/HeaderTitle'
 import ConnectionStatus from '@/components/pwa/ConnectionStatus'
 import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration'
@@ -13,11 +12,7 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const isLogin = pathname === '/'
-
-  const isAdmin =
-    pathname === '/' ||
-    pathname.startsWith('/admin')
+  const isLogin = pathname === '/' || pathname === '/ships'
 
   if (isLogin) {
     return (
@@ -31,7 +26,7 @@ export default function ClientLayout({
   return (
     <>
       <ServiceWorkerRegistration />
-      {!isAdmin && <ConnectionStatus />}
+      <ConnectionStatus />
 
       <div className="min-h-screen flex flex-col">
 
@@ -70,11 +65,7 @@ export default function ClientLayout({
 
       </div>
 
-      {isAdmin ? (
-        <AdminBottomNav />
-      ) : (
-        <BottomNav />
-      )}
+      <BottomNav />
     </>
   )
 }

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useRouter } from "next/navigation"
 import { useTranslation } from "@/lib/LanguageContext"
@@ -10,8 +10,8 @@ export default function Page() {
   const { t } = useTranslation()
 
   function handleLogin() {
-    localStorage.setItem("admin-auth", "true")
-    router.push("/admin")
+    localStorage.setItem("crew-auth", "true")
+    router.push("/ships")
   }
 
   return (
@@ -66,5 +66,3 @@ export default function Page() {
     </main>
   )
 }
-
-

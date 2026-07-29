@@ -8,7 +8,7 @@ export default function HeaderTitle() {
     <div className="w-full max-w-5xl flex items-center justify-center">
 
       <Link
-        href="/admin"
+        href="/"
         aria-label="Go Nordic Cruiseline"
         className="flex items-center transition-transform duration-200 active:scale-95"
       >

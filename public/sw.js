@@ -1,7 +1,8 @@
-const CACHE_NAME = 'handover-offline-v5'
+const CACHE_NAME = 'handover-offline-v6'
 
 const APP_SHELL = [
   '/',
+  '/ships',
   '/galley',
   '/galley/food-waste',
   '/galley/food-waste/overblik',
