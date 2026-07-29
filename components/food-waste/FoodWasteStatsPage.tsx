@@ -494,17 +494,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
       <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">{t.writeGuests}</h2>
-            <button
-              onClick={() => void exportOverview()}
-              disabled={loading || exporting}
-              className="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gray-100 px-4 text-sm font-semibold text-gray-700 transition active:scale-[0.98] disabled:opacity-50 dark:bg-white/10 dark:text-white"
-            >
-              <Download size={16} />
-              {exporting ? t.exporting : t.exportExcel}
-            </button>
-          </div>
+          <h2 className="text-lg font-semibold">{t.writeGuests}</h2>
 
           <div className="mt-4 grid gap-3">
             <input
@@ -560,7 +550,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t.latestRegistrations}</h2>
 
-        {entries.slice(0, 10).map((entry) => (
+        {entries.slice(0, 3).map((entry) => (
           <article
             key={entry.id}
             className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
@@ -579,6 +569,17 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           </article>
         ))}
       </section>
+
+      <div className="flex justify-center pt-2">
+        <button
+          onClick={() => void exportOverview()}
+          disabled={loading || exporting}
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-black px-6 font-semibold text-white shadow-sm transition active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-black sm:w-auto"
+        >
+          <Download size={18} />
+          {exporting ? t.exporting : t.exportExcel}
+        </button>
+      </div>
     </main>
   )
 }
