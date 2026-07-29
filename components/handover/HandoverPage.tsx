@@ -215,6 +215,8 @@ export default function HandoverPage({
       note: isOral ? ORAL_HANDOVER_NOTE : note,
       images,
       status: 'published',
+      read_by: isOral ? receiver : null,
+      read_at: isOral ? new Date().toISOString() : null,
     }
 
     const result = draftId

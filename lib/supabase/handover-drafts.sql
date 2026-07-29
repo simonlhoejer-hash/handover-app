@@ -56,7 +56,7 @@ begin
       new.receiver_name is distinct from old.receiver_name or
       new.shift_date is distinct from old.shift_date or
       new.note is distinct from old.note or
-      new.images is distinct from old.images or
+      new.images::jsonb is distinct from old.images::jsonb or
       new.status is distinct from old.status
     then
       raise exception 'Published handovers cannot be edited';
