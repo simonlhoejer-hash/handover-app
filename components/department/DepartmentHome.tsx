@@ -154,7 +154,7 @@ export default function DepartmentHome({
               ? new Date(bInfo.lastDate).getTime()
               : 0
 
-            return aDate - bDate
+            return bDate - aDate
           })
           .map((item) => {
 
