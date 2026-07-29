@@ -1,17 +1,12 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
 
 export default function HeaderTitle() {
   return (
     <div className="w-full max-w-5xl flex items-center justify-center">
 
-      <Link
-        href="/"
-        aria-label="Go Nordic Cruiseline"
-        className="flex flex-col items-center transition-transform duration-200 active:scale-95"
-      >
+      <div className="flex flex-col items-center">
         <Image
           src="/go-nordic-logo.png"
           alt="Go Nordic Cruiseline"
@@ -38,7 +33,7 @@ export default function HeaderTitle() {
         <span className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.16em] text-[#347f7a] dark:text-white/55">
           Powered by HandoverPro
         </span>
-      </Link>
+      </div>
 
     </div>
   )

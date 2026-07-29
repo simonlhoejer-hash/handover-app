@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v7'
+const CACHE_NAME = 'handover-offline-v8'
 
 const APP_SHELL = [
   '/',
