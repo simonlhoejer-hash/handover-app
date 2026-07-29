@@ -44,7 +44,7 @@ export default function ConnectionStatus() {
   const Icon = isOnline ? Cloud : CloudOff
 
   return (
-    <div className="fixed bottom-24 right-4 z-50 pointer-events-none">
+    <div className="fixed right-4 top-4 z-30 pointer-events-none">
       <div
         className={`
           flex items-center gap-2

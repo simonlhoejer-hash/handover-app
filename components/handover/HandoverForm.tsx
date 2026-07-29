@@ -106,10 +106,10 @@ export default function HandoverForm({
 
   return (
     <>
-      <div className="fixed bottom-24 right-4 z-40 pointer-events-none">
+      <div className="fixed bottom-24 left-4 z-30 pointer-events-none">
         <div
           className={`
-            max-w-[calc(100vw-2rem)]
+            max-w-[calc(100vw-2rem)] sm:max-w-xs
             rounded-2xl
             border
             px-4 py-3
@@ -132,27 +132,6 @@ export default function HandoverForm({
       </div>
 
 <section className={cardClass}>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <span className="rounded-full bg-amber-400/15 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-          {t.draftNotPublished}
-        </span>
-
-        {draftStatusText && (
-          <span
-            className={`
-              rounded-full px-3 py-1 text-xs font-semibold
-              ${
-                draftStatus === 'error'
-                  ? 'bg-red-500/10 text-red-600 dark:text-red-300'
-                  : 'bg-black/5 text-gray-600 dark:bg-white/10 dark:text-white/70'
-              }
-            `}
-          >
-            {draftStatusText}
-          </span>
-        )}
-      </div>
-
       <input
         className={inputClass}
         placeholder={t.senderName}
