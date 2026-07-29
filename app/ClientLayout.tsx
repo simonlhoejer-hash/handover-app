@@ -13,14 +13,20 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const isLogin = pathname === '/'
 
   const isAdmin =
     pathname === '/' ||
     pathname.startsWith('/admin')
 
-  const isPartiPage =
-    pathname.startsWith('/galley/parti/') ||
-    pathname.startsWith('/pearl/parti/')
+  if (isLogin) {
+    return (
+      <>
+        <ServiceWorkerRegistration />
+        {children}
+      </>
+    )
+  }
 
   return (
     <>
@@ -32,25 +38,28 @@ export default function ClientLayout({
         <header
           className="
             w-full
-            max-w-3xl
-            mx-auto
-            px-4
-            pt-2
-            pb-1
+            px-5
+            pt-3
+            pb-3
             flex
             flex-col
             items-center
-            gap-1
+            bg-white/90
+            border-b border-[#0f4f4a]/10
+            backdrop-blur-xl
+            dark:bg-[#073f3d]/90
+            dark:border-white/10
+            sticky top-0 z-30
           "
         >
-          {!isPartiPage && <HeaderTitle />}
+          <HeaderTitle />
         </header>
 
         <main
           className="
             flex-1
             w-full
-            max-w-3xl
+            max-w-5xl
             mx-auto
             px-4
             pb-24

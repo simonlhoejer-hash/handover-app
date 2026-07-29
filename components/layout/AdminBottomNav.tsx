@@ -60,10 +60,10 @@ export default function AdminBottomNav() {
         backdrop-blur-xl
         z-40
 
-        bg-white/80
-        border-t border-black/5
+        bg-white/90
+        border-t border-[#064e4c]/10
 
-        dark:bg-[#0f1b2d]/80
+        dark:bg-[#073f3d]/90
         dark:border-white/10
       "
     >
@@ -95,15 +95,15 @@ export default function AdminBottomNav() {
                 ${
                   active
                     ? `
-                      bg-black/5
-                      text-gray-900
+                      bg-[#e7f1ef]
+                      text-[#064e4c]
                       shadow-sm
 
                       dark:bg-white/10
                       dark:text-white
                     `
                     : `
-                      text-gray-400
+                      text-[#347f7a]/60
                       hover:bg-black/5
 
                       dark:text-white/50

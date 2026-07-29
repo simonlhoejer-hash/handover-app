@@ -39,9 +39,9 @@ export default function RootLayout({
       <body
         className="
           min-h-screen
-          bg-[#f8fafc]
+          bg-[var(--nordic-bg)]
           text-gray-900
-          dark:bg-[#0f1b2d]
+          dark:bg-[#082d2d]
           dark:text-white
           transition-colors
         "

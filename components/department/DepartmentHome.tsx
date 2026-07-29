@@ -144,10 +144,13 @@ export default function DepartmentHome({
   }, [department, items])
 
   return (
-    <main className="px-4 pt-4 pb-8 max-w-5xl mx-auto">
-      <header className="mb-6 flex flex-col items-center text-center">
+    <main className="pt-8 sm:pt-12 pb-8 max-w-5xl mx-auto">
+      <header className="mb-8 sm:mb-10 flex flex-col items-start">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#347f7a] dark:text-[#8dc4bf]">
+            Crew operations
+          </p>
+          <h1 className="font-nordic-display text-4xl sm:text-5xl text-[#102f2e] dark:text-white">
             {t.handoverTitle}
           </h1>
           <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
@@ -156,7 +159,7 @@ export default function DepartmentHome({
         </div>
       </header>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
         {[...items]
           .sort((a, b) => {
@@ -193,20 +196,19 @@ export default function DepartmentHome({
                 key={item}
                 href={`${basePath}/${encodeURIComponent(item)}`}
                 className="
-                  rounded-xl
+                  group rounded-xl
                   p-5
-                  h-[110px]
+                  min-h-[126px]
 
                   flex items-center justify-center
 
-                  bg-[#ffffff]
-                  border border-gray-200/70
+                  nordic-card
 
                   text-gray-900
                   shadow-sm
 
-                  hover:shadow-md
-                  hover:-translate-y-[1px]
+                  hover:border-[#347f7a]/40
+                  hover:-translate-y-0.5
 
                   transition-all duration-200
 
@@ -216,9 +218,9 @@ export default function DepartmentHome({
                 "
               >
 
-                <div className="flex flex-col items-center text-center space-y-2">
+                <div className="w-full flex flex-col items-start text-left space-y-2">
 
-                  <h2 className="text-lg font-semibold tracking-tight">
+                  <h2 className="text-xl font-semibold tracking-tight text-[#102f2e] dark:text-white">
                     {item}
                   </h2>
 
@@ -260,7 +262,7 @@ export default function DepartmentHome({
 
                     ) : info?.lastDate ? (
 
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-start gap-2">
 
                         {info?.receiverName && !info?.readBy && (
                           <span className="font-semibold text-amber-600">

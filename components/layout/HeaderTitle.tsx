@@ -5,7 +5,7 @@ import Image from 'next/image'
 
 export default function HeaderTitle() {
   return (
-    <div className="w-full flex flex-col items-center pt-1 pb-1">
+    <div className="w-full max-w-5xl flex items-center justify-between">
 
       <Link
         href="/admin"
@@ -18,7 +18,7 @@ export default function HeaderTitle() {
           width={420}
           height={120}
           className="
-            h-12 sm:h-16 lg:h-20 w-auto
+            h-10 sm:h-12 w-auto
             dark:hidden
           "
           priority
@@ -30,12 +30,17 @@ export default function HeaderTitle() {
           width={420}
           height={120}
           className="
-            hidden h-12 sm:h-16 lg:h-20 w-auto
+            hidden h-10 sm:h-12 w-auto
             dark:block
           "
           priority
         />
       </Link>
+
+      <div className="hidden sm:flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#347f7a] dark:text-white/60">
+        <span className="h-px w-8 bg-current opacity-40" />
+        Crew operations
+      </div>
 
     </div>
   )

@@ -11,11 +11,14 @@ html {
 body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(52, 127, 122, 0.08), transparent 34rem),
+    var(--nordic-bg);
 }
 
 /* Ens border-radius i hele appen */
 :root {
-  --radius: 14px;
+  --radius: 12px;
 }
 
 /* ---------- INPUT BASE STYLE ---------- */
@@ -126,10 +129,14 @@ input[type="date"] {
 /* ---------- GO NORDIC BRAND COLORS ---------- */
 
 :root {
-  --nordic-green: #3f7f7a;
-  --nordic-green-dark: #0f4f4a;
-  --nordic-green-soft: #e6f2f1;
-  --nordic-bg: #f3f5f6;
+  --nordic-green: #347f7a;
+  --nordic-green-dark: #064e4c;
+  --nordic-green-deep: #073f3d;
+  --nordic-green-soft: #e7f1ef;
+  --nordic-ink: #102f2e;
+  --nordic-sand: #f1efe8;
+  --nordic-bg: #f5f5f1;
+  --nordic-red: #b82025;
 }
 
 /* Utility classes */
@@ -144,5 +151,47 @@ input[type="date"] {
 
 .text-nordic {
   color: var(--nordic-green-dark);
+}
+
+.font-nordic-display {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -0.035em;
+}
+
+.nordic-card {
+  border: 1px solid rgba(6, 78, 76, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 35px rgba(7, 63, 61, 0.07);
+}
+
+.nordic-wave {
+  position: relative;
+  overflow: hidden;
+}
+
+.nordic-wave::after {
+  content: "";
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  bottom: -44px;
+  height: 70px;
+  border-radius: 50% 50% 0 0;
+  background: var(--nordic-bg);
+}
+
+.dark body {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(52, 127, 122, 0.18), transparent 32rem),
+    #082d2d;
+}
+
+.dark .nordic-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(9, 62, 61, 0.82);
+}
+
+.dark .nordic-wave::after {
+  background: #082d2d;
 }
 

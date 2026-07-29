@@ -37,8 +37,11 @@ export default function AdminPage() {
     <main className="max-w-5xl mx-auto px-4 pb-24">
    
 
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-semibold tracking-tight">
+      <div className="text-left mb-8 pt-8 sm:pt-12">
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#347f7a] dark:text-[#8dc4bf]">
+          Go Nordic Cruiseline
+        </p>
+        <h1 className="font-nordic-display text-4xl sm:text-5xl text-[#102f2e] dark:text-white">
           {t.administration}
         </h1>
 
@@ -54,13 +57,12 @@ export default function AdminPage() {
             href={`/admin/${outlet.slug}`}
             className="
               group
-              rounded-3xl
-              bg-white
-              border border-black/5
-              p-8
-              shadow-sm
+              rounded-xl
+              nordic-card
+              p-7
               hover:shadow-lg
-              hover:-translate-y-1
+              hover:-translate-y-0.5
+              hover:border-[#347f7a]/40
               transition-all duration-300
               dark:bg-white/5
               dark:border-white/10
