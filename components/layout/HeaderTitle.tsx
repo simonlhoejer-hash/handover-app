@@ -9,16 +9,29 @@ export default function HeaderTitle() {
 
       <Link
         href="/admin"
+        aria-label="Go Nordic Cruiseline"
         className="flex items-center transition-transform duration-200 active:scale-95"
       >
         <Image
           src="/go-nordic-logo.png"
-          alt="HandoverPro"
+          alt="Go Nordic Cruiseline"
           width={420}
           height={120}
           className="
             h-12 sm:h-16 lg:h-20 w-auto
-            dark:invert
+            dark:hidden
+          "
+          priority
+        />
+        <Image
+          src="/go-nordic-logo-dark.png"
+          alt=""
+          aria-hidden="true"
+          width={420}
+          height={120}
+          className="
+            hidden h-12 sm:h-16 lg:h-20 w-auto
+            dark:block
           "
           priority
         />
