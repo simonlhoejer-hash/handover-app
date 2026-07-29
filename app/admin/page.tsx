@@ -37,7 +37,7 @@ export default function AdminPage() {
     <main className="max-w-5xl mx-auto px-4 pb-24">
    
 
-      <div className="text-left mb-8 pt-8 sm:pt-12">
+      <div className="text-center mb-8 pt-8 sm:pt-12">
         <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#347f7a] dark:text-[#8dc4bf]">
           Go Nordic Cruiseline
         </p>
