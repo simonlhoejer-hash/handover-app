@@ -40,6 +40,19 @@ export const translations = {
     images: 'Billeder',
     saving: 'Gemmer...',
     saveHandover: 'Gem overlevering',
+    draftNotPublished: 'Kladde - ikke offentliggjort',
+    draftSaving: 'Gemmer...',
+    draftSaved: '✓ Gemt kladde',
+    draftSaveFailed: 'Kunne ikke gemme kladde',
+    draftLoaded: 'Kladde hentet',
+    lastSavedAt: 'Sidst gemt kl.',
+    publishConfirmTitle: 'Er du sikker?',
+    publishConfirmText:
+      'Når overleveringen er gemt, kan den ikke redigeres eller slettes igen.',
+    publishConfirmButton: 'Gem og offentliggør',
+    publishCancelButton: 'Annuller',
+    publishRequiresDraft:
+      'Kladde-funktionen kræver, at Supabase SQL-filen er kørt.',
 
     // Parti page
     handoversFor: 'Overleveringer for',
@@ -221,6 +234,19 @@ Skriv hvor tingene står.`,
     images: 'Bilder',
     saving: 'Sparar...',
     saveHandover: 'Spara överlämning',
+    draftNotPublished: 'Utkast - inte publicerat',
+    draftSaving: 'Sparar...',
+    draftSaved: '✓ Utkast sparat',
+    draftSaveFailed: 'Kunde inte spara utkast',
+    draftLoaded: 'Utkast hämtat',
+    lastSavedAt: 'Senast sparat kl.',
+    publishConfirmTitle: 'Är du säker?',
+    publishConfirmText:
+      'När överlämningen har sparats kan den inte redigeras eller raderas igen.',
+    publishConfirmButton: 'Spara och publicera',
+    publishCancelButton: 'Avbryt',
+    publishRequiresDraft:
+      'Utkastfunktionen kräver att Supabase SQL-filen har körts.',
 
     // Parti page
     handoversFor: 'Överlämningar för',

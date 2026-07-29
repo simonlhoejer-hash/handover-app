@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import HandoverHistoryItem from '@/components/handover/HandoverHistoryItem'
 import HandoverForm from '@/components/handover/HandoverForm'
 import { useTranslation } from '@/lib/LanguageContext'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { ChevronDown } from 'lucide-react'
 import { ChevronLeft } from 'lucide-react'
@@ -32,11 +32,19 @@ export default function HandoverPage({
   const [items, setItems] = useState<any[]>([])
   const [images, setImages] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
+  const [draftId, setDraftId] = useState<string | null>(null)
+  const [draftStatus, setDraftStatus] = useState<
+    'idle' | 'saving' | 'saved' | 'error'
+  >('idle')
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
+  const [draftError, setDraftError] = useState('')
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false)
+  const draftHydratedRef = useRef(false)
 
   useEffect(() => {
     loadNotes()
+    loadDraft()
   }, [itemName, department])
 
   async function loadNotes() {
@@ -47,7 +55,128 @@ export default function HandoverPage({
       .eq('parti', itemName)
       .order('created_at', { ascending: false })
 
-    setItems(data || [])
+    setItems((data || []).filter((item) => (item.status ?? 'published') === 'published'))
+  }
+
+  async function loadDraft() {
+    draftHydratedRef.current = false
+    setDraftId(null)
+    setDraftStatus('idle')
+    setDraftSavedAt(null)
+    setDraftError('')
+
+    const { data, error } = await supabase
+      .from('handover_notes')
+      .select('*')
+      .eq('department', department)
+      .eq('parti', itemName)
+      .eq('status', 'draft')
+      .maybeSingle()
+
+    if (error) {
+      draftHydratedRef.current = true
+      setDraftStatus('error')
+      setDraftError(t.publishRequiresDraft)
+      return
+    }
+
+    if (data) {
+      setDraftId(data.id)
+      setName(data.author_name ?? '')
+      setReceiver(data.receiver_name ?? '')
+      setDate(data.shift_date ?? new Date().toISOString().split('T')[0])
+      setNote(data.note ?? '')
+      setImages(data.images ?? [])
+      setDraftSavedAt(data.draft_saved_at ?? data.updated_at ?? data.created_at ?? null)
+      setDraftStatus('saved')
+      setOpen(true)
+    } else {
+      setName('')
+      setReceiver('')
+      setDate(new Date().toISOString().split('T')[0])
+      setNote('')
+      setImages([])
+    }
+
+    draftHydratedRef.current = true
+  }
+
+  async function saveDraft() {
+    const trimmedNote = note.replace(/<[^>]*>/g, '').trim()
+    if (!trimmedNote) return
+
+    setDraftStatus('saving')
+    setDraftError('')
+
+    const now = new Date().toISOString()
+    const payload = {
+      department,
+      author_name: name,
+      receiver_name: receiver,
+      parti: itemName,
+      shift_date: date,
+      note,
+      images,
+      status: 'draft',
+      draft_saved_at: now,
+    }
+
+    if (draftId) {
+      const { error } = await supabase
+        .from('handover_notes')
+        .update(payload)
+        .eq('id', draftId)
+        .eq('status', 'draft')
+
+      if (error) {
+        setDraftStatus('error')
+        setDraftError(error.message)
+        return
+      }
+
+      setDraftStatus('saved')
+      setDraftSavedAt(now)
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('handover_notes')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error || !data) {
+      const { data: existingDraft } = await supabase
+        .from('handover_notes')
+        .select('id')
+        .eq('department', department)
+        .eq('parti', itemName)
+        .eq('status', 'draft')
+        .maybeSingle()
+
+      if (existingDraft?.id) {
+        const { error: updateExistingError } = await supabase
+          .from('handover_notes')
+          .update(payload)
+          .eq('id', existingDraft.id)
+          .eq('status', 'draft')
+
+        if (!updateExistingError) {
+          setDraftId(existingDraft.id)
+          setDraftStatus('saved')
+          setDraftSavedAt(now)
+          return
+        }
+      }
+
+      setDraftStatus('error')
+      setDraftError(error?.message || t.draftSaveFailed)
+      return
+    }
+
+    setDraftId(data.id)
+    setDraftStatus('saved')
+    setDraftSavedAt(now)
   }
 
   async function saveNote() {
@@ -56,52 +185,69 @@ export default function HandoverPage({
       return
     }
 
+    setShowPublishConfirm(true)
+  }
+
+  async function publishNote() {
     setLoading(true)
 
-    let error
+    const payload = {
+      author_name: name,
+      receiver_name: receiver,
+      shift_date: date,
+      note,
+      images,
+      status: 'published',
+    }
 
-    if (editingId) {
-      const result = await supabase
+    const result = draftId
+      ? await supabase
         .from('handover_notes')
-        .update({
-          author_name: name,
-          receiver_name: receiver,
-          shift_date: date,
-          note,
-          images,
-        })
-        .eq('id', editingId)
-
-      error = result.error
-    } else {
-      const result = await supabase
+        .update(payload)
+        .eq('id', draftId)
+        .eq('status', 'draft')
+      : await supabase
         .from('handover_notes')
         .insert({
           department,
-          author_name: name,
-          receiver_name: receiver,
           parti: itemName,
-          shift_date: date,
-          note,
-          images,
+          ...payload,
         })
 
-      error = result.error
-    }
+    const error = result.error
 
     setLoading(false)
+    setShowPublishConfirm(false)
 
     if (error) {
       alert(error.message)
-    } else {
-      setNote('')
-      setImages([])
-      setReceiver('')
-      setEditingId(null)
-      await loadNotes()
-      setOpen(false)
+      return
     }
+
+    setNote('')
+    setImages([])
+    setName('')
+    setReceiver('')
+    setDraftId(null)
+    setDraftStatus('idle')
+    setDraftSavedAt(null)
+    setDraftError('')
+    await loadNotes()
+    setOpen(false)
   }
+
+  useEffect(() => {
+    if (!draftHydratedRef.current) return
+
+    const trimmedNote = note.replace(/<[^>]*>/g, '').trim()
+    if (!trimmedNote) return
+
+    const timer = window.setTimeout(() => {
+      void saveDraft()
+    }, 1800)
+
+    return () => window.clearTimeout(timer)
+  }, [name, receiver, date, note, images, department, itemName, draftId])
 
   return (
     <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-8">
@@ -207,6 +353,9 @@ className="
   setImages={setImages}
   loading={loading}
   onSave={saveNote}
+  draftStatus={draftStatus}
+  draftSavedAt={draftSavedAt}
+  draftError={draftError}
 parti={itemName}/>
           </div>
         </div>
@@ -236,6 +385,35 @@ parti={itemName}/>
         </div>
 
       </section>
+
+      {showPublishConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl dark:bg-[#162338] dark:border dark:border-white/10">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {t.publishConfirmTitle}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-gray-500 dark:text-white/60">
+              {t.publishConfirmText}
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowPublishConfirm(false)}
+                className="min-h-12 rounded-2xl bg-black/5 px-4 font-semibold text-gray-700 transition active:scale-[0.98] dark:bg-white/10 dark:text-white/80"
+              >
+                {t.publishCancelButton}
+              </button>
+              <button
+                onClick={() => void publishNote()}
+                disabled={loading}
+                className="min-h-12 rounded-2xl bg-black px-4 font-semibold text-white transition active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-black"
+              >
+                {loading ? t.saving : t.publishConfirmButton}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </main>
   )

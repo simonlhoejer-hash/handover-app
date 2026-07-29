@@ -28,6 +28,7 @@ type HandoverStatusRow = {
   read_by?: string | null
   receiver_name?: string | null
   created_at?: string
+  status?: string | null
   handover_comments?: { id: string }[]
 }
 
@@ -62,6 +63,7 @@ export default function DepartmentHome({
           read_by,
           receiver_name,
           created_at,
+          status,
           handover_comments(id)
         `)
         .eq('department', department)
@@ -71,7 +73,9 @@ export default function DepartmentHome({
       const result: StatusMap = {}
 
       for (const item of items) {
-        const rows = (data ?? []) as HandoverStatusRow[]
+        const rows = ((data ?? []) as HandoverStatusRow[]).filter(
+          (row: any) => (row.status ?? 'published') === 'published'
+        )
         const latest = rows.find((row) => row.parti === item)
 
         let isExpired = false

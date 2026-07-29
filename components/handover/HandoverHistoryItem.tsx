@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from '@/lib/LanguageContext'
 import HandoverComments from './HandoverComments'
-import HandoverEditor from './HandoverEditor'
 
 type Props = {
   item: any
@@ -14,34 +13,9 @@ type Props = {
 export default function HandoverHistoryItem({ item, reload }: Props) {
   const { t, lang } = useTranslation()
 
-  const [isEditing, setIsEditing] = useState(false)
-  const [note, setNote] = useState(item.note)
   const [readName, setReadName] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-
-  async function saveEdit() {
-    if (item.read_by) {
-      alert(t.cannotEditRead)
-      return
-    }
-
-    setLoading(true)
-
-    const { error } = await supabase
-      .from('handover_notes')
-      .update({ note })
-      .eq('id', item.id)
-
-    setLoading(false)
-
-    if (error) {
-      alert(error.message)
-    } else {
-      setIsEditing(false)
-      reload()
-    }
-  }
 
   async function markAsRead() {
     if (!readName) {
@@ -58,6 +32,7 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
         read_at: new Date().toISOString(),
       })
       .eq('id', item.id)
+      .eq('status', 'published')
 
     setLoading(false)
 
@@ -105,21 +80,6 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
             )}
           </span>
 
-          {!isEditing && !item.read_by && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="
-                px-3 py-1
-                text-xs font-medium
-                rounded-full
-                bg-black/5 text-gray-700
-                dark:bg-white/10 dark:text-white/80
-                hover:opacity-80 transition
-              "
-            >
-              {t.edit}
-            </button>
-          )}
         </div>
 
         {/* Names */}
@@ -148,74 +108,34 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
         </div>
       </div>
 
-      {isEditing ? (
-        <>
-          <HandoverEditor value={note} onChange={setNote} />
+      <div
+        className="
+          prose
+          dark:prose-invert
+          max-w-none
+          text-gray-800
+          dark:text-white/90
+          prose-p:leading-relaxed
+        "
+        dangerouslySetInnerHTML={{ __html: item.note }}
+      />
 
-          <div className="flex gap-3 mt-4">
-            <button
-              onClick={saveEdit}
-              disabled={loading}
+      {item.images?.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          {item.images.map((url: string) => (
+            <img
+              key={url}
+              src={url}
+              onClick={() => setSelectedImage(url)}
               className="
-                px-4 py-2
+                h-24 w-full object-cover
                 rounded-2xl
-                font-medium
-                bg-black text-white
-                dark:bg-white dark:text-black
-                transition active:scale-95
+                cursor-pointer
+                hover:opacity-80 transition
               "
-            >
-              {t.save}
-            </button>
-
-            <button
-              onClick={() => {
-                setNote(item.note)
-                setIsEditing(false)
-              }}
-              className="
-                px-4 py-2
-                rounded-2xl
-                bg-black/5 text-gray-700
-                dark:bg-white/10 dark:text-white/80
-              "
-            >
-              {t.cancel}
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div
-            className="
-              prose
-              dark:prose-invert
-              max-w-none
-              text-gray-800
-              dark:text-white/90
-              prose-p:leading-relaxed
-            "
-            dangerouslySetInnerHTML={{ __html: item.note }}
-          />
-
-          {item.images?.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mt-4">
-              {item.images.map((url: string) => (
-                <img
-                  key={url}
-                  src={url}
-                  onClick={() => setSelectedImage(url)}
-                  className="
-                    h-24 w-full object-cover
-                    rounded-2xl
-                    cursor-pointer
-                    hover:opacity-80 transition
-                  "
-                />
-              ))}
-            </div>
-          )}
-        </>
+            />
+          ))}
+        </div>
       )}
 
       {/* Mark as read */}

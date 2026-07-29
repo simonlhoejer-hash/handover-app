@@ -18,6 +18,9 @@ type Props = {
   loading: boolean
   onSave: () => void
   parti: string
+  draftStatus?: 'idle' | 'saving' | 'saved' | 'error'
+  draftSavedAt?: string | null
+  draftError?: string
 }
 
 const cardClass = `
@@ -71,11 +74,56 @@ export default function HandoverForm({
   loading,
   onSave,
   parti,
+  draftStatus = 'idle',
+  draftSavedAt,
+  draftError,
 }: Props) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
+
+  const draftStatusText =
+    draftStatus === 'saving'
+      ? t.draftSaving
+      : draftStatus === 'saved'
+        ? t.draftSaved
+        : draftStatus === 'error'
+          ? t.draftSaveFailed
+          : ''
+
+  const lastSavedText =
+    draftSavedAt && draftStatus === 'saved'
+      ? `${t.lastSavedAt} ${new Date(draftSavedAt).toLocaleTimeString(
+          lang === 'sv' ? 'sv-SE' : 'da-DK',
+          {
+            hour: '2-digit',
+            minute: '2-digit',
+          }
+        )}`
+      : ''
 
   return (
-<section className={cardClass}>      <input
+<section className={cardClass}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <span className="rounded-full bg-amber-400/15 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+          {t.draftNotPublished}
+        </span>
+
+        {draftStatusText && (
+          <span
+            className={`
+              rounded-full px-3 py-1 text-xs font-semibold
+              ${
+                draftStatus === 'error'
+                  ? 'bg-red-500/10 text-red-600 dark:text-red-300'
+                  : 'bg-black/5 text-gray-600 dark:bg-white/10 dark:text-white/70'
+              }
+            `}
+          >
+            {draftStatusText}
+          </span>
+        )}
+      </div>
+
+      <input
         className={inputClass}
         placeholder={t.senderName}
         value={name}
@@ -99,6 +147,21 @@ export default function HandoverForm({
 
 
       <HandoverEditor value={note} onChange={setNote} />
+
+      {(lastSavedText || draftError) && (
+        <p
+          className={`
+            mt-3 text-xs
+            ${
+              draftStatus === 'error'
+                ? 'text-red-600 dark:text-red-300'
+                : 'text-gray-500 dark:text-white/60'
+            }
+          `}
+        >
+          {draftStatus === 'error' ? draftError : lastSavedText}
+        </p>
+      )}
 
       <div className="mb-4">
         <label className="block font-medium mb-1">
