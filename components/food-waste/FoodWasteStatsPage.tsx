@@ -431,15 +431,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </label>
       </section>
 
-      <button
-        onClick={() => void exportOverview()}
-        disabled={loading || exporting}
-        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-black px-5 font-semibold text-white transition active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-black sm:w-auto"
-      >
-        <Download size={18} />
-        {exporting ? t.exporting : t.exportExcel}
-      </button>
-
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.kgInPeriod}</p>
@@ -503,7 +494,17 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
       <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <h2 className="text-lg font-semibold">{t.writeGuests}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">{t.writeGuests}</h2>
+            <button
+              onClick={() => void exportOverview()}
+              disabled={loading || exporting}
+              className="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gray-100 px-4 text-sm font-semibold text-gray-700 transition active:scale-[0.98] disabled:opacity-50 dark:bg-white/10 dark:text-white"
+            >
+              <Download size={16} />
+              {exporting ? t.exporting : t.exportExcel}
+            </button>
+          </div>
 
           <div className="mt-4 grid gap-3">
             <input
