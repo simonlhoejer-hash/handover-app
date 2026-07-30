@@ -1,48 +1,85 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Cloud, CloudOff } from 'lucide-react'
-import { readPendingFoodWasteEntries } from '@/lib/foodWasteOffline'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Cloud, CloudOff, RefreshCw } from 'lucide-react'
+import {
+  getPendingFoodWasteCount,
+  syncAllPendingFoodWaste,
+} from '@/lib/foodWasteSync'
 import { useTranslation } from '@/lib/LanguageContext'
-
-function getPendingCount() {
-  return readPendingFoodWasteEntries().length
-}
 
 export default function ConnectionStatus() {
   const { t } = useTranslation()
   const [isOnline, setIsOnline] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'retry'>('idle')
+  const isSyncingRef = useRef(false)
+
+  const syncPending = useCallback(async () => {
+    if (!navigator.onLine || isSyncingRef.current || getPendingFoodWasteCount() === 0) {
+      return
+    }
+
+    isSyncingRef.current = true
+    setSyncState('syncing')
+
+    try {
+      const result = await syncAllPendingFoodWaste()
+      setPendingCount(result.remaining)
+      setSyncState(result.remaining > 0 ? 'retry' : 'idle')
+    } catch {
+      setPendingCount(getPendingFoodWasteCount())
+      setSyncState('retry')
+    } finally {
+      isSyncingRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     function updateStatus() {
       setIsOnline(navigator.onLine)
-      setPendingCount(getPendingCount())
+      setPendingCount(getPendingFoodWasteCount())
+    }
+
+    function handleOnline() {
+      updateStatus()
+      void syncPending()
     }
 
     updateStatus()
+    if (navigator.onLine) void syncPending()
 
-    window.addEventListener('online', updateStatus)
+    window.addEventListener('online', handleOnline)
     window.addEventListener('offline', updateStatus)
     window.addEventListener('storage', updateStatus)
     window.addEventListener('food-waste-pending-updated', updateStatus)
 
-    const timer = window.setInterval(updateStatus, 15000)
+    const timer = window.setInterval(() => {
+      updateStatus()
+      if (navigator.onLine) void syncPending()
+    }, 30000)
 
     return () => {
-      window.removeEventListener('online', updateStatus)
+      window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', updateStatus)
       window.removeEventListener('storage', updateStatus)
       window.removeEventListener('food-waste-pending-updated', updateStatus)
       window.clearInterval(timer)
     }
-  }, [])
+  }, [syncPending])
 
   const hasPending = pendingCount > 0
   const label = isOnline ? t.online : t.offline
-  const detail = hasPending ? `${pendingCount} ${t.waitingShort}` : t.synced
-  const Icon = isOnline ? Cloud : CloudOff
+  const detail =
+    syncState === 'syncing'
+      ? `${t.syncing} · ${pendingCount} ${t.waitingShort}`
+      : syncState === 'retry' && hasPending
+        ? `${pendingCount} ${t.waitingShort} · ${t.retrying}`
+        : hasPending
+          ? `${pendingCount} ${t.waitingShort}`
+          : t.synced
+  const Icon = syncState === 'syncing' ? RefreshCw : isOnline ? Cloud : CloudOff
 
   return (
     <div className="fixed right-3 top-3 z-50 sm:right-4 sm:top-4">
@@ -78,7 +115,11 @@ export default function ConnectionStatus() {
             }
           `}
         >
-          <Icon size={17} strokeWidth={2} />
+          <Icon
+            size={17}
+            strokeWidth={2}
+            className={syncState === 'syncing' ? 'animate-spin' : undefined}
+          />
           {hasPending && (
             <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white sm:hidden">
               {pendingCount > 9 ? '9+' : pendingCount}

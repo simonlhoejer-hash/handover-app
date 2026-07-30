@@ -37,6 +37,8 @@ export const translations = {
     offline: 'Offline',
     synced: 'Synkroniseret',
     waitingShort: 'venter',
+    syncing: 'Synkroniserer',
+    retrying: 'prøver igen',
     offlineShowingCached: 'Offline. Viser seneste gemte tal.',
 
     // Forside
@@ -252,6 +254,8 @@ Skriv hvor tingene står.`,
     offline: 'Offline',
     synced: 'Synkroniserat',
     waitingShort: 'väntar',
+    syncing: 'Synkroniserar',
+    retrying: 'försöker igen',
     offlineShowingCached: 'Offline. Visar senast sparade siffror.',
 
     // Forside
