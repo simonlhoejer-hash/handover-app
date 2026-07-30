@@ -1,8 +1,9 @@
 ﻿'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, Plus, Trash2 } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, Trash2 } from 'lucide-react'
 import {
   cacheFoodWasteEntries,
   readCachedFoodWasteEntries,
@@ -69,17 +70,19 @@ export default function FoodWasteLocationPage({
   basePath = '/galley',
 }: Props) {
   const { t, lang } = useTranslation()
+  const router = useRouter()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [quantityKg, setQuantityKg] = useState('')
-  const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [syncMessage, setSyncMessage] = useState('')
   const [isOnline, setIsOnline] = useState(
     typeof navigator === 'undefined' ? true : navigator.onLine
   )
   const kgInputRef = useRef<HTMLInputElement>(null)
+  const saveStartedRef = useRef(false)
 
   const today = getToday()
 
@@ -205,11 +208,12 @@ export default function FoodWasteLocationPage({
     }, 0)
   }, [entries, today])
 
-  async function saveEntry() {
-    const quantity = Number(quantityKg.replace(',', '.'))
+  async function saveEntry(value: string) {
+    const quantity = Number(value.replace(',', '.'))
 
     if (!quantity || quantity <= 0) {
       setError(t.writeKg)
+      saveStartedRef.current = false
       return
     }
 
@@ -220,13 +224,14 @@ export default function FoodWasteLocationPage({
       waste_date: today,
       location_name: locationName,
       quantity_kg: quantity,
-      comment: comment.trim() || null,
+      comment: null,
       vessel,
     }
 
     if (!navigator.onLine) {
       saveEntryLocally(payload)
       setSaving(false)
+      showSavedAndReturn()
       return
     }
 
@@ -242,11 +247,10 @@ export default function FoodWasteLocationPage({
       cacheFoodWasteEntries([data], vessel)
       setEntries((current) => [data, ...current])
       setQuantityKg('')
-      setComment('')
-      kgInputRef.current?.focus()
     }
 
     setSaving(false)
+    showSavedAndReturn()
   }
 
   function saveEntryLocally(payload: FoodWastePayload) {
@@ -265,10 +269,34 @@ export default function FoodWasteLocationPage({
 
     setEntries((current) => [localEntry, ...current])
     setQuantityKg('')
-    setComment('')
     setSyncMessage(t.savedLocally)
-    kgInputRef.current?.focus()
   }
+
+  function showSavedAndReturn() {
+    setSaved(true)
+    window.setTimeout(() => {
+      router.push(`${basePath}/food-waste`)
+    }, 750)
+  }
+
+  useEffect(() => {
+    const value = quantityKg.trim()
+    const quantity = Number(value.replace(',', '.'))
+
+    if (!value || !Number.isFinite(quantity) || quantity <= 0) {
+      saveStartedRef.current = false
+      return
+    }
+
+    if (saving || saved || saveStartedRef.current) return
+
+    const timer = window.setTimeout(() => {
+      saveStartedRef.current = true
+      void saveEntry(value)
+    }, 2000)
+
+    return () => window.clearTimeout(timer)
+  }, [quantityKg, saved, saving])
 
   async function deleteEntry(id: string) {
     if (id.startsWith('local-')) {
@@ -355,12 +383,16 @@ export default function FoodWasteLocationPage({
           </span>
         </div>
 
-        <textarea
-          className="mt-3 min-h-16 w-full rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 border border-black/5 dark:bg-[#0f1b2d] dark:text-white dark:border-white/10"
-          placeholder={t.comment}
-          value={comment}
-          onChange={(event) => setComment(event.target.value)}
-        />
+        <p className="mt-3 text-center text-sm text-gray-500 dark:text-white/60">
+          {saving ? t.saving : t.foodWasteAutoSaveHint}
+        </p>
+
+        {saved && (
+          <p className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 size={18} />
+            {t.foodWasteSavedReturning}
+          </p>
+        )}
 
         {error && (
           <p className="mt-3 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-300">
@@ -380,14 +412,6 @@ export default function FoodWasteLocationPage({
           </p>
         )}
 
-        <button
-          onClick={saveEntry}
-          disabled={saving}
-          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-black px-7 font-semibold text-white shadow-md transition active:scale-[0.98] hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
-        >
-          <Plus size={18} />
-          {saving ? t.saving : t.save}
-        </button>
       </section>
 
       <section className="space-y-3">
