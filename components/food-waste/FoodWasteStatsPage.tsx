@@ -95,6 +95,18 @@ function formatNumber(value: number, lang: string) {
   return value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK')
 }
 
+function formatDecimal(value: number, lang: string, decimals = 2) {
+  return value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+    maximumFractionDigits: decimals,
+  })
+}
+
+function formatCurrency(value: number, lang: string) {
+  return value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+    maximumFractionDigits: 0,
+  })
+}
+
 function formatDate(value: string, lang: string) {
   return parseLocalDate(value).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
     day: 'numeric',
@@ -467,6 +479,16 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     ...stats.grinder.chartPoints.map((point) => point.total),
     1
   )
+  const estimatedContainers = stats.grinder.totalKg / 3000
+  const estimatedSavings = estimatedContainers * 5000
+  const grinderLocations: LocationSummary[] = [
+    {
+      name: t.buffetIncludedInGrinder,
+      total: stats.buffet.totalKg,
+      averagePerDay: stats.buffet.averagePerDay,
+    },
+    ...stats.production.locations,
+  ]
 
   return (
     <main className="max-w-5xl mx-auto px-4 pt-4 pb-24 space-y-6">
@@ -546,12 +568,14 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             points: stats.buffet.chartPoints,
             maxValue: maxBuffetChartValue,
             barClass: 'bg-amber-500',
+            showEstimate: false,
           },
           {
             title: t.productionDevelopment,
             points: stats.grinder.chartPoints,
             maxValue: maxProductionChartValue,
             barClass: 'bg-nordic',
+            showEstimate: true,
           },
         ].map((chart) => (
           <div
@@ -566,6 +590,30 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                 </span>
               )}
             </div>
+
+            {chart.showEstimate && (
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-nordic-soft px-3 py-2">
+                  <p className="text-[11px] text-gray-500 dark:text-white/60">
+                    {t.estimatedContainerEquivalent}
+                  </p>
+                  <p className="mt-1 font-semibold text-nordic">
+                    {formatDecimal(estimatedContainers, lang)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-nordic-soft px-3 py-2">
+                  <p className="text-[11px] text-gray-500 dark:text-white/60">
+                    {t.estimatedRenovationSavings}
+                  </p>
+                  <p className="mt-1 font-semibold text-nordic">
+                    {formatCurrency(estimatedSavings, lang)} kr.
+                  </p>
+                </div>
+                <p className="col-span-2 text-[11px] text-gray-400 dark:text-white/40">
+                  {t.estimateBasis}
+                </p>
+              </div>
+            )}
 
             <div className="mt-5 flex h-48 items-end gap-2 overflow-x-auto pb-2">
               {!loading && chart.points.length === 0 && (
@@ -585,7 +633,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   <div
                     className={`w-8 rounded-t-xl ${chart.barClass}`}
                     style={{
-                      height: `${Math.max((point.total / chart.maxValue) * 130, 8)}px`,
+                      height:
+                        point.total > 0
+                          ? `${Math.max((point.total / chart.maxValue) * 130, 8)}px`
+                          : '0px',
                     }}
                   />
                   <span className="text-xs text-gray-500 dark:text-white/60">
@@ -616,11 +667,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               </p>
             </div>
             <p className="text-sm font-semibold text-nordic">
-              {formatAmount(stats.production.averagePerDay, lang)} {t.perDay}
+              {formatAmount(stats.grinder.averagePerDay, lang)} {t.perDay}
             </p>
           </div>
           <LocationList
-            locations={stats.production.locations}
+            locations={grinderLocations}
             lang={lang}
             perDay={t.perDay}
           />
@@ -638,7 +689,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           {
             title: t.productionByLocation,
             explanation: t.productionWasteExplanation,
-            locations: stats.production.locations,
+            locations: grinderLocations,
             className: 'border-black/5 bg-white dark:border-white/10 dark:bg-[#162338]',
           },
         ].map((overview) => (
