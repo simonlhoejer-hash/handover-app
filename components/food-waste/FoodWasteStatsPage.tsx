@@ -41,6 +41,13 @@ type ChartPoint = {
   total: number
 }
 
+type WasteCategoryStats = {
+  totalKg: number
+  averagePerDay: number
+  locations: LocationSummary[]
+  chartPoints: ChartPoint[]
+}
+
 function getToday() {
   const now = new Date()
   const year = now.getFullYear()
@@ -97,6 +104,37 @@ function formatDate(value: string, lang: string) {
 
 function getEntryAmount(entry: FoodWasteEntry) {
   return Number(entry.quantity_kg) || 0
+}
+
+function LocationList({
+  locations,
+  lang,
+  perDay,
+}: {
+  locations: LocationSummary[]
+  lang: string
+  perDay: string
+}) {
+  return (
+    <div className="mt-4 space-y-3">
+      {locations.map((location) => (
+        <div
+          key={location.name}
+          className="grid grid-cols-[1fr_auto] items-center gap-3"
+        >
+          <div className="min-w-0">
+            <p className="truncate font-medium">{location.name}</p>
+            <p className="text-xs text-gray-500 dark:text-white/60">
+              {formatAmount(location.averagePerDay, lang)} {perDay}
+            </p>
+          </div>
+          <span className="rounded-full bg-nordic-soft px-3 py-1 text-sm font-semibold text-nordic">
+            {formatAmount(location.total, lang)}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 type Props = {
@@ -200,68 +238,87 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   }, [fromDate, t.offlineShowingCached, toDate, vessel])
 
   const stats = useMemo(() => {
-    const byLocation = new Map<string, number>()
-    const dailyTotals = new Map<string, number>()
-    const weeklyTotals = new Map<number, number>()
     const daysInRange = getDateRangeDays(fromDate, toDate)
     const useWeeks = daysInRange > 45
 
-    let totalKg = 0
+    function buildCategoryStats(
+      categoryEntries: FoodWasteEntry[],
+      locationNames: string[]
+    ): WasteCategoryStats {
+      const byLocation = new Map<string, number>()
+      const dailyTotals = new Map<string, number>()
+      const weeklyTotals = new Map<number, number>()
 
-    for (const entry of entries) {
-      const amount = getEntryAmount(entry)
+      for (const entry of categoryEntries) {
+        const amount = getEntryAmount(entry)
+        byLocation.set(
+          entry.location_name,
+          (byLocation.get(entry.location_name) ?? 0) + amount
+        )
+        dailyTotals.set(
+          entry.waste_date,
+          (dailyTotals.get(entry.waste_date) ?? 0) + amount
+        )
+        const week = getIsoWeek(entry.waste_date)
+        weeklyTotals.set(week, (weeklyTotals.get(week) ?? 0) + amount)
+      }
 
-      totalKg += amount
-      byLocation.set(
-        entry.location_name,
-        (byLocation.get(entry.location_name) ?? 0) + amount
+      const totalKg = categoryEntries.reduce(
+        (total, entry) => total + getEntryAmount(entry),
+        0
       )
+      const locations = locationNames
+        .map((name) => {
+          const total = byLocation.get(name) ?? 0
+          return { name, total, averagePerDay: total / daysInRange }
+        })
+        .sort((a, b) => b.total - a.total)
+      const chartPoints: ChartPoint[] = useWeeks
+        ? Array.from(weeklyTotals.entries())
+            .map(([week, total]) => ({ label: `${t.week} ${week}`, total }))
+            .sort(
+              (a, b) =>
+                Number(a.label.replace(`${t.week} `, '')) -
+                Number(b.label.replace(`${t.week} `, ''))
+            )
+        : Array.from(dailyTotals.entries())
+            .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+            .map(([date, total]) => ({ label: formatDate(date, lang), total }))
 
-      dailyTotals.set(
-        entry.waste_date,
-        (dailyTotals.get(entry.waste_date) ?? 0) + amount
-      )
-
-      const week = getIsoWeek(entry.waste_date)
-      weeklyTotals.set(week, (weeklyTotals.get(week) ?? 0) + amount)
+      return {
+        totalKg,
+        averagePerDay: totalKg / daysInRange,
+        locations,
+        chartPoints,
+      }
     }
+
+    const productionNames = FOOD_WASTE_LOCATIONS.filter((location) =>
+      location.name.startsWith('Produktion ')
+    ).map((location) => location.name)
+    const buffetNames = FOOD_WASTE_LOCATIONS.filter(
+      (location) => !location.name.startsWith('Produktion ')
+    ).map((location) => location.name)
+    const productionNameSet = new Set(productionNames)
+    const buffet = buildCategoryStats(
+      entries.filter((entry) => !productionNameSet.has(entry.location_name)),
+      buffetNames
+    )
+    const production = buildCategoryStats(
+      entries.filter((entry) => productionNameSet.has(entry.location_name)),
+      productionNames
+    )
 
     const guestsTotal = guestCounts.reduce(
       (total, count) => total + count.guest_count,
       0
     )
 
-    const locations: LocationSummary[] = FOOD_WASTE_LOCATIONS.map((location) => {
-      const total = byLocation.get(location.name) ?? 0
-
-      return {
-        name: location.name,
-        total,
-        averagePerDay: total / daysInRange,
-      }
-    }).sort((a, b) => b.total - a.total)
-
-    const chartPoints: ChartPoint[] = useWeeks
-      ? Array.from(weeklyTotals.entries())
-          .map(([week, total]) => ({
-            label: `${t.week} ${week}`,
-            total,
-          }))
-          .sort((a, b) => Number(a.label.replace(`${t.week} `, '')) - Number(b.label.replace(`${t.week} `, '')))
-      : Array.from(dailyTotals.entries())
-          .map(([date, total]) => ({
-            label: formatDate(date, lang),
-            total,
-          }))
-          .reverse()
-
     return {
-      totalKg,
+      buffet,
+      production,
       guestsTotal,
-      kgPerGuest: guestsTotal > 0 ? totalKg / guestsTotal : 0,
-      averagePerDay: totalKg / daysInRange,
-      locations,
-      chartPoints,
+      kgPerGuest: guestsTotal > 0 ? buffet.totalKg / guestsTotal : 0,
     }
   }, [entries, fromDate, guestCounts, lang, t.week, toDate])
 
@@ -316,22 +373,40 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     const overviewRows = [
       [t.periodFrom, fromDate],
       [t.periodTo, toDate],
-      [t.kgInPeriod, stats.totalKg],
+      [t.buffetWaste, stats.buffet.totalKg],
+      [t.productionWaste, stats.production.totalKg],
       [t.guests, stats.guestsTotal],
-      [t.kgPerGuest, stats.kgPerGuest],
-      [t.averageKgPerDay, stats.averagePerDay],
+      [t.buffetKgPerGuest, stats.kgPerGuest],
+      [t.productionAveragePerDay, stats.production.averagePerDay],
     ]
 
-    const locationRows = stats.locations.map((location) => ({
-      [t.location]: location.name,
-      [t.kgInPeriod]: location.total,
-      [t.averageKgPerDay]: location.averagePerDay,
-    }))
+    const locationRows = [
+      ...stats.buffet.locations.map((location) => ({
+        [t.category]: t.buffetWaste,
+        [t.location]: location.name,
+        [t.kgInPeriod]: location.total,
+        [t.averageKgPerDay]: location.averagePerDay,
+      })),
+      ...stats.production.locations.map((location) => ({
+        [t.category]: t.productionAndDeckOne,
+        [t.location]: location.name,
+        [t.kgInPeriod]: location.total,
+        [t.averageKgPerDay]: location.averagePerDay,
+      })),
+    ]
 
-    const chartRows = stats.chartPoints.map((point) => ({
-      [t.period]: point.label,
-      [t.kg]: point.total,
-    }))
+    const chartRows = [
+      ...stats.buffet.chartPoints.map((point) => ({
+        [t.category]: t.buffetWaste,
+        [t.period]: point.label,
+        [t.kg]: point.total,
+      })),
+      ...stats.production.chartPoints.map((point) => ({
+        [t.category]: t.productionAndDeckOne,
+        [t.period]: point.label,
+        [t.kg]: point.total,
+      })),
+    ]
 
     const entryRows = entries.map((entry) => ({
       [t.date]: entry.waste_date,
@@ -377,8 +452,12 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     setExporting(false)
   }
 
-  const maxChartValue = Math.max(
-    ...stats.chartPoints.map((point) => point.total),
+  const maxBuffetChartValue = Math.max(
+    ...stats.buffet.chartPoints.map((point) => point.total),
+    1
+  )
+  const maxProductionChartValue = Math.max(
+    ...stats.production.chartPoints.map((point) => point.total),
     1
   )
 
@@ -433,8 +512,8 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">{t.kgInPeriod}</p>
-          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.totalKg, lang)}</div>
+          <p className="text-sm text-gray-500 dark:text-white/60">{t.buffetWaste}</p>
+          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.buffet.totalKg, lang)}</div>
         </div>
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
@@ -443,56 +522,76 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </div>
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">{t.kgPerGuest}</p>
+          <p className="text-sm text-gray-500 dark:text-white/60">{t.buffetKgPerGuest}</p>
           <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.kgPerGuest, lang, 2)}</div>
         </div>
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">{t.averagePerDay}</p>
-          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.averagePerDay, lang)}</div>
+          <p className="text-sm text-gray-500 dark:text-white/60">{t.productionWaste}</p>
+          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.production.totalKg, lang)}</div>
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">{t.weightChart}</h2>
-          {loading && (
-            <span className="text-sm text-gray-500 dark:text-white/60">
-              {t.loadingShort}
-            </span>
-          )}
-        </div>
-
-        <div className="mt-5 flex h-48 items-end gap-2 overflow-x-auto pb-2">
-          {!loading && stats.chartPoints.length === 0 && (
-            <p className="self-center text-sm text-gray-500 dark:text-white/60">
-              {t.noRegistrationsInPeriod}
-            </p>
-          )}
-
-          {stats.chartPoints.map((point) => (
-            <div
-              key={point.label}
-              className="flex h-full min-w-12 flex-col items-center justify-end gap-2"
-            >
-              <span className="text-xs font-medium text-gray-500 dark:text-white/60">
-                {formatAmount(point.total, lang)}
-              </span>
-              <div
-                className="w-8 rounded-t-xl bg-nordic"
-                style={{
-                  height: `${Math.max((point.total / maxChartValue) * 130, 8)}px`,
-                }}
-              />
-              <span className="text-xs text-gray-500 dark:text-white/60">
-                {point.label}
-              </span>
+      <section className="grid gap-6 lg:grid-cols-2">
+        {[
+          {
+            title: t.buffetDevelopment,
+            points: stats.buffet.chartPoints,
+            maxValue: maxBuffetChartValue,
+            barClass: 'bg-amber-500',
+          },
+          {
+            title: t.productionDevelopment,
+            points: stats.production.chartPoints,
+            maxValue: maxProductionChartValue,
+            barClass: 'bg-nordic',
+          },
+        ].map((chart) => (
+          <div
+            key={chart.title}
+            className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">{chart.title}</h2>
+              {loading && (
+                <span className="text-sm text-gray-500 dark:text-white/60">
+                  {t.loadingShort}
+                </span>
+              )}
             </div>
-          ))}
-        </div>
+
+            <div className="mt-5 flex h-48 items-end gap-2 overflow-x-auto pb-2">
+              {!loading && chart.points.length === 0 && (
+                <p className="self-center text-sm text-gray-500 dark:text-white/60">
+                  {t.noRegistrationsInPeriod}
+                </p>
+              )}
+
+              {chart.points.map((point) => (
+                <div
+                  key={point.label}
+                  className="flex h-full min-w-12 flex-col items-center justify-end gap-2"
+                >
+                  <span className="text-xs font-medium text-gray-500 dark:text-white/60">
+                    {formatAmount(point.total, lang)}
+                  </span>
+                  <div
+                    className={`w-8 rounded-t-xl ${chart.barClass}`}
+                    style={{
+                      height: `${Math.max((point.total / chart.maxValue) * 130, 8)}px`,
+                    }}
+                  />
+                  <span className="text-xs text-gray-500 dark:text-white/60">
+                    {point.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+      <section className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
           <h2 className="text-lg font-semibold">{t.writeGuests}</h2>
 
@@ -526,25 +625,32 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           )}
         </div>
 
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <h2 className="text-lg font-semibold">{t.overviewByLocation}</h2>
-
-          <div className="mt-4 space-y-3">
-            {stats.locations.map((location) => (
-              <div key={location.name} className="grid grid-cols-[1fr_auto] items-center gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{location.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-white/60">
-                    {formatAmount(location.averagePerDay, lang)} {t.perDay}
-                  </p>
-                </div>
-                <span className="rounded-full bg-nordic-soft px-3 py-1 text-sm font-semibold text-nordic">
-                  {formatAmount(location.total, lang)}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="rounded-2xl border border-amber-500/15 bg-amber-50/60 p-4 shadow-sm dark:bg-amber-400/5">
+          <h2 className="text-lg font-semibold">{t.buffetByLocation}</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
+            {t.buffetWasteExplanation}
+          </p>
+          <LocationList locations={stats.buffet.locations} lang={lang} perDay={t.perDay} />
         </div>
+      </section>
+
+      <section className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">{t.productionByLocation}</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
+              {t.productionWasteExplanation}
+            </p>
+          </div>
+          <p className="text-sm font-semibold text-nordic">
+            {formatAmount(stats.production.averagePerDay, lang)} {t.perDay}
+          </p>
+        </div>
+        <LocationList
+          locations={stats.production.locations}
+          lang={lang}
+          perDay={t.perDay}
+        />
       </section>
 
       <section className="space-y-3">

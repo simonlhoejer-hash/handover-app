@@ -178,7 +178,20 @@ Skriv hvor tingene står.`,
 
     // Food waste overview
     foodWasteOverview: 'Food waste overblik',
-    foodWasteOverviewSubtitle: 'Vælg periode, se vægt og skriv gæster.',
+    foodWasteOverviewSubtitle: 'Sammenlign buffetspild og produktionsaffald.',
+    buffetWaste: 'Buffetspild',
+    productionWaste: 'Produktionsaffald',
+    productionAndDeckOne: 'Produktion & Dæk 1',
+    buffetKgPerGuest: 'Buffet kg pr. gæst',
+    buffetDevelopment: 'Buffetspild over tid',
+    productionDevelopment: 'Produktionsaffald over tid',
+    buffetByLocation: 'Buffetspild pr. sted',
+    productionByLocation: 'Produktion & Dæk 1 pr. sted',
+    productionAveragePerDay: 'Produktionsaffald pr. dag',
+    buffetWasteExplanation: 'Viser mulig overproduktion og tabte råvarer.',
+    productionWasteExplanation:
+      'Viser mængden gennem kværnen og grundlaget for sparet renovation.',
+    category: 'Kategori',
     guestCountsNeedSql:
       'Gæstetal kræver den nye Supabase SQL, før de kan gemmes.',
     fromDate: 'Fra dato',
@@ -395,7 +408,20 @@ Skriv var sakerna står.`,
 
     // Food waste overview
     foodWasteOverview: 'Food waste översikt',
-    foodWasteOverviewSubtitle: 'Välj period, se vikt och skriv gäster.',
+    foodWasteOverviewSubtitle: 'Jämför buffésvinn och produktionsavfall.',
+    buffetWaste: 'Buffésvinn',
+    productionWaste: 'Produktionsavfall',
+    productionAndDeckOne: 'Produktion & Däck 1',
+    buffetKgPerGuest: 'Buffé kg per gäst',
+    buffetDevelopment: 'Buffésvinn över tid',
+    productionDevelopment: 'Produktionsavfall över tid',
+    buffetByLocation: 'Buffésvinn per plats',
+    productionByLocation: 'Produktion & Däck 1 per plats',
+    productionAveragePerDay: 'Produktionsavfall per dag',
+    buffetWasteExplanation: 'Visar möjlig överproduktion och förlorade råvaror.',
+    productionWasteExplanation:
+      'Visar mängden genom kvarnen och underlaget för sparad avfallshantering.',
+    category: 'Kategori',
     guestCountsNeedSql:
       'Gästantal kräver den nya Supabase SQL innan de kan sparas.',
     fromDate: 'Från datum',
