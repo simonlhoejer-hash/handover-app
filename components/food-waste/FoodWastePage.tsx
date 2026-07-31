@@ -58,7 +58,11 @@ const LOCATION_GROUPS = [
     slugs: [
       'produktion-main-galley',
       'produktion-skagerak-galley',
-      'produktion-kold-galley',
+    ],
+  },
+  {
+    title: 'Dæk 1',
+    slugs: [
       'produktion-bageri',
       'produktion-slagteri',
       'produktion-proviant-daek-1',

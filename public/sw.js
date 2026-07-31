@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v8'
+const CACHE_NAME = 'handover-offline-v10'
 
 const APP_SHELL = [
   '/',
@@ -14,7 +14,6 @@ const APP_SHELL = [
   '/galley/food-waste/commodore-morgen',
   '/galley/food-waste/produktion-main-galley',
   '/galley/food-waste/produktion-skagerak-galley',
-  '/galley/food-waste/produktion-kold-galley',
   '/galley/food-waste/produktion-bageri',
   '/galley/food-waste/produktion-slagteri',
   '/galley/food-waste/produktion-proviant-daek-1',

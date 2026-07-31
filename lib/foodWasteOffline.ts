@@ -21,6 +21,10 @@ export type CachedFoodWasteGuestCount = {
 const FOOD_WASTE_CACHE_KEY = 'foodWasteCachedEntries'
 const FOOD_WASTE_GUEST_CACHE_KEY = 'foodWasteCachedGuestCounts'
 export const FOOD_WASTE_PENDING_KEY = 'foodWastePendingEntries'
+const LEGACY_LOCATION_NAMES = new Map([
+  ['Produktion Kold Galley', 'Produktion Skagerak Galley'],
+  ['Produktion Proviant dæk 1', 'Produktion Proviant'],
+])
 
 function canUseStorage() {
   return typeof window !== 'undefined' && Boolean(window.localStorage)
@@ -54,7 +58,9 @@ function vesselKey(key: string, vessel: 'crown' | 'pearl') {
 }
 
 export function readPendingFoodWasteEntries(vessel: 'crown' | 'pearl' = 'crown') {
-  return readStorageArray<CachedFoodWasteEntry>(vesselKey(FOOD_WASTE_PENDING_KEY, vessel))
+  return readStorageArray<CachedFoodWasteEntry>(
+    vesselKey(FOOD_WASTE_PENDING_KEY, vessel)
+  ).map(normalizeLegacyLocationName)
 }
 
 export function writePendingFoodWasteEntries(entries: CachedFoodWasteEntry[], vessel: 'crown' | 'pearl' = 'crown') {
@@ -62,7 +68,19 @@ export function writePendingFoodWasteEntries(entries: CachedFoodWasteEntry[], ve
 }
 
 export function readCachedFoodWasteEntries(vessel: 'crown' | 'pearl' = 'crown') {
-  return readStorageArray<CachedFoodWasteEntry>(vesselKey(FOOD_WASTE_CACHE_KEY, vessel))
+  return readStorageArray<CachedFoodWasteEntry>(
+    vesselKey(FOOD_WASTE_CACHE_KEY, vessel)
+  ).map(normalizeLegacyLocationName)
+}
+
+function normalizeLegacyLocationName(entry: CachedFoodWasteEntry) {
+  const locationName = LEGACY_LOCATION_NAMES.get(entry.location_name)
+  if (!locationName) return entry
+
+  return {
+    ...entry,
+    location_name: locationName,
+  }
 }
 
 export function cacheFoodWasteEntries(entries: CachedFoodWasteEntry[], vessel: 'crown' | 'pearl' = 'crown') {
