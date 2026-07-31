@@ -593,17 +593,76 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         ))}
       </section>
 
-      <section>
-        <div className="rounded-2xl border border-amber-500/15 bg-amber-50/60 p-4 shadow-sm dark:bg-amber-400/5">
+      <section className="hidden items-stretch gap-6 lg:grid lg:grid-cols-2">
+        <div className="h-full rounded-2xl border border-amber-500/15 bg-amber-50/60 p-4 shadow-sm dark:bg-amber-400/5">
           <h2 className="text-lg font-semibold">{t.buffetByLocation}</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
             {t.buffetWasteExplanation}
           </p>
           <LocationList locations={stats.buffet.locations} lang={lang} perDay={t.perDay} />
         </div>
+
+        <div className="h-full rounded-2xl border border-black/5 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#162338]">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">{t.productionByLocation}</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
+                {t.productionWasteExplanation}
+              </p>
+            </div>
+            <p className="text-sm font-semibold text-nordic">
+              {formatAmount(stats.production.averagePerDay, lang)} {t.perDay}
+            </p>
+          </div>
+          <LocationList
+            locations={stats.production.locations}
+            lang={lang}
+            perDay={t.perDay}
+          />
+        </div>
       </section>
 
-      <aside className="fixed bottom-6 right-6 z-40 hidden w-80 lg:block">
+      <section className="grid gap-3 lg:hidden">
+        {[
+          {
+            title: t.buffetByLocation,
+            explanation: t.buffetWasteExplanation,
+            locations: stats.buffet.locations,
+            className: 'border-amber-500/15 bg-amber-50/60 dark:bg-amber-400/5',
+          },
+          {
+            title: t.productionByLocation,
+            explanation: t.productionWasteExplanation,
+            locations: stats.production.locations,
+            className: 'border-black/5 bg-white dark:border-white/10 dark:bg-[#162338]',
+          },
+        ].map((overview) => (
+          <details
+            key={overview.title}
+            className={`group rounded-2xl border shadow-sm ${overview.className}`}
+          >
+            <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 px-4 font-semibold [&::-webkit-details-marker]:hidden">
+              {overview.title}
+              <ChevronDown
+                size={19}
+                className="shrink-0 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div className="border-t border-black/5 px-4 pb-4 pt-3 dark:border-white/10">
+              <p className="text-sm text-gray-500 dark:text-white/60">
+                {overview.explanation}
+              </p>
+              <LocationList
+                locations={overview.locations}
+                lang={lang}
+                perDay={t.perDay}
+              />
+            </div>
+          </details>
+        ))}
+      </section>
+
+      <aside className="fixed bottom-24 right-6 z-40 hidden w-80 lg:block">
         <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#162338]">
           <button
             type="button"
@@ -659,25 +718,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           </div>
         </div>
       </aside>
-
-      <section className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">{t.productionByLocation}</h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
-              {t.productionWasteExplanation}
-            </p>
-          </div>
-          <p className="text-sm font-semibold text-nordic">
-            {formatAmount(stats.production.averagePerDay, lang)} {t.perDay}
-          </p>
-        </div>
-        <LocationList
-          locations={stats.production.locations}
-          lang={lang}
-          perDay={t.perDay}
-        />
-      </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t.latestRegistrations}</h2>
