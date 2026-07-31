@@ -309,6 +309,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       entries.filter((entry) => productionNameSet.has(entry.location_name)),
       productionNames
     )
+    const grinder = buildCategoryStats(
+      entries,
+      FOOD_WASTE_LOCATIONS.map((location) => location.name)
+    )
 
     const guestsTotal = guestCounts.reduce(
       (total, count) => total + count.guest_count,
@@ -318,6 +322,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     return {
       buffet,
       production,
+      grinder,
       guestsTotal,
       kgPerGuest: guestsTotal > 0 ? buffet.totalKg / guestsTotal : 0,
     }
@@ -376,7 +381,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       [t.periodFrom, fromDate],
       [t.periodTo, toDate],
       [t.buffetWaste, stats.buffet.totalKg],
-      [t.productionWaste, stats.production.totalKg],
+      [t.productionWaste, stats.grinder.totalKg],
       [t.guests, stats.guestsTotal],
       [t.buffetKgPerGuest, stats.kgPerGuest],
       [t.productionAveragePerDay, stats.production.averagePerDay],
@@ -403,8 +408,8 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         [t.period]: point.label,
         [t.kg]: point.total,
       })),
-      ...stats.production.chartPoints.map((point) => ({
-        [t.category]: t.productionAndDeckOne,
+      ...stats.grinder.chartPoints.map((point) => ({
+        [t.category]: t.productionWaste,
         [t.period]: point.label,
         [t.kg]: point.total,
       })),
@@ -459,7 +464,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     1
   )
   const maxProductionChartValue = Math.max(
-    ...stats.production.chartPoints.map((point) => point.total),
+    ...stats.grinder.chartPoints.map((point) => point.total),
     1
   )
 
@@ -530,7 +535,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.productionWaste}</p>
-          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.production.totalKg, lang)}</div>
+          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.grinder.totalKg, lang)}</div>
         </div>
       </section>
 
@@ -544,7 +549,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           },
           {
             title: t.productionDevelopment,
-            points: stats.production.chartPoints,
+            points: stats.grinder.chartPoints,
             maxValue: maxProductionChartValue,
             barClass: 'bg-nordic',
           },
