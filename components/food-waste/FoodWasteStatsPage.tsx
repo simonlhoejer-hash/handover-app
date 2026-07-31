@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { ChevronDown, Download, Users } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
@@ -170,6 +171,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [guestMessage, setGuestMessage] = useState('')
   const [guestTableError, setGuestTableError] = useState(false)
   const [guestPanelOpen, setGuestPanelOpen] = useState(false)
+  const [selectedPoint, setSelectedPoint] = useState<{
+    chart: string
+    point: ChartPoint
+  } | null>(null)
 
   useEffect(() => {
     let isCurrent = true
@@ -591,6 +596,20 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               )}
             </div>
 
+            <AnimatePresence mode="wait">
+              {selectedPoint?.chart === chart.title && (
+                <motion.div
+                  key={`${chart.title}-${selectedPoint.point.label}`}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="mt-3 inline-flex rounded-full bg-black px-3 py-1.5 text-sm font-semibold text-white dark:bg-white dark:text-black"
+                >
+                  {selectedPoint.point.label}: {formatAmount(selectedPoint.point.total, lang)}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {chart.showEstimate && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-xl bg-nordic-soft px-3 py-2">
@@ -598,7 +617,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     {t.estimatedContainerEquivalent}
                   </p>
                   <p className="mt-1 font-semibold text-nordic">
-                    {formatDecimal(estimatedContainers, lang)}
+                    {formatDecimal(estimatedContainers, lang)} {t.containerShort}
                   </p>
                 </div>
                 <div className="rounded-xl bg-nordic-soft px-3 py-2">
@@ -622,27 +641,43 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                 </p>
               )}
 
-              {chart.points.map((point) => (
-                <div
+              {chart.points.map((point, pointIndex) => (
+                <button
+                  type="button"
                   key={point.label}
-                  className="flex h-full min-w-12 flex-col items-center justify-end gap-2"
+                  onClick={() => setSelectedPoint({ chart: chart.title, point })}
+                  aria-label={`${point.label}: ${formatAmount(point.total, lang)}`}
+                  className={`group flex h-full min-w-12 flex-col items-center justify-end gap-2 rounded-xl px-1 transition hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-nordic/30 dark:hover:bg-white/5 ${
+                    selectedPoint?.chart === chart.title &&
+                    selectedPoint.point.label === point.label
+                      ? 'bg-black/5 dark:bg-white/5'
+                      : ''
+                  }`}
                 >
                   <span className="text-xs font-medium text-gray-500 dark:text-white/60">
                     {formatAmount(point.total, lang)}
                   </span>
-                  <div
+                  <motion.div
                     className={`w-8 rounded-t-xl ${chart.barClass}`}
-                    style={{
+                    initial={{ height: 0, opacity: 0.4 }}
+                    animate={{
                       height:
                         point.total > 0
-                          ? `${Math.max((point.total / chart.maxValue) * 130, 8)}px`
-                          : '0px',
+                          ? Math.max((point.total / chart.maxValue) * 130, 8)
+                          : 0,
+                      opacity: 1,
                     }}
+                    transition={{
+                      duration: 0.45,
+                      delay: Math.min(pointIndex * 0.05, 0.4),
+                      ease: 'easeOut',
+                    }}
+                    whileHover={{ scaleX: 1.15 }}
                   />
                   <span className="text-xs text-gray-500 dark:text-white/60">
                     {point.label}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
