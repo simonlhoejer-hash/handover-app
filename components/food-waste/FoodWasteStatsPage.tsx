@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { Download } from 'lucide-react'
+import { ChevronDown, Download, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
@@ -157,6 +157,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [error, setError] = useState('')
   const [guestMessage, setGuestMessage] = useState('')
   const [guestTableError, setGuestTableError] = useState(false)
+  const [guestPanelOpen, setGuestPanelOpen] = useState(false)
 
   useEffect(() => {
     let isCurrent = true
@@ -354,6 +355,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       setGuestTableError(false)
       setGuestMessage(t.guestsSaved)
       setGuestCount('')
+      setGuestPanelOpen(false)
       setGuestCounts((current) => [
         data,
         ...current.filter((count) => count.service_date !== data.service_date),
@@ -591,40 +593,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         ))}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
-          <h2 className="text-lg font-semibold">{t.writeGuests}</h2>
-
-          <div className="mt-4 grid gap-3">
-            <input
-              type="date"
-              value={guestDate}
-              onChange={(event) => setGuestDate(event.target.value)}
-              className="h-12 w-full rounded-2xl bg-gray-100 px-4 border border-black/5 dark:bg-[#0f1b2d] dark:border-white/10"
-            />
-            <input
-              inputMode="numeric"
-              value={guestCount}
-              onChange={(event) => setGuestCount(event.target.value)}
-              className="h-14 w-full rounded-2xl bg-gray-100 px-4 text-2xl font-semibold border border-black/5 dark:bg-[#0f1b2d] dark:border-white/10"
-              placeholder={t.guestCountPlaceholder}
-            />
-            <button
-              onClick={saveGuestCount}
-              disabled={savingGuests}
-              className="min-h-12 rounded-2xl bg-black px-5 font-semibold text-white transition active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-black"
-            >
-              {savingGuests ? t.saving : t.saveGuests}
-            </button>
-          </div>
-
-          {guestMessage && (
-            <p className="mt-3 rounded-2xl bg-nordic-soft px-4 py-3 text-sm text-nordic">
-              {guestMessage}
-            </p>
-          )}
-        </div>
-
+      <section>
         <div className="rounded-2xl border border-amber-500/15 bg-amber-50/60 p-4 shadow-sm dark:bg-amber-400/5">
           <h2 className="text-lg font-semibold">{t.buffetByLocation}</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
@@ -633,6 +602,63 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           <LocationList locations={stats.buffet.locations} lang={lang} perDay={t.perDay} />
         </div>
       </section>
+
+      <aside className="fixed bottom-6 right-6 z-40 hidden w-80 lg:block">
+        <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#162338]">
+          <button
+            type="button"
+            onClick={() => setGuestPanelOpen((current) => !current)}
+            aria-expanded={guestPanelOpen}
+            className="flex min-h-14 w-full items-center justify-between gap-3 px-5 text-left font-semibold"
+          >
+            <span className="flex items-center gap-2">
+              <Users size={19} className="text-nordic" />
+              {t.writeGuests}
+            </span>
+            <ChevronDown
+              size={19}
+              className={`transition-transform ${guestPanelOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          <div
+            className={`grid transition-[grid-template-rows] duration-300 ${
+              guestPanelOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="grid gap-3 border-t border-black/5 p-4 dark:border-white/10">
+                <input
+                  type="date"
+                  value={guestDate}
+                  onChange={(event) => setGuestDate(event.target.value)}
+                  className="h-12 w-full rounded-xl border border-black/5 bg-gray-100 px-4 dark:border-white/10 dark:bg-[#0f1b2d]"
+                />
+                <input
+                  inputMode="numeric"
+                  value={guestCount}
+                  onChange={(event) => setGuestCount(event.target.value)}
+                  className="h-14 w-full rounded-xl border border-black/5 bg-gray-100 px-4 text-2xl font-semibold dark:border-white/10 dark:bg-[#0f1b2d]"
+                  placeholder={t.guestCountPlaceholder}
+                />
+                <button
+                  onClick={saveGuestCount}
+                  disabled={savingGuests}
+                  className="min-h-12 rounded-xl bg-black px-5 font-semibold text-white transition active:scale-[0.98] disabled:opacity-50 dark:bg-white dark:text-black"
+                >
+                  {savingGuests ? t.saving : t.saveGuests}
+                </button>
+
+                {guestMessage && (
+                  <p className="rounded-xl bg-nordic-soft px-4 py-3 text-sm text-nordic">
+                    {guestMessage}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
 
       <section className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
         <div className="flex flex-wrap items-end justify-between gap-3">
