@@ -3,20 +3,20 @@ const CACHE_NAME = 'handover-offline-v10'
 const APP_SHELL = [
   '/',
   '/ships',
-  '/galley',
-  '/galley/food-waste',
-  '/galley/food-waste/overblik',
-  '/galley/food-waste/skagerak-morgen',
-  '/galley/food-waste/skagerak-aften',
-  '/galley/food-waste/messen-morgen',
-  '/galley/food-waste/messen-frokost',
-  '/galley/food-waste/messen-aften',
-  '/galley/food-waste/commodore-morgen',
-  '/galley/food-waste/produktion-main-galley',
-  '/galley/food-waste/produktion-skagerak-galley',
-  '/galley/food-waste/produktion-bageri',
-  '/galley/food-waste/produktion-slagteri',
-  '/galley/food-waste/produktion-proviant-daek-1',
+  '/crown',
+  '/crown/food-waste',
+  '/crown/food-waste/overblik',
+  '/crown/food-waste/skagerak-morgen',
+  '/crown/food-waste/skagerak-aften',
+  '/crown/food-waste/messen-morgen',
+  '/crown/food-waste/messen-frokost',
+  '/crown/food-waste/messen-aften',
+  '/crown/food-waste/commodore-morgen',
+  '/crown/food-waste/produktion-main-galley',
+  '/crown/food-waste/produktion-skagerak-galley',
+  '/crown/food-waste/produktion-bageri',
+  '/crown/food-waste/produktion-slagteri',
+  '/crown/food-waste/produktion-proviant-daek-1',
   '/manifest-galley.json',
   '/pearl',
   '/pearl/food-waste',
@@ -69,7 +69,7 @@ self.addEventListener('fetch', (event) => {
         .catch(() =>
           caches
             .match(request)
-            .then((cached) => cached || caches.match('/galley/food-waste'))
+            .then((cached) => cached || caches.match('/crown/food-waste'))
         )
     )
     return

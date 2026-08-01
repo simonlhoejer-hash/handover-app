@@ -67,7 +67,7 @@ function getEntryAmount(entry: FoodWasteEntry) {
 export default function FoodWasteLocationPage({
   locationName,
   vessel = 'crown',
-  basePath = '/galley',
+  basePath = '/crown',
 }: Props) {
   const { t, lang } = useTranslation()
   const router = useRouter()

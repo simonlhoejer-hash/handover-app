@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'HandoverPro Pearl',
+  title: 'HandoverPro Nordic Pearl',
   manifest: '/manifest-pearl.json',
 }
 

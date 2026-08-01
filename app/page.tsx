@@ -9,11 +9,6 @@ export default function Page() {
   const router = useRouter()
   const { t } = useTranslation()
 
-  function handleLogin() {
-    localStorage.setItem("crew-auth", "true")
-    router.push("/ships")
-  }
-
   return (
     <main className="min-h-screen grid lg:grid-cols-[1.15fr_.85fr] overflow-hidden bg-white dark:bg-[#082d2d]">
       <section className="nordic-wave relative min-h-[42vh] lg:min-h-screen bg-[#347f7a] px-7 py-10 sm:px-12 lg:px-20 lg:py-16 text-white flex flex-col justify-between">
@@ -36,6 +31,7 @@ export default function Page() {
             </span>
           </span>
         </div>
+
         <div className="relative z-10 max-w-2xl py-14 lg:py-0">
           <div className="mb-5 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-white/70">
             <Anchor size={17} />
@@ -48,6 +44,7 @@ export default function Page() {
             Én samlet arbejdsflade til overlevering, drift og opfølgning om bord.
           </p>
         </div>
+
         <p className="relative z-10 hidden lg:block text-xs uppercase tracking-[0.18em] text-white/55">
           København · Oslo
         </p>
@@ -55,7 +52,9 @@ export default function Page() {
 
       <section className="flex items-center px-7 py-12 sm:px-14 lg:px-20">
         <div className="w-full max-w-md mx-auto">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#347f7a]">Handover</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#347f7a]">
+            Handover
+          </p>
           <h2 className="font-nordic-display mt-3 text-4xl text-[#102f2e] dark:text-white">
             Velkommen om bord
           </h2>
@@ -63,11 +62,14 @@ export default function Page() {
             {t.loginTagline}
           </p>
           <button
-            onClick={handleLogin}
+            onClick={() => router.push("/ships")}
             className="group mt-9 w-full flex items-center justify-between rounded-xl bg-[#064e4c] px-6 py-4 text-left font-semibold text-white shadow-[0_12px_28px_rgba(6,78,76,.22)] transition hover:bg-[#073f3d] active:scale-[.99]"
           >
-            <span>{t.login}</span>
-            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
+            <span>{t.continueButton}</span>
+            <ArrowRight
+              size={20}
+              className="transition-transform group-hover:translate-x-1"
+            />
           </button>
           <p className="mt-5 text-center text-xs text-gray-400 dark:text-white/35">
             HandoverPro platform · for Go Nordic Cruiseline crew

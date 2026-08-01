@@ -22,7 +22,7 @@ export default function ImageUploader({
   const pathname = usePathname()
   const department = pathname.startsWith('/pearl')
     ? 'pearl'
-    : pathname.startsWith('/galley')
+    : pathname.startsWith('/crown')
       ? 'galley'
       : 'shop'
 
