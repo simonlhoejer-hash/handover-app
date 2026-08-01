@@ -6,7 +6,7 @@ export default function Page() {
     <>
 
       <DepartmentHome
-        department="galley"
+        department="crown"
         items={PARTIS.galley}
         basePath="/crown/parti"
       />

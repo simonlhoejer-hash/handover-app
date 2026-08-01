@@ -18,8 +18,6 @@ type Props = {
   loading: boolean
   onSave: () => void
   parti: string
-  isOral: boolean
-  setIsOral: (value: boolean) => void
   draftStatus?: 'idle' | 'saving' | 'saved' | 'error'
   draftSavedAt?: string | null
   draftError?: string
@@ -76,8 +74,6 @@ export default function HandoverForm({
   loading,
   onSave,
   parti,
-  isOral,
-  setIsOral,
   draftStatus = 'idle',
   draftSavedAt,
   draftError,
@@ -136,37 +132,6 @@ export default function HandoverForm({
       </div>
 
 <section className={cardClass}>
-      <div className="mb-4 grid grid-cols-2 gap-2 rounded-2xl bg-gray-100 p-1 dark:bg-[#0f1b2d]">
-        <button
-          type="button"
-          onClick={() => setIsOral(false)}
-          className={`
-            min-h-11 rounded-xl px-3 text-sm font-semibold transition
-            ${
-              !isOral
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-white dark:text-black'
-                : 'text-gray-500 dark:text-white/60'
-            }
-          `}
-        >
-          {t.writtenHandover}
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsOral(true)}
-          className={`
-            min-h-11 rounded-xl px-3 text-sm font-semibold transition
-            ${
-              isOral
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-white dark:text-black'
-                : 'text-gray-500 dark:text-white/60'
-            }
-          `}
-        >
-          {t.oralHandover}
-        </button>
-      </div>
-
       <input
         className={inputClass}
         placeholder={t.senderName}
@@ -189,13 +154,7 @@ export default function HandoverForm({
   style={{ WebkitAppearance: 'none' }}
 />
 
-      {isOral ? (
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-400/10 px-4 py-4 text-sm font-medium text-amber-800 dark:text-amber-200">
-          {t.oralHandoverNoText}
-        </div>
-      ) : (
-        <HandoverEditor value={note} onChange={setNote} />
-      )}
+      <HandoverEditor value={note} onChange={setNote} />
 
       {(lastSavedText || draftError) && (
         <p
