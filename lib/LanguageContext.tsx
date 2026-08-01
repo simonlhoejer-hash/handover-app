@@ -3,7 +3,11 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { translations } from './translations'
 
-type Lang = 'da' | 'sv'
+export type Lang = 'da' | 'sv' | 'en'
+
+export function localeFor(lang?: string) {
+  return lang === 'sv' ? 'sv-SE' : lang === 'en' ? 'en-GB' : 'da-DK'
+}
 
 type LanguageContextType = {
   lang: Lang
@@ -17,8 +21,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>('da')
 
   useEffect(() => {
-    const saved = localStorage.getItem('lang') as Lang
-    if (saved) setLangState(saved)
+    const saved = localStorage.getItem('lang')
+    if (saved === 'da' || saved === 'sv' || saved === 'en') setLangState(saved)
   }, [])
 
   const setLang = (newLang: Lang) => {

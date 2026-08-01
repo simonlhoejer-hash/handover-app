@@ -23,6 +23,7 @@ const FOOD_WASTE_GUEST_CACHE_KEY = 'foodWasteCachedGuestCounts'
 export const FOOD_WASTE_PENDING_KEY = 'foodWastePendingEntries'
 const LEGACY_LOCATION_NAMES = new Map([
   ['Produktion Kold Galley', 'Produktion Skagerak Galley'],
+  ['Produktion Main Galley', 'Produktion Varm Galley'],
   ['Produktion Proviant dæk 1', 'Produktion Proviant'],
 ])
 

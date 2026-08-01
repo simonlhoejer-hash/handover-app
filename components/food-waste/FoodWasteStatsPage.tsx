@@ -1,9 +1,9 @@
-﻿'use client'
+'use client'
 
 import { ChevronDown, Download, Maximize2, Users, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
-import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
+import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
   cacheFoodWasteEntries,
   cacheFoodWasteGuestCounts,
@@ -11,7 +11,7 @@ import {
   readCachedFoodWasteGuestCounts,
   readPendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
-import { useTranslation } from '@/lib/LanguageContext'
+import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -88,29 +88,29 @@ function getIsoWeek(dateString: string) {
 }
 
 function formatAmount(value: number, lang: string, decimals = 1) {
-  return `${value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+  return `${value.toLocaleString(localeFor(lang), {
     maximumFractionDigits: decimals,
   })} kg`
 }
 
 function formatNumber(value: number, lang: string) {
-  return value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK')
+  return value.toLocaleString(localeFor(lang))
 }
 
 function formatDecimal(value: number, lang: string, decimals = 2) {
-  return value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+  return value.toLocaleString(localeFor(lang), {
     maximumFractionDigits: decimals,
   })
 }
 
 function formatCurrency(value: number, lang: string) {
-  return value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+  return value.toLocaleString(localeFor(lang), {
     maximumFractionDigits: 0,
   })
 }
 
 function formatDate(value: string, lang: string) {
-  return parseLocalDate(value).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+  return parseLocalDate(value).toLocaleDateString(localeFor(lang), {
     day: 'numeric',
     month: 'short',
   })
@@ -122,7 +122,7 @@ function getEntryAmount(entry: FoodWasteEntry) {
 
 function formatTime(value: string, lang: string) {
   return new Date(value).toLocaleTimeString(
-    lang === 'sv' ? 'sv-SE' : 'da-DK',
+    localeFor(lang),
     {
       hour: '2-digit',
       minute: '2-digit',
@@ -148,7 +148,7 @@ function LocationList({
           className="grid grid-cols-[1fr_auto] items-center gap-3"
         >
           <div className="min-w-0">
-            <p className="truncate font-medium">{location.name}</p>
+            <p className="truncate font-medium">{displayFoodWasteLocation(location.name, lang)}</p>
             <p className="text-xs text-gray-500 dark:text-white/60">
               {formatAmount(location.averagePerDay, lang)} {perDay}
             </p>
@@ -432,13 +432,13 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     const locationRows = [
       ...stats.buffet.locations.map((location) => ({
         [t.category]: t.buffetWaste,
-        [t.location]: location.name,
+        [t.location]: displayFoodWasteLocation(location.name, lang),
         [t.kgInPeriod]: location.total,
         [t.averageKgPerDay]: location.averagePerDay,
       })),
       ...stats.production.locations.map((location) => ({
         [t.category]: t.productionAndDeckOne,
-        [t.location]: location.name,
+        [t.location]: displayFoodWasteLocation(location.name, lang),
         [t.kgInPeriod]: location.total,
         [t.averageKgPerDay]: location.averagePerDay,
       })),
@@ -459,7 +459,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
     const entryRows = entries.map((entry) => ({
       [t.date]: entry.waste_date,
-      [t.location]: entry.location_name,
+      [t.location]: displayFoodWasteLocation(entry.location_name, lang),
       [t.kg]: getEntryAmount(entry),
       [t.comment]: entry.comment ?? '',
       [t.created]: entry.created_at,
@@ -600,7 +600,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             type="date"
             value={fromDate}
             onChange={(event) => setFromDate(event.target.value)}
-            className="h-12 w-full rounded-2xl bg-white px-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
+            className="h-12 w-full rounded-2xl bg-white px-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
           />
         </label>
 
@@ -612,28 +612,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             type="date"
             value={toDate}
             onChange={(event) => setToDate(event.target.value)}
-            className="h-12 w-full rounded-2xl bg-white px-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
+            className="h-12 w-full rounded-2xl bg-white px-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
           />
         </label>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
+        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.buffetWaste}</p>
           <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.buffet.totalKg, lang)}</div>
         </div>
 
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
+        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.guests}</p>
           <div className="mt-2 text-2xl font-semibold">{formatNumber(stats.guestsTotal, lang)}</div>
         </div>
 
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
+        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.buffetKgPerGuest}</p>
           <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.kgPerGuest, lang, 2)}</div>
         </div>
 
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
+        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.productionWaste}</p>
           <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.grinder.totalKg, lang)}</div>
         </div>
@@ -643,7 +643,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         {chartConfigs.map((chart) => (
           <div
             key={chart.title}
-            className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
+            className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
           >
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">{chart.title}</h2>
@@ -665,7 +665,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     }
                   }}
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/5 text-gray-600 transition hover:bg-black/10 dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15"
-                  aria-label={lang === 'sv' ? 'Förstora graf' : 'Forstør graf'}
+                  aria-label={lang === 'sv' ? 'Förstora graf' : lang === 'en' ? 'Enlarge chart' : 'Forstør graf'}
                 >
                   <Maximize2 size={17} />
                 </button>
@@ -783,12 +783,12 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.97, y: 12 }}
                 onClick={(event) => event.stopPropagation()}
-                className="mx-auto flex max-h-full w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-[#162338]"
+                className="mx-auto flex max-h-full w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-[#0d3b3a]"
               >
                 <div className="flex items-center justify-between border-b border-black/5 px-5 py-4 dark:border-white/10 sm:px-7">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.15em] text-nordic/70">
-                      {lang === 'sv' ? 'Detaljerad graf' : 'Detaljeret graf'}
+                      {lang === 'sv' ? 'Detaljerad graf' : lang === 'en' ? 'Detailed chart' : 'Detaljeret graf'}
                     </p>
                     <h2 className="mt-1 text-xl font-semibold sm:text-2xl">{chart.title}</h2>
                   </div>
@@ -796,7 +796,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     type="button"
                     onClick={() => setExpandedChart(null)}
                     className="flex h-11 w-11 items-center justify-center rounded-full bg-black/5 transition hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15"
-                    aria-label={lang === 'sv' ? 'Stäng' : 'Luk'}
+                    aria-label={lang === 'sv' ? 'Stäng' : lang === 'en' ? 'Close' : 'Luk'}
                   >
                     <X size={21} />
                   </button>
@@ -843,7 +843,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-nordic/70">
-                              {lang === 'sv' ? 'Fördelning' : 'Fordeling'}
+                              {lang === 'sv' ? 'Fördelning' : lang === 'en' ? 'Breakdown' : 'Fordeling'}
                             </p>
                             <h3 className="mt-1 text-xl font-semibold text-nordic">
                               {activePoint.label}
@@ -851,11 +851,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                           </div>
                           <span className="rounded-full bg-nordic-soft px-3 py-1.5 text-sm font-semibold text-nordic">
                             {Math.abs(difference).toLocaleString(
-                              lang === 'sv' ? 'sv-SE' : 'da-DK',
+                              localeFor(lang),
                               { maximumFractionDigits: 0 }
                             )}% {difference >= 0
-                              ? lang === 'sv' ? 'över snittet' : 'over gennemsnittet'
-                              : lang === 'sv' ? 'under snittet' : 'under gennemsnittet'}
+                              ? lang === 'sv' ? 'över snittet' : lang === 'en' ? 'above average' : 'over gennemsnittet'
+                              : lang === 'sv' ? 'under snittet' : lang === 'en' ? 'below average' : 'under gennemsnittet'}
                           </span>
                         </div>
 
@@ -869,9 +869,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                               <div key={location.name}>
                                 <div className="flex items-start justify-between gap-4">
                                   <div className="min-w-0">
-                                    <p className="font-semibold">{location.name}</p>
+                                    <p className="font-semibold">{displayFoodWasteLocation(location.name, lang)}</p>
                                     <p className="mt-0.5 text-xs text-gray-500 dark:text-white/55">
-                                      {lang === 'sv' ? 'Registrerat kl.' : 'Registreret kl.'}{' '}
+                                      {lang === 'sv' ? 'Registrerat kl.' : lang === 'en' ? 'Registered at' : 'Registreret kl.'}{' '}
                                       {location.times.join(', ')}
                                     </p>
                                   </div>
@@ -898,9 +898,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
                         {largest && (
                           <p className="mt-7 rounded-2xl bg-nordic-soft p-4 text-sm leading-relaxed text-gray-700 dark:text-white/70">
-                            {lang === 'sv' ? 'Största bidraget kom från' : 'Det største bidrag kom fra'}{' '}
+                            {lang === 'sv' ? 'Största bidraget kom från' : lang === 'en' ? 'The largest contribution came from' : 'Det største bidrag kom fra'}{' '}
                             <strong>{largest.name}</strong>. {breakdown.length}{' '}
-                            {lang === 'sv' ? 'stationer hade registreringar.' : 'stationer havde registreringer.'}
+                            {lang === 'sv' ? 'stationer hade registreringar.' : lang === 'en' ? 'stations had entries.' : 'stationer havde registreringer.'}
                           </p>
                         )}
                       </>
@@ -924,7 +924,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           <LocationList locations={stats.buffet.locations} lang={lang} perDay={t.perDay} />
         </div>
 
-        <div className="h-full rounded-2xl border border-black/5 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#162338]">
+        <div className="h-full rounded-2xl border border-black/5 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#0d3b3a]">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">{t.productionByLocation}</h2>
@@ -956,7 +956,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             title: t.productionByLocation,
             explanation: t.productionWasteExplanation,
             locations: grinderLocations,
-            className: 'border-black/5 bg-white dark:border-white/10 dark:bg-[#162338]',
+            className: 'border-black/5 bg-white dark:border-white/10 dark:bg-[#0d3b3a]',
           },
         ].map((overview) => (
           <details
@@ -986,7 +986,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
       <aside className="fixed bottom-24 right-4 z-40 hidden lg:block xl:right-6">
         <div
-          className={`overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl transition-[width] duration-300 dark:border-white/10 dark:bg-[#162338] ${
+          className={`overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl transition-[width] duration-300 dark:border-white/10 dark:bg-[#0d3b3a] ${
             guestPanelOpen ? 'w-72' : 'w-44'
           }`}
         >
@@ -1017,13 +1017,13 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   type="date"
                   value={guestDate}
                   onChange={(event) => setGuestDate(event.target.value)}
-                  className="h-12 w-full rounded-xl border border-black/5 bg-gray-100 px-4 dark:border-white/10 dark:bg-[#0f1b2d]"
+                  className="h-12 w-full rounded-xl border border-black/5 bg-gray-100 px-4 dark:border-white/10 dark:bg-[#082f2e]"
                 />
                 <input
                   inputMode="numeric"
                   value={guestCount}
                   onChange={(event) => setGuestCount(event.target.value)}
-                  className="h-14 w-full rounded-xl border border-black/5 bg-gray-100 px-4 text-2xl font-semibold dark:border-white/10 dark:bg-[#0f1b2d]"
+                  className="h-14 w-full rounded-xl border border-black/5 bg-gray-100 px-4 text-2xl font-semibold dark:border-white/10 dark:bg-[#082f2e]"
                   placeholder={t.guestCountPlaceholder}
                 />
                 <button
@@ -1051,11 +1051,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         {entries.slice(0, 3).map((entry) => (
           <article
             key={entry.id}
-            className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
+            className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-semibold">{entry.location_name}</h3>
+                <h3 className="font-semibold">{displayFoodWasteLocation(entry.location_name, lang)}</h3>
                 <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
                   {formatDate(entry.waste_date, lang)} · kl.{' '}
                   {formatTime(entry.created_at, lang)}

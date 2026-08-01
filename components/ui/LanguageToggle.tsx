@@ -15,15 +15,18 @@ export default function LanguageToggle() {
 
   if (!mounted) return null
 
-  const isSwedish = lang === 'sv'
   const isDark = resolvedTheme === 'dark'
+  const options = [
+    { value: 'da' as const, label: 'DA' },
+    { value: 'sv' as const, label: 'SV' },
+    { value: 'en' as const, label: 'EN' },
+  ]
 
   return (
-    <button
-      onClick={() => setLang(isSwedish ? 'da' : 'sv')}
+    <div
       className="
-        relative
-        w-20 h-10
+        relative flex
+        w-32 h-10 p-1
         rounded-full
         transition-all duration-300
         active:scale-95
@@ -32,57 +35,29 @@ export default function LanguageToggle() {
         bg-gray-100
 
         dark:border-white/10
-        dark:bg-[#1d2e46]
+        dark:bg-[#124744]
 
         shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)]
         dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]
       "
+      role="group"
       aria-label={t.switchLanguage}
     >
-      {/* Labels */}
-      <div className="absolute inset-0 flex text-sm font-medium">
-        <div className="w-1/2 flex items-center justify-center">
-          <span
-            className={`
-              transition-all duration-200
-              ${!isSwedish ? 'opacity-100 text-gray-700' : 'opacity-40 text-gray-500'}
-              ${isDark ? 'dark:text-white' : ''}
-            `}
-          >
-            DK
-          </span>
-        </div>
-
-        <div className="w-1/2 flex items-center justify-center">
-          <span
-            className={`
-              transition-all duration-200
-              ${isSwedish ? 'opacity-100 text-gray-700' : 'opacity-40 text-gray-500'}
-              ${isDark ? 'dark:text-white' : ''}
-            `}
-          >
-            SE
-          </span>
-        </div>
-      </div>
-
-      {/* Slider */}
-      <span
-        className={`
-          absolute top-1 left-1
-          w-8 h-8
-          rounded-full
-          transition-all duration-300
-
-          bg-white
-          shadow-md
-
-          dark:bg-white
-          dark:shadow-lg
-
-          ${isSwedish ? 'translate-x-10' : 'translate-x-0'}
-        `}
-      />
-    </button>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => setLang(option.value)}
+          aria-pressed={lang === option.value}
+          className={`relative z-10 flex flex-1 items-center justify-center rounded-full text-xs font-bold transition-all ${
+            lang === option.value
+              ? 'bg-white text-[#005a57] shadow-md'
+              : `text-gray-500 opacity-70 hover:opacity-100 ${isDark ? 'dark:text-white' : ''}`
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
   )
 }

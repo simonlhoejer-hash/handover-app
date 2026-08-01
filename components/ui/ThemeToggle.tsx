@@ -32,7 +32,7 @@ export default function ThemeToggle() {
         bg-gray-100
 
         dark:border-white/10
-        dark:bg-[#1d2e46]
+        dark:bg-[#124744]
 
         shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)]
         dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]

@@ -2,7 +2,7 @@
 
 import HandoverEditor from './HandoverEditor'
 import ImageUploader from '../ui/ImageUploader'
-import { useTranslation } from '@/lib/LanguageContext'
+import { localeFor, useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
   name: string
@@ -33,7 +33,7 @@ const cardClass = `
   border border-black/5
   shadow-[0_20px_40px_rgba(0,0,0,0.06)]
 
-  dark:bg-[#162338]
+  dark:bg-[#0d3b3a]
   dark:border-white/10
   dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)]
 `
@@ -50,7 +50,7 @@ const inputClass = `
   text-gray-900
   border border-black/5
 
-  dark:bg-[#162338]
+  dark:bg-[#082f2e]
   dark:text-white
   dark:border-white/10
 
@@ -92,7 +92,7 @@ export default function HandoverForm({
   const lastSavedText =
     draftSavedAt && draftStatus === 'saved'
       ? `${t.lastSavedAt} ${new Date(draftSavedAt).toLocaleTimeString(
-          lang === 'sv' ? 'sv-SE' : 'da-DK',
+          localeFor(lang),
           {
             hour: '2-digit',
             minute: '2-digit',

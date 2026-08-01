@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useTranslation } from '@/lib/LanguageContext'
+import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import HandoverComments from './HandoverComments'
 
 function isOralHandoverNote(value: string) {
@@ -61,7 +61,7 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
         border border-black/5
         shadow-[0_20px_40px_rgba(0,0,0,0.06)]
 
-        dark:bg-[#101c2f]
+        dark:bg-[#0a3534]
         dark:border-white/10
         dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)]
       "
@@ -81,7 +81,7 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
             "
           >
             {new Date(item.shift_date).toLocaleDateString(
-              lang === 'sv' ? 'sv-SE' : 'da-DK'
+              localeFor(lang)
             )}
           </span>
 
@@ -164,7 +164,7 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
                 border border-black/5
                 text-gray-900
 
-                dark:bg-[#162338]
+                dark:bg-[#0d3b3a]
                 dark:border-white/10
                 dark:text-white
 

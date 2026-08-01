@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useTranslation } from '@/lib/LanguageContext'
+import { localeFor, useTranslation } from '@/lib/LanguageContext'
 
 type HandoverComment = {
   id: string
@@ -129,7 +129,7 @@ export default function HandoverComments({
                 border border-black/5
                 shadow-[0_10px_30px_rgba(0,0,0,0.04)]
 
-                dark:bg-[#162338]
+                dark:bg-[#0d3b3a]
                 dark:border-white/10
 dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
             >
@@ -140,11 +140,11 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
                 </div>
 
                 <div className="text-xs text-gray-500 dark:text-white/50">
-                  {new Date(c.created_at).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+                  {new Date(c.created_at).toLocaleDateString(localeFor(lang), {
                     day: '2-digit',
                     month: '2-digit',
                   })}{' '}
-                  {t.timePrefix}{new Date(c.created_at).toLocaleTimeString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+                  {t.timePrefix}{new Date(c.created_at).toLocaleTimeString(localeFor(lang), {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
@@ -172,7 +172,7 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
                 border border-black/5
                 text-gray-900
 
-                dark:bg-[#162338]
+                dark:bg-[#0d3b3a]
                 dark:border-white/10
                 dark:text-white
 
@@ -198,7 +198,7 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
                 border border-black/5
                 text-gray-900
 
-                dark:bg-[#162338]
+                dark:bg-[#0d3b3a]
                 dark:border-white/10
                 dark:text-white
 
