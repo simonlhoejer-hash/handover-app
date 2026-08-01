@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ArrowRight, LockKeyhole } from 'lucide-react'
+import { AlertCircle, ArrowRight, LockKeyhole } from 'lucide-react'
 import type { AccessShip } from '@/lib/shipAccess'
 
 type Props = {
@@ -94,16 +94,30 @@ export default function ShipAccessForm({
             autoCapitalize="characters"
             required
             autoFocus
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? 'access-code-error' : undefined}
             value={code}
-            onChange={(event) => setCode(event.target.value)}
+            onChange={(event) => {
+              setCode(event.target.value)
+              if (error) setError('')
+            }}
             placeholder="Kabyskode"
-            className="w-full rounded-xl border border-black/10 bg-white px-5 py-4 text-center text-lg font-semibold uppercase tracking-[0.14em] text-gray-900 outline-none transition focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 dark:border-white/10 dark:bg-white/5 dark:text-white"
+            className={`w-full rounded-xl bg-white px-5 py-4 text-center text-lg font-semibold uppercase tracking-[0.14em] text-gray-900 outline-none transition dark:bg-white/5 dark:text-white ${
+              error
+                ? 'border-2 border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-red-400'
+                : 'border border-black/10 focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 dark:border-white/10'
+            }`}
           />
 
           {error && (
-            <p role="alert" className="text-center text-sm text-red-600 dark:text-red-300">
-              {error}
-            </p>
+            <div
+              id="access-code-error"
+              role="alert"
+              className="flex items-center justify-center gap-2 rounded-xl border border-red-500/15 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-200"
+            >
+              <AlertCircle size={18} className="shrink-0" />
+              <span>{error}</span>
+            </div>
           )}
 
           <button

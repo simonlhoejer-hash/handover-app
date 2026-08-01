@@ -396,7 +396,7 @@ parti={itemName}/>
 
       {showPublishConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl dark:bg-[#162338] dark:border dark:border-white/10">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl dark:bg-[#0d3b3a] dark:border dark:border-white/10">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {t.publishConfirmTitle}
             </h2>

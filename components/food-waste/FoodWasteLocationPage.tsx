@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -11,7 +11,8 @@ import {
   removeCachedFoodWasteEntry,
   writePendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
-import { useTranslation } from '@/lib/LanguageContext'
+import { localeFor, useTranslation } from '@/lib/LanguageContext'
+import { displayFoodWasteLocation } from '@/lib/foodWasteLocations'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -48,14 +49,14 @@ function getToday() {
 }
 
 function formatDate(value: string, lang: string) {
-  return new Date(value).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+  return new Date(value).toLocaleDateString(localeFor(lang), {
     day: 'numeric',
     month: 'short',
   })
 }
 
 function formatAmount(value: number, lang: string) {
-  return `${value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+  return `${value.toLocaleString(localeFor(lang), {
     maximumFractionDigits: 2,
   })} kg`
 }
@@ -336,7 +337,7 @@ export default function FoodWasteLocationPage({
             bg-white
             border border-black/5
             shadow-sm
-            dark:bg-[#162338]
+            dark:bg-[#0d3b3a]
             dark:border-white/10
           "
           aria-label={t.back}
@@ -346,7 +347,7 @@ export default function FoodWasteLocationPage({
 
         <div className="text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
-            {locationName}
+            {displayFoodWasteLocation(locationName, lang)}
           </h1>
           <p className="text-sm text-gray-500 mt-1 dark:text-white/60">
             {t.foodWaste}
@@ -354,7 +355,7 @@ export default function FoodWasteLocationPage({
         </div>
       </header>
 
-      <section className="rounded-3xl bg-white p-5 sm:p-6 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10">
+      <section className="rounded-3xl bg-white p-5 sm:p-6 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500 dark:text-white/60">
@@ -373,7 +374,7 @@ export default function FoodWasteLocationPage({
           <input
             ref={kgInputRef}
             inputMode="decimal"
-            className="w-full rounded-2xl bg-gray-100 px-4 py-5 pr-16 text-4xl font-semibold text-gray-900 border border-black/5 dark:bg-[#0f1b2d] dark:text-white dark:border-white/10"
+            className="w-full rounded-2xl bg-gray-100 px-4 py-5 pr-16 text-4xl font-semibold text-gray-900 border border-black/5 dark:bg-[#082f2e] dark:text-white dark:border-white/10"
             placeholder="0,0"
             value={quantityKg}
             onChange={(event) => setQuantityKg(event.target.value)}
@@ -420,13 +421,13 @@ export default function FoodWasteLocationPage({
         </h2>
 
         {loading && (
-          <div className="rounded-2xl bg-white p-5 text-sm text-gray-500 border border-black/5 dark:bg-[#162338] dark:border-white/10 dark:text-white/60">
+          <div className="rounded-2xl bg-white p-5 text-sm text-gray-500 border border-black/5 dark:bg-[#0d3b3a] dark:border-white/10 dark:text-white/60">
             {t.loading}
           </div>
         )}
 
         {!loading && entries.length === 0 && (
-          <div className="rounded-2xl bg-white p-5 text-sm text-gray-500 border border-black/5 dark:bg-[#162338] dark:border-white/10 dark:text-white/60">
+          <div className="rounded-2xl bg-white p-5 text-sm text-gray-500 border border-black/5 dark:bg-[#0d3b3a] dark:border-white/10 dark:text-white/60">
             {t.noRegistrations}
           </div>
         )}
@@ -434,7 +435,7 @@ export default function FoodWasteLocationPage({
         {entries.map((entry) => (
           <article
             key={entry.id}
-            className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
+            className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">

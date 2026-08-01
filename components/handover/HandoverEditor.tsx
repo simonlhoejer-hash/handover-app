@@ -95,7 +95,7 @@ useEffect(() => {
         border border-black/5
         shadow-[0_15px_40px_rgba(0,0,0,0.05)]
 
-        dark:bg-[#162338]
+        dark:bg-[#0d3b3a]
         dark:border-white/10
         dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)]
       "

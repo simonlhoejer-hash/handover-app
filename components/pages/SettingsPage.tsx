@@ -31,7 +31,7 @@ export default function SettingsPage() {
           border border-black/5
           shadow-[0_20px_40px_rgba(0,0,0,0.06)]
 
-          dark:bg-[#162338]
+          dark:bg-[#0d3b3a]
           dark:border-white/10
           dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)]
         "
@@ -100,7 +100,7 @@ export default function SettingsPage() {
           bg-white
           border border-black/5
           shadow-[0_20px_40px_rgba(0,0,0,0.06)]
-          dark:bg-[#162338]
+          dark:bg-[#0d3b3a]
           dark:border-white/10
           dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)]
         "

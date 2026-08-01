@@ -5,7 +5,7 @@ export const FOOD_WASTE_LOCATIONS = [
   { name: 'Messen frokost', slug: 'messen-frokost' },
   { name: 'Messen aften', slug: 'messen-aften' },
   { name: 'Commodore morgen', slug: 'commodore-morgen' },
-  { name: 'Produktion Main Galley', slug: 'produktion-main-galley' },
+  { name: 'Produktion Varm Galley', slug: 'produktion-main-galley' },
   { name: 'Produktion Skagerak Galley', slug: 'produktion-skagerak-galley' },
   { name: 'Produktion Bageri', slug: 'produktion-bageri' },
   { name: 'Produktion Slagteri', slug: 'produktion-slagteri' },
@@ -14,4 +14,12 @@ export const FOOD_WASTE_LOCATIONS = [
 
 export function getFoodWasteLocation(slug: string) {
   return FOOD_WASTE_LOCATIONS.find((location) => location.slug === slug)
+}
+
+export function displayFoodWasteLocation(name: string, lang: string) {
+  if (name === 'Produktion Main Galley' || name === 'Produktion Varm Galley') {
+    return lang === 'en' ? 'Production Hot Galley' : 'Produktion Varm Galley'
+  }
+
+  return name
 }

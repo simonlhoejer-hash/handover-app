@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useTranslation } from '@/lib/LanguageContext'
+import { localeFor, useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
   department: 'admin' | 'shop' | 'crown' | 'pearl'
@@ -34,7 +34,7 @@ function formatDate(dateString?: string, lang?: string) {
   if (!dateString) return ''
 
   return new Date(dateString).toLocaleDateString(
-    lang === 'sv' ? 'sv-SE' : 'da-DK',
+    localeFor(lang),
     {
       day: 'numeric',
       month: 'short',
@@ -209,7 +209,7 @@ export default function DepartmentHome({
 
                   transition-all duration-200
 
-                  dark:bg-[#162338]
+                  dark:bg-[#0d3b3a]
                   dark:border-white/10
                   dark:text-white
                 "

@@ -16,6 +16,8 @@ export default function ClientLayout({
     pathname === '/' ||
     pathname === '/ships' ||
     pathname === '/galley' ||
+    pathname === '/crown/adgang' ||
+    pathname === '/pearl/adgang' ||
     pathname.startsWith('/adgang/')
 
   if (isStandalonePage) {

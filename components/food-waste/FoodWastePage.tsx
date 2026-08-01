@@ -2,13 +2,13 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
+import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
   cacheFoodWasteEntries,
   readCachedFoodWasteEntries,
   readPendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
-import { useTranslation } from '@/lib/LanguageContext'
+import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { supabase } from '@/lib/supabase'
 
 type FoodWasteEntry = {
@@ -30,7 +30,7 @@ function getToday() {
 }
 
 function formatAmount(value: number, lang: string) {
-  return `${value.toLocaleString(lang === 'sv' ? 'sv-SE' : 'da-DK', {
+  return `${value.toLocaleString(localeFor(lang), {
     maximumFractionDigits: 2,
   })} kg`
 }
@@ -166,7 +166,13 @@ export default function FoodWastePage({
             <div className="mb-4 flex items-center justify-center gap-4 lg:mb-4 lg:gap-3">
               <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/30" />
               <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/70">
-                {group.title}
+                {group.title === 'Produktion'
+                  ? lang === 'en' ? 'Production' : lang === 'sv' ? 'Produktion' : 'Produktion'
+                  : group.title === 'Messen'
+                    ? lang === 'en' ? 'Crew mess' : 'Messen'
+                    : group.title === 'DÃ¦k 1'
+                      ? lang === 'en' ? 'Deck 1' : lang === 'sv' ? 'DÃ¤ck 1' : group.title
+                      : group.title}
               </h2>
               <div className="h-px flex-1 bg-gradient-to-r from-gray-300/80 to-transparent dark:from-white/30" />
             </div>
@@ -226,11 +232,11 @@ export default function FoodWastePage({
                           <>
                             <span className="block">Produktion</span>
                             <span className="block">
-                              {location.name.replace(/^Produktion\s+/, '')}
+                              {displayFoodWasteLocation(location.name, lang).replace(/^(Produktion|Production)\s+/, '')}
                             </span>
                           </>
                         ) : (
-                          location.name
+                          displayFoodWasteLocation(location.name, lang)
                         )}
                       </h3>
                       <span
