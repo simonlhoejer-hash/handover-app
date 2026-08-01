@@ -169,7 +169,7 @@ export default function FoodWastePage({
                 {group.title === 'Produktion'
                   ? lang === 'en' ? 'Production' : lang === 'sv' ? 'Produktion' : 'Produktion'
                   : group.title === 'Messen'
-                    ? lang === 'en' ? 'Crew mess' : 'Messen'
+                    ? lang === 'en' ? 'Crew mess' : lang === 'sv' ? 'Mässen' : 'Messen'
                     : group.title === 'DÃ¦k 1'
                       ? lang === 'en' ? 'Deck 1' : lang === 'sv' ? 'DÃ¤ck 1' : group.title
                       : group.title}

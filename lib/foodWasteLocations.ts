@@ -17,9 +17,45 @@ export function getFoodWasteLocation(slug: string) {
 }
 
 export function displayFoodWasteLocation(name: string, lang: string) {
-  if (name === 'Produktion Main Galley' || name === 'Produktion Varm Galley') {
-    return lang === 'en' ? 'Production Hot Galley' : 'Produktion Varm Galley'
+  if (lang === 'en') {
+    const englishNames: Record<string, string> = {
+      'Skagerak morgen': 'Skagerak morning',
+      'Skagerak aften': 'Skagerak evening',
+      'Messen morgen': 'Crew mess morning',
+      'Messen frokost': 'Crew mess lunch',
+      'Messen aften': 'Crew mess evening',
+      'Commodore morgen': 'Commodore morning',
+      'Produktion Main Galley': 'Production Hot Galley',
+      'Produktion Varm Galley': 'Production Hot Galley',
+      'Produktion Skagerak Galley': 'Production Skagerak Galley',
+      'Produktion Bageri': 'Production Bakery',
+      'Produktion Slagteri': 'Production Butchery',
+      'Produktion Proviant': 'Production Provisions',
+    }
+
+    return englishNames[name] ?? name
   }
+
+  if (lang === 'sv') {
+    const swedishNames: Record<string, string> = {
+      'Skagerak morgen': 'Skagerak morgon',
+      'Skagerak aften': 'Skagerak kväll',
+      'Messen morgen': 'Mässen morgon',
+      'Messen frokost': 'Mässen lunch',
+      'Messen aften': 'Mässen kväll',
+      'Commodore morgen': 'Commodore morgon',
+      'Produktion Main Galley': 'Produktion Varmkök',
+      'Produktion Varm Galley': 'Produktion Varmkök',
+      'Produktion Skagerak Galley': 'Produktion Skagerak-kök',
+      'Produktion Bageri': 'Produktion Bageri',
+      'Produktion Slagteri': 'Produktion Slakteri',
+      'Produktion Proviant': 'Produktion Proviant',
+    }
+
+    return swedishNames[name] ?? name
+  }
+
+  if (name === 'Produktion Main Galley') return 'Produktion Varm Galley'
 
   return name
 }
