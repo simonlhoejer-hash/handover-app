@@ -4,10 +4,10 @@ import HandoverPage from '@/components/handover/HandoverPage'
 
 type Props = {
   parti: string
-  department?: 'galley' | 'pearl'
+  department?: 'crown' | 'pearl'
 }
 
-export default function PartiTabs({ parti, department = 'galley' }: Props) {
+export default function PartiTabs({ parti, department = 'crown' }: Props) {
   return (
     <div className="w-full">
       <HandoverPage
