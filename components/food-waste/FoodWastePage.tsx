@@ -139,8 +139,8 @@ export default function FoodWastePage({
   }, [entries, today])
 
   return (
-    <main className="px-4 pt-4 pb-8 max-w-5xl mx-auto">
-      <header className="mb-6 flex flex-col items-center text-center">
+    <main className="mx-auto max-w-5xl px-4 pb-8 pt-4 lg:max-w-7xl lg:pb-24 lg:pt-3">
+      <header className="mb-6 flex flex-col items-center text-center lg:mb-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
             {t.foodWaste}
@@ -157,10 +157,10 @@ export default function FoodWastePage({
         </p>
       )}
 
-      <div className="space-y-9">
+      <div className="space-y-9 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-5 lg:space-y-0">
         {LOCATION_GROUPS.map((group) => (
-          <section key={group.title}>
-            <div className="mb-4 flex items-center justify-center gap-4">
+          <section key={group.title} className="lg:min-w-0">
+            <div className="mb-4 flex items-center justify-center gap-4 lg:mb-2 lg:gap-3">
               <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/20" />
               <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/55">
                 {group.title}
@@ -175,7 +175,7 @@ export default function FoodWastePage({
                 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
                 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5
                 sm:overflow-visible sm:px-0 sm:pb-0
-                lg:grid-cols-3
+                lg:grid-cols-3 lg:gap-3
               "
             >
               {group.slugs.map((slug) => {
@@ -211,10 +211,12 @@ export default function FoodWastePage({
                       dark:border-white/10
                       dark:text-white
                       sm:min-w-0
+                      lg:h-[82px]
+                      lg:p-3
                     "
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <h3 className="text-lg font-semibold tracking-tight">
+                    <div className="flex flex-col items-center gap-2 lg:gap-1.5">
+                      <h3 className="text-lg font-semibold tracking-tight lg:text-base lg:leading-tight">
                         {group.title === 'Produktion' ? (
                           <>
                             <span className="block">Produktion</span>

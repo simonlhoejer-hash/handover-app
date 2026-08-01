@@ -1,4 +1,4 @@
--- Gør statusopslag på Galley- og Pearl-forsiderne hurtigere.
+-- Gør statusopslag på Crown- og Pearl-forsiderne hurtigere.
 -- Kan køres flere gange uden at ændre eksisterende data.
 
 create index if not exists handover_notes_department_status_dates_idx

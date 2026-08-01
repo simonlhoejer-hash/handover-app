@@ -1,125 +1,130 @@
-# Kitchen Handover
+# HandoverPro
 
-Internt overleveringssystem til Galley & Shop.
+HandoverPro er Go Nordic Cruiselines interne arbejdsplatform til skriftlige overleveringer og registrering af madspild om bord på **Nordic Crown** og **Nordic Pearl**.
 
----
+Produktionssiden findes på [handoverpro.dk](https://handoverpro.dk).
 
-## 🚀 Features
+## Funktioner
 
-### 📋 Partier
-- Status: **Mangler / Afventer / Læst**
-- Viser seneste overleveringsdato
-- Viser hvem der skal læse / har læst
-- Klikbart kort pr. parti
-- Ens layout for Galley & Shop
+- Skriftlige overleveringer opdelt efter skib og parti
+- Status for manglende, afventende og læste overleveringer
+- Automatisk lagring af kladder
+- Billeder på overleveringer
+- Registrering og statistik for madspild
+- Gæstetal og beregninger pr. gæst
+- Offline registrering af Waste-data med senere synkronisering
+- Dansk og svensk brugerflade
+- PWA-understøttelse til installation på computer og mobil
+- QR-adgang til Nordic Crown og Nordic Pearl
 
----
+## Skibe og adresser
 
-### 📅 Kalender
-- Dansk & Norsk skoleferie
-- Dansk & Norske helligdage
-- Påske beregnes dynamisk
-- Overlap vises med gradient
-- Klikbar dato
-- Markering af dags dato
-- Måned navigation
+| Område | Adresse | Databaseværdi |
+| --- | --- | --- |
+| Nordic Crown | `/crown` | `crown` |
+| Nordic Pearl | `/pearl` | `pearl` |
+| Tidligere Galley-link | `/galley` | Viser forklaring og vej til login |
 
----
+Forsiden og skibsvalget er offentligt tilgængelige. Skibssiderne kræver en fælles skibskode. Et godkendt login gemmes i en sikker cookie i op til seks måneder.
 
-## 🧠 Holiday Engine
+Adgangskoden er en enkel fælles adgangskontrol og ikke et individuelt brugersystem. Supabase-reglerne skal derfor fortsat behandles som den egentlige databasebeskyttelse.
 
-Holiday logik er samlet i:
+## Overleveringer og datalagring
 
+Nye overleveringer skal være skriftlige. Publicerede overleveringer kan ikke redigeres eller slettes manuelt.
+
+Supabase rydder automatisk overleveringer, kommentarer og tilknyttede billeder, når de er ældre end 12 måneder. Oprydningen kører dagligt kl. 03.15.
+
+## Offlinebrug
+
+Appens sider gemmes lokalt via en service worker. Waste-registreringer kan oprettes uden internet og lægges i en lokal kø. Når computeren igen får forbindelse, synkroniseres køen med Supabase.
+
+Computeren bør forbindes til internettet jævnligt, så lokale registreringer bliver sendt og den nyeste app-version bliver hentet.
+
+## Teknologi
+
+- Next.js 16 og React 19
+- TypeScript
+- Tailwind CSS
+- Supabase
+- Vercel
+- TipTap-editor
+- PWA/service worker
+
+## Lokal udvikling
+
+Installer pakker:
+
+```bash
+npm install
 ```
-lib/holidays/
-  danish.ts
-  norwegian.ts
-  easter.ts
-  holidayEngine.ts
-```
 
-UI bruger kun:
-
-```
-createHolidayEngine(year)
-```
-
-Det holder logik adskilt fra UI og gør systemet nemt at udvide.
-
----
-
-## 🏗 Struktur
-
-```
-app/
-components/
-lib/
-  holidays/
-```
-
-Holiday logik er samlet ét sted.  
-UI komponenter indeholder ingen dato-beregning.
-
----
-
-## 🛠 Development
-
-Start lokalt:
+Start udviklingsserveren:
 
 ```bash
 npm run dev
 ```
 
----
+Åbn derefter [http://localhost:3000](http://localhost:3000).
 
-## 🧹 Hvis der opstår mærkelige fejl
-
-Stop server:
+Kontroller en produktionsbygning:
 
 ```bash
-CTRL + C
+npm run build
 ```
 
-Slet cache:
+## Miljøvariabler
+
+Opret `.env.local` lokalt. Filen må ikke lægges på GitHub.
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+CROWN_ACCESS_CODE=
+PEARL_ACCESS_CODE=
+ACCESS_SESSION_SECRET=
+```
+
+`ACCESS_SESSION_SECRET` bør være en lang, tilfældig værdi. De samme servervariabler skal oprettes i Vercel.
+
+## Supabase
+
+De aktuelle SQL-definitioner ligger i [`lib/supabase`](lib/supabase):
+
+1. `food-waste.sql` – tabeller og regler til Waste og gæstetal
+2. `handover-departments.sql` – gyldige afdelinger for Crown og Pearl
+3. `handover-drafts.sql` – kladder, tidsstempler og låsning af publicerede overleveringer
+4. `handover-performance.sql` – indeks til hurtigere statusopslag
+5. `handover-retention.sql` – automatisk sletning efter 12 måneder
+
+Filerne er database-dokumentation og må ikke slettes efter kørsel. Engangsmigreringer fjernes, når resultatet er kontrolleret.
+
+## Centrale mapper
+
+```text
+app/                 Sider, login og API-ruter
+components/          Brugerflade og funktionskomponenter
+lib/                 Supabase, offlinekø og fælles logik
+lib/supabase/        Aktuelle SQL-definitioner
+public/              PWA-filer, QR-koder og billeder
+deliverables/        A4-dokumenter med QR-koder
+scripts/             Generering af QR-materiale
+```
+
+## QR-materiale
+
+Færdige A4-dokumenter findes i `deliverables`. QR-billederne ligger i `public`, og genereringsfilerne ligger i `scripts`.
+
+Hvis adresser eller adgangskoder ændres, skal QR-materialet genereres og kontrolleres igen.
+
+## Udgivelse
+
+Produktionsmiljøet hostes på Vercel. Ændringer deployes automatisk, når de er kontrolleret og flettet ind i `main` på GitHub.
+
+Før udgivelse køres som minimum:
 
 ```bash
-rd /s /q .next
+npm run build
 ```
 
-Start igen:
-
-```bash
-npm run dev
-```
-
----
-
-## 📦 Commit & Deploy til Vercel
-
-Commit ændringer:
-
-```bash
-git add .
-git commit -m "Holiday engine + unified status layout"
-git push
-```
-
-Vercel deployer automatisk fra `main` branch.
-
----
-
-## 🌍 Production
-
-App hostes via Vercel.  
-Deploy sker automatisk ved push til main.
-
----
-
-## 👨‍🍳 Formål
-
-Systemet bruges til:
-
-- Daglig overlevering
-- Overblik over manglende partier
-- Planlægning ved ferie og helligdage
-- Travlhedsforståelse for køkken & shop
+Efter udgivelse kontrolleres `/crown`, `/pearl` og det gamle `/galley`-link.
