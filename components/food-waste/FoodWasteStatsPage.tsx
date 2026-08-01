@@ -672,20 +672,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               </div>
             </div>
 
-            <AnimatePresence mode="wait">
-              {selectedPoint?.chart === chart.title && (
-                <motion.div
-                  key={`${chart.title}-${selectedPoint.point.label}`}
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="mt-3 inline-flex rounded-full bg-black px-3 py-1.5 text-sm font-semibold text-white dark:bg-white dark:text-black"
-                >
-                  {selectedPoint.point.label}: {formatAmount(selectedPoint.point.total, lang)}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {chart.showEstimate && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-xl bg-nordic-soft px-3 py-2">
@@ -721,7 +707,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                 <button
                   type="button"
                   key={point.label}
-                  onClick={() => setSelectedPoint({ chart: chart.title, point })}
+                  onClick={() => {
+                    setSelectedPoint({ chart: chart.title, point })
+                    setExpandedChart(chart.title)
+                  }}
                   aria-label={`${point.label}: ${formatAmount(point.total, lang)}`}
                   className={`group flex h-full min-w-12 flex-col items-center justify-end gap-2 rounded-xl px-1 transition hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-nordic/30 dark:hover:bg-white/5 ${
                     selectedPoint?.chart === chart.title &&
@@ -757,93 +746,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               ))}
             </div>
 
-            <AnimatePresence mode="wait">
-              {selectedPoint?.chart === chart.title && (() => {
-                const breakdown = getPointBreakdown(
-                  selectedPoint.point,
-                  chart.kind
-                )
-                const largest = breakdown[0]
-                const chartAverage =
-                  chart.points.reduce((sum, point) => sum + point.total, 0) /
-                  Math.max(chart.points.length, 1)
-                const difference =
-                  chartAverage > 0
-                    ? ((selectedPoint.point.total - chartAverage) / chartAverage) * 100
-                    : 0
-
-                return (
-                  <motion.div
-                    key={`${chart.title}-${selectedPoint.point.label}-details`}
-                    initial={{ opacity: 0, height: 0, y: -8 }}
-                    animate={{ opacity: 1, height: 'auto', y: 0 }}
-                    exit={{ opacity: 0, height: 0, y: -8 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-4 rounded-2xl border border-nordic/15 bg-nordic-soft/60 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-nordic/70">
-                            {lang === 'sv' ? 'Fördelning' : 'Fordeling'}
-                          </p>
-                          <h3 className="mt-1 font-semibold text-nordic">
-                            {selectedPoint.point.label}
-                          </h3>
-                        </div>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-nordic shadow-sm dark:bg-white/10">
-                          {Math.abs(difference).toLocaleString(
-                            lang === 'sv' ? 'sv-SE' : 'da-DK',
-                            { maximumFractionDigits: 0 }
-                          )}% {difference >= 0
-                            ? lang === 'sv' ? 'över snittet' : 'over gennemsnittet'
-                            : lang === 'sv' ? 'under snittet' : 'under gennemsnittet'}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 space-y-3">
-                        {breakdown.map((location) => {
-                          const percentage = selectedPoint.point.total > 0
-                            ? (location.total / selectedPoint.point.total) * 100
-                            : 0
-
-                          return (
-                            <div key={location.name}>
-                              <div className="mb-1 flex items-center justify-between gap-3 text-sm">
-                                <div className="min-w-0">
-                                  <p className="truncate font-medium">{location.name}</p>
-                                  <p className="text-[11px] text-gray-500 dark:text-white/55">
-                                    {lang === 'sv' ? 'Registrerat kl.' : 'Registreret kl.'}{' '}
-                                    {location.times.join(', ')}
-                                  </p>
-                                </div>
-                                <span className="shrink-0 font-semibold text-nordic">
-                                  {formatAmount(location.total, lang)} · {formatNumber(Math.round(percentage), lang)}%
-                                </span>
-                              </div>
-                              <div className="h-2 overflow-hidden rounded-full bg-white/80 dark:bg-white/10">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${percentage}%` }}
-                                  className="h-full rounded-full bg-nordic"
-                                />
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-
-                      {largest && (
-                        <p className="mt-4 text-xs leading-relaxed text-gray-600 dark:text-white/65">
-                          {lang === 'sv' ? 'Största bidraget kom från' : 'Det største bidrag kom fra'}{' '}
-                          <strong>{largest.name}</strong>. {breakdown.length}{' '}
-                          {lang === 'sv' ? 'stationer hade registreringar.' : 'stationer havde registreringer.'}
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                )
-              })()}
-            </AnimatePresence>
           </div>
         ))}
       </section>
@@ -873,7 +775,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[80] bg-black/50 p-3 backdrop-blur-sm sm:p-6"
+              className="fixed inset-0 z-[80] bg-black/60 p-3 sm:p-6 dark:bg-[#031f1f]/95"
               onClick={() => setExpandedChart(null)}
             >
               <motion.div
