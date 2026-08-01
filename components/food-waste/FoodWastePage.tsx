@@ -161,14 +161,14 @@ export default function FoodWastePage({
         {LOCATION_GROUPS.map((group) => (
           <section
             key={group.title}
-            className="lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/10 dark:lg:bg-[#162338]/80"
+            className="lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]"
           >
             <div className="mb-4 flex items-center justify-center gap-4 lg:mb-4 lg:gap-3">
-              <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/20" />
-              <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/55">
+              <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/30" />
+              <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/70">
                 {group.title}
               </h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-gray-300/80 to-transparent dark:from-white/20" />
+              <div className="h-px flex-1 bg-gradient-to-r from-gray-300/80 to-transparent dark:from-white/30" />
             </div>
 
             <div
@@ -211,9 +211,10 @@ export default function FoodWastePage({
                       hover:shadow-md
                       hover:-translate-y-[1px]
                       active:scale-[0.98]
-                      dark:bg-[#162338]
-                      dark:border-white/10
+                      dark:bg-white/[0.055]
+                      dark:border-white/[0.12]
                       dark:text-white
+                      dark:shadow-[0_8px_24px_rgba(0,0,0,0.12)]
                       sm:min-w-0
                       lg:h-[104px]
                       lg:p-4
