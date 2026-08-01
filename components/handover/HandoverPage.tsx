@@ -347,7 +347,7 @@ className="
             ${open ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0'}
           `}
         >
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-4">
+          <div>
 <HandoverForm
   name={name}
   setName={setName}

@@ -31,7 +31,7 @@ content: value || '',
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
-  })
+  }, [placeholder, t.editorPlaceholder])
 
 useEffect(() => {
   if (!editor) return;
