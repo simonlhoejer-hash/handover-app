@@ -46,7 +46,7 @@ type Props = {
 
 const LOCATION_GROUPS = [
   {
-    title: 'Skagerak & Commodore',
+    title: 'Buffet',
     slugs: ['skagerak-morgen', 'commodore-morgen', 'skagerak-aften'],
   },
   {
@@ -157,10 +157,13 @@ export default function FoodWastePage({
         </p>
       )}
 
-      <div className="space-y-9 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-5 lg:space-y-0">
+      <div className="space-y-9 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         {LOCATION_GROUPS.map((group) => (
-          <section key={group.title} className="lg:min-w-0">
-            <div className="mb-4 flex items-center justify-center gap-4 lg:mb-2 lg:gap-3">
+          <section
+            key={group.title}
+            className="lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/10 dark:lg:bg-[#162338]/80"
+          >
+            <div className="mb-4 flex items-center justify-center gap-4 lg:mb-4 lg:gap-3">
               <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/20" />
               <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/55">
                 {group.title}
@@ -169,14 +172,15 @@ export default function FoodWastePage({
             </div>
 
             <div
-              className="
+              className={`
                 -mx-4 flex snap-x snap-mandatory gap-4
                 overflow-x-auto px-4 pb-3
                 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
                 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5
                 sm:overflow-visible sm:px-0 sm:pb-0
-                lg:grid-cols-3 lg:gap-3
-              "
+                ${group.slugs.length === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}
+                lg:gap-4
+              `}
             >
               {group.slugs.map((slug) => {
                 const location = FOOD_WASTE_LOCATIONS.find(
@@ -211,12 +215,12 @@ export default function FoodWastePage({
                       dark:border-white/10
                       dark:text-white
                       sm:min-w-0
-                      lg:h-[82px]
-                      lg:p-3
+                      lg:h-[104px]
+                      lg:p-4
                     "
                   >
-                    <div className="flex flex-col items-center gap-2 lg:gap-1.5">
-                      <h3 className="text-lg font-semibold tracking-tight lg:text-base lg:leading-tight">
+                    <div className="flex flex-col items-center gap-2">
+                      <h3 className="text-lg font-semibold tracking-tight lg:text-[17px] lg:leading-tight">
                         {group.title === 'Produktion' ? (
                           <>
                             <span className="block">Produktion</span>

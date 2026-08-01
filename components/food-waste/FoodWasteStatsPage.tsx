@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { ChevronDown, Download, Users } from 'lucide-react'
+import { ChevronDown, Download, Maximize2, Users, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
@@ -187,6 +187,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     chart: string
     point: ChartPoint
   } | null>(null)
+  const [expandedChart, setExpandedChart] = useState<string | null>(null)
 
   useEffect(() => {
     let isCurrent = true
@@ -519,6 +520,25 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     ...stats.production.locations,
   ]
 
+  const chartConfigs = [
+    {
+      title: t.buffetDevelopment,
+      kind: 'buffet' as const,
+      points: stats.buffet.chartPoints,
+      maxValue: maxBuffetChartValue,
+      barClass: 'bg-amber-500',
+      showEstimate: false,
+    },
+    {
+      title: t.productionDevelopment,
+      kind: 'grinder' as const,
+      points: stats.grinder.chartPoints,
+      maxValue: maxProductionChartValue,
+      barClass: 'bg-nordic',
+      showEstimate: true,
+    },
+  ]
+
   function getPointBreakdown(point: ChartPoint, kind: 'buffet' | 'grinder') {
     const selectedDates = new Set(point.dates)
     const totals = new Map<string, { total: number; times: Set<string> }>()
@@ -620,35 +640,36 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        {[
-          {
-            title: t.buffetDevelopment,
-            kind: 'buffet' as const,
-            points: stats.buffet.chartPoints,
-            maxValue: maxBuffetChartValue,
-            barClass: 'bg-amber-500',
-            showEstimate: false,
-          },
-          {
-            title: t.productionDevelopment,
-            kind: 'grinder' as const,
-            points: stats.grinder.chartPoints,
-            maxValue: maxProductionChartValue,
-            barClass: 'bg-nordic',
-            showEstimate: true,
-          },
-        ].map((chart) => (
+        {chartConfigs.map((chart) => (
           <div
             key={chart.title}
             className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#162338] dark:border-white/10"
           >
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">{chart.title}</h2>
-              {loading && (
-                <span className="text-sm text-gray-500 dark:text-white/60">
-                  {t.loadingShort}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {loading && (
+                  <span className="text-sm text-gray-500 dark:text-white/60">
+                    {t.loadingShort}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExpandedChart(chart.title)
+                    if (selectedPoint?.chart !== chart.title && chart.points.length > 0) {
+                      setSelectedPoint({
+                        chart: chart.title,
+                        point: chart.points[chart.points.length - 1],
+                      })
+                    }
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/5 text-gray-600 transition hover:bg-black/10 dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15"
+                  aria-label={lang === 'sv' ? 'Förstora graf' : 'Forstør graf'}
+                >
+                  <Maximize2 size={17} />
+                </button>
+              </div>
             </div>
 
             <AnimatePresence mode="wait">
@@ -826,6 +847,171 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           </div>
         ))}
       </section>
+
+      <AnimatePresence>
+        {expandedChart && (() => {
+          const chart = chartConfigs.find((candidate) => candidate.title === expandedChart)
+          if (!chart) return null
+
+          const activePoint =
+            selectedPoint?.chart === chart.title
+              ? selectedPoint.point
+              : chart.points[chart.points.length - 1]
+          const breakdown = activePoint
+            ? getPointBreakdown(activePoint, chart.kind)
+            : []
+          const largest = breakdown[0]
+          const chartAverage =
+            chart.points.reduce((sum, point) => sum + point.total, 0) /
+            Math.max(chart.points.length, 1)
+          const difference = activePoint && chartAverage > 0
+            ? ((activePoint.total - chartAverage) / chartAverage) * 100
+            : 0
+
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[80] bg-black/50 p-3 backdrop-blur-sm sm:p-6"
+              onClick={() => setExpandedChart(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.97, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, y: 12 }}
+                onClick={(event) => event.stopPropagation()}
+                className="mx-auto flex max-h-full w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-[#162338]"
+              >
+                <div className="flex items-center justify-between border-b border-black/5 px-5 py-4 dark:border-white/10 sm:px-7">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-nordic/70">
+                      {lang === 'sv' ? 'Detaljerad graf' : 'Detaljeret graf'}
+                    </p>
+                    <h2 className="mt-1 text-xl font-semibold sm:text-2xl">{chart.title}</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedChart(null)}
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-black/5 transition hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15"
+                    aria-label={lang === 'sv' ? 'Stäng' : 'Luk'}
+                  >
+                    <X size={21} />
+                  </button>
+                </div>
+
+                <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,.9fr)]">
+                  <div className="border-b border-black/5 p-5 dark:border-white/10 lg:border-b-0 lg:border-r sm:p-7">
+                    <div className="flex h-[360px] items-end gap-3 overflow-x-auto pb-3">
+                      {chart.points.map((point, pointIndex) => (
+                        <button
+                          type="button"
+                          key={point.label}
+                          onClick={() => setSelectedPoint({ chart: chart.title, point })}
+                          className={`group flex h-full min-w-16 flex-1 flex-col items-center justify-end gap-3 rounded-2xl px-2 transition hover:bg-black/5 dark:hover:bg-white/5 ${
+                            activePoint?.label === point.label
+                              ? 'bg-nordic-soft ring-2 ring-nordic/25 dark:bg-white/10'
+                              : ''
+                          }`}
+                        >
+                          <span className="text-sm font-semibold text-gray-600 dark:text-white/70">
+                            {formatAmount(point.total, lang)}
+                          </span>
+                          <motion.div
+                            className={`w-12 rounded-t-2xl ${chart.barClass}`}
+                            initial={{ height: 0 }}
+                            animate={{
+                              height: point.total > 0
+                                ? Math.max((point.total / chart.maxValue) * 250, 10)
+                                : 0,
+                            }}
+                            transition={{ duration: 0.45, delay: Math.min(pointIndex * 0.04, 0.3) }}
+                          />
+                          <span className="pb-2 text-sm text-gray-500 dark:text-white/60">
+                            {point.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <aside className="p-5 sm:p-7">
+                    {activePoint ? (
+                      <>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-nordic/70">
+                              {lang === 'sv' ? 'Fördelning' : 'Fordeling'}
+                            </p>
+                            <h3 className="mt-1 text-xl font-semibold text-nordic">
+                              {activePoint.label}
+                            </h3>
+                          </div>
+                          <span className="rounded-full bg-nordic-soft px-3 py-1.5 text-sm font-semibold text-nordic">
+                            {Math.abs(difference).toLocaleString(
+                              lang === 'sv' ? 'sv-SE' : 'da-DK',
+                              { maximumFractionDigits: 0 }
+                            )}% {difference >= 0
+                              ? lang === 'sv' ? 'över snittet' : 'over gennemsnittet'
+                              : lang === 'sv' ? 'under snittet' : 'under gennemsnittet'}
+                          </span>
+                        </div>
+
+                        <div className="mt-6 space-y-5">
+                          {breakdown.map((location) => {
+                            const percentage = activePoint.total > 0
+                              ? (location.total / activePoint.total) * 100
+                              : 0
+
+                            return (
+                              <div key={location.name}>
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="min-w-0">
+                                    <p className="font-semibold">{location.name}</p>
+                                    <p className="mt-0.5 text-xs text-gray-500 dark:text-white/55">
+                                      {lang === 'sv' ? 'Registrerat kl.' : 'Registreret kl.'}{' '}
+                                      {location.times.join(', ')}
+                                    </p>
+                                  </div>
+                                  <div className="shrink-0 text-right">
+                                    <p className="text-lg font-semibold text-nordic">
+                                      {formatAmount(location.total, lang)}
+                                    </p>
+                                    <p className="text-sm font-medium text-gray-500 dark:text-white/55">
+                                      {formatNumber(Math.round(percentage), lang)}%
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${percentage}%` }}
+                                    className="h-full rounded-full bg-nordic"
+                                  />
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {largest && (
+                          <p className="mt-7 rounded-2xl bg-nordic-soft p-4 text-sm leading-relaxed text-gray-700 dark:text-white/70">
+                            {lang === 'sv' ? 'Största bidraget kom från' : 'Det største bidrag kom fra'}{' '}
+                            <strong>{largest.name}</strong>. {breakdown.length}{' '}
+                            {lang === 'sv' ? 'stationer hade registreringar.' : 'stationer havde registreringer.'}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-gray-500 dark:text-white/60">{t.noRegistrationsInPeriod}</p>
+                    )}
+                  </aside>
+                </div>
+              </motion.div>
+            </motion.div>
+          )
+        })()}
+      </AnimatePresence>
 
       <section className="hidden items-stretch gap-6 lg:grid lg:grid-cols-2">
         <div className="h-full rounded-2xl border border-amber-500/15 bg-amber-50/60 p-4 shadow-sm dark:bg-amber-400/5">
