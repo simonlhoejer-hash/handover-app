@@ -28,6 +28,9 @@ export const translations = {
     privacyRetentionTitle: 'Opbevaring',
     privacyRetention:
       'Overleveringer, fornavne, kommentarer og tilknyttede billeder opbevares i op til 12 måneder og slettes derefter.',
+    privacyAccessTitle: 'Adgang',
+    privacyAccess:
+      'Adgangen til appens Nordic Crown- og Nordic Pearl-sider kræver hver sin fælles afdelingskode. Det begrænser adgangen via appen, og enheden husker den i op til 6 måneder. Koden kan deles af afdelingslederen og udskiftes ved behov. Da koden er fælles, identificerer den ikke den enkelte bruger.',
     privacyResponsibilityTitle: 'Dataansvar',
     privacyResponsibility:
       'Arbejdsgiveren er ansvarlig for behandlingen af personoplysninger i HandoverPro. Spørg din nærmeste leder, hvis du ønsker indsigt, rettelse eller sletning.',
@@ -135,6 +138,8 @@ Skriv hvor tingene står.`,
     // Login/admin/kalkulation
     loginTagline: 'Digital overlevering til køkken og ledelse.',
     login: 'Log ind',
+    continueButton: 'Fortsæt',
+    lockApp: 'Lås appen',
     administration: 'Administration',
     chooseOutlet: 'Vælg outlet',
     calculations: 'kalkulationer',
@@ -263,6 +268,9 @@ Skriv hvor tingene står.`,
     privacyRetentionTitle: 'Lagring',
     privacyRetention:
       'Överlämningar, förnamn, kommentarer och tillhörande bilder lagras i upp till 12 månader och raderas därefter.',
+    privacyAccessTitle: 'Åtkomst',
+    privacyAccess:
+      'Åtkomst till appens Nordic Crown- och Nordic Pearl-sidor kräver var sin gemensamma avdelningskod. Det begränsar åtkomsten via appen, och enheten kommer ihåg den i upp till 6 månader. Koden kan delas av avdelningschefen och bytas vid behov. Eftersom koden är gemensam identifierar den inte den enskilda användaren.',
     privacyResponsibilityTitle: 'Personuppgiftsansvar',
     privacyResponsibility:
       'Arbetsgivaren ansvarar för behandlingen av personuppgifter i HandoverPro. Fråga din närmaste chef om du önskar tillgång, rättelse eller radering.',
@@ -370,6 +378,8 @@ Skriv var sakerna står.`,
     // Login/admin/kalkulation
     loginTagline: 'Digital överlämning till kök och ledning.',
     login: 'Logga in',
+    continueButton: 'Fortsätt',
+    lockApp: 'Lås appen',
     administration: 'Administration',
     chooseOutlet: 'Välj outlet',
     calculations: 'kalkyler',

@@ -7,12 +7,12 @@ const ships = [
     name: 'Nordic Crown',
     department: 'Galley',
     description: 'Overlevering og food waste for Nordic Crown.',
-    href: '/galley',
+    href: '/crown',
   },
   {
-    name: 'Pearl',
+    name: 'Nordic Pearl',
     department: 'Galley',
-    description: 'Overlevering og food waste for Pearl.',
+    description: 'Overlevering og food waste for Nordic Pearl.',
     href: '/pearl',
   },
 ]

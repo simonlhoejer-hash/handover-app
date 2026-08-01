@@ -12,6 +12,7 @@ import {
   Trash2,
   MoreHorizontal,
   ShieldCheck,
+  LogOut,
 } from 'lucide-react'
 
 export default function BottomNav() {
@@ -19,7 +20,7 @@ export default function BottomNav() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const basePath = pathname.startsWith('/pearl') ? '/pearl' : '/galley'
+  const basePath = pathname.startsWith('/pearl') ? '/pearl' : '/crown'
 
   const tabs = [
     {
@@ -196,6 +197,19 @@ export default function BottomNav() {
                   <ShieldCheck size={18} strokeWidth={1.8} />
                   <span>{t.privacy}</span>
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await fetch('/api/access', { method: 'DELETE' })
+                    setOpen(false)
+                    window.location.assign('/')
+                  }}
+                  className="flex w-full items-center gap-3 text-sm font-medium text-gray-700 transition hover:text-red-600 dark:text-white/80 dark:hover:text-red-300"
+                >
+                  <LogOut size={18} strokeWidth={1.8} />
+                  <span>{t.lockApp}</span>
+                </button>
 
               </div>
             </div>

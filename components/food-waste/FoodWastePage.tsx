@@ -72,7 +72,7 @@ const LOCATION_GROUPS = [
 
 export default function FoodWastePage({
   vessel = 'crown',
-  basePath = '/galley',
+  basePath = '/crown',
 }: Props) {
   const { t, lang } = useTranslation()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
