@@ -5,7 +5,7 @@ import HandoverHistoryItem from '@/components/handover/HandoverHistoryItem'
 import HandoverForm from '@/components/handover/HandoverForm'
 import { useTranslation } from '@/lib/LanguageContext'
 import { useEffect, useRef, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { ChevronDown } from 'lucide-react'
 import { ChevronLeft } from 'lucide-react'
 
@@ -45,6 +45,7 @@ export default function HandoverPage({
   const [draftError, setDraftError] = useState('')
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
   const draftHydratedRef = useRef(false)
+  const ship: AccessShip = department === 'pearl' ? 'pearl' : 'crown'
 
   useEffect(() => {
     loadNotes()
@@ -52,14 +53,14 @@ export default function HandoverPage({
   }, [itemName, department])
 
   async function loadNotes() {
-    const { data } = await supabase
-      .from('handover_notes')
-      .select('*')
-      .eq('department', department)
-      .eq('parti', itemName)
-      .order('created_at', { ascending: false })
-
-    setItems((data || []).filter((item) => (item.status ?? 'published') === 'published'))
+    try {
+      const { data } = await secureFetch<{ data: any[] }>(
+        `/api/handovers?${queryString({ ship, parti: itemName, status: 'published' })}`
+      )
+      setItems(data || [])
+    } catch {
+      setItems([])
+    }
   }
 
   async function loadDraft() {
@@ -69,15 +70,13 @@ export default function HandoverPage({
     setDraftSavedAt(null)
     setDraftError('')
 
-    const { data, error } = await supabase
-      .from('handover_notes')
-      .select('*')
-      .eq('department', department)
-      .eq('parti', itemName)
-      .eq('status', 'draft')
-      .maybeSingle()
-
-    if (error) {
+    let data: any | null = null
+    try {
+      const result = await secureFetch<{ data: any[] }>(
+        `/api/handovers?${queryString({ ship, parti: itemName, status: 'draft' })}`
+      )
+      data = result.data[0] ?? null
+    } catch {
       draftHydratedRef.current = true
       setDraftStatus('error')
       setDraftError(t.publishRequiresDraft)
@@ -128,62 +127,18 @@ export default function HandoverPage({
       draft_saved_at: now,
     }
 
-    if (draftId) {
-      const { error } = await supabase
-        .from('handover_notes')
-        .update(payload)
-        .eq('id', draftId)
-        .eq('status', 'draft')
-
-      if (error) {
-        setDraftStatus('error')
-        setDraftError(error.message)
-        return
-      }
-
+    try {
+      const { data } = await secureFetch<{ data: any }>('/api/handovers', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'save-draft', ship, id: draftId, ...payload }),
+      })
+      if (data?.id) setDraftId(data.id)
       setDraftStatus('saved')
       setDraftSavedAt(now)
-      return
-    }
-
-    const { data, error } = await supabase
-      .from('handover_notes')
-      .insert(payload)
-      .select('*')
-      .single()
-
-    if (error || !data) {
-      const { data: existingDraft } = await supabase
-        .from('handover_notes')
-        .select('id')
-        .eq('department', department)
-        .eq('parti', itemName)
-        .eq('status', 'draft')
-        .maybeSingle()
-
-      if (existingDraft?.id) {
-        const { error: updateExistingError } = await supabase
-          .from('handover_notes')
-          .update(payload)
-          .eq('id', existingDraft.id)
-          .eq('status', 'draft')
-
-        if (!updateExistingError) {
-          setDraftId(existingDraft.id)
-          setDraftStatus('saved')
-          setDraftSavedAt(now)
-          return
-        }
-      }
-
+    } catch (error) {
       setDraftStatus('error')
-      setDraftError(error?.message || t.draftSaveFailed)
-      return
+      setDraftError(error instanceof Error ? error.message : t.draftSaveFailed)
     }
-
-    setDraftId(data.id)
-    setDraftStatus('saved')
-    setDraftSavedAt(now)
   }
 
   async function saveNote() {
@@ -211,29 +166,26 @@ export default function HandoverPage({
       created_at: publishedAt,
     }
 
-    const result = draftId
-      ? await supabase
-        .from('handover_notes')
-        .update(payload)
-        .eq('id', draftId)
-        .eq('status', 'draft')
-      : await supabase
-        .from('handover_notes')
-        .insert({
-          department,
+    try {
+      await secureFetch('/api/handovers', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'publish',
+          ship,
+          id: draftId,
           parti: itemName,
           ...payload,
-        })
-
-    const error = result.error
+        }),
+      })
+    } catch (error) {
+      setLoading(false)
+      setShowPublishConfirm(false)
+      alert(error instanceof Error ? error.message : t.draftSaveFailed)
+      return
+    }
 
     setLoading(false)
     setShowPublishConfirm(false)
-
-    if (error) {
-      alert(error.message)
-      return
-    }
 
     setNote('')
     setImages([])
@@ -393,6 +345,7 @@ parti={itemName}/>
             <HandoverHistoryItem
               key={item.id}
               item={item}
+              ship={ship}
               reload={loadNotes}
             />
           ))}

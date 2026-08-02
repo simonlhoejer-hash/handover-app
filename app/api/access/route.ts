@@ -16,12 +16,22 @@ export async function POST(request: Request) {
     code?: unknown
   } | null
 
-  if (
-    !body ||
-    !isAccessShip(body.ship) ||
-    typeof body.code !== 'string' ||
-    !(await isCorrectAccessCode(body.ship, body.code))
-  ) {
+  let valid = false
+  try {
+    valid = Boolean(
+      body &&
+      isAccessShip(body.ship) &&
+      typeof body.code === 'string' &&
+      (await isCorrectAccessCode(body.ship, body.code))
+    )
+  } catch {
+    return NextResponse.json(
+      { error: 'Serverens adgang er ikke konfigureret endnu.' },
+      { status: 503 }
+    )
+  }
+
+  if (!valid || !body || !isAccessShip(body.ship)) {
     return NextResponse.json(
       { error: 'Forkert kode. Prøv igen.' },
       { status: 401 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { secureFetch, type AccessShip } from '@/lib/secureApi'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import HandoverComments from './HandoverComments'
 
@@ -11,10 +11,11 @@ function isOralHandoverNote(value: string) {
 
 type Props = {
   item: any
+  ship: AccessShip
   reload: () => void
 }
 
-export default function HandoverHistoryItem({ item, reload }: Props) {
+export default function HandoverHistoryItem({ item, ship, reload }: Props) {
   const { t, lang } = useTranslation()
 
   const [readName, setReadName] = useState('')
@@ -30,23 +31,17 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
 
     setLoading(true)
 
-    const { error } = await supabase
-      .from('handover_notes')
-      .update({
-        read_by: readName,
-        read_at: new Date().toISOString(),
+    try {
+      await secureFetch('/api/handovers', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'mark-read', ship, id: item.id, readBy: readName }),
       })
-      .eq('id', item.id)
-      .eq('status', 'published')
-
-    setLoading(false)
-
-    if (error) {
-      alert(error.message)
-    } else {
       setReadName('')
       reload()
+    } catch (error) {
+      alert(error instanceof Error ? error.message : t.couldNotSaveComment)
     }
+    setLoading(false)
   }
 
   return (
@@ -212,7 +207,7 @@ export default function HandoverHistoryItem({ item, reload }: Props) {
 
       {/* Comments */}
       <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/10 flex justify-center">
-        <HandoverComments handoverId={item.id} />
+        <HandoverComments handoverId={item.id} ship={ship} />
       </div>
 
       {/* Image modal */}

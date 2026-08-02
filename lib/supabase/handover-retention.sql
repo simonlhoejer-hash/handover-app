@@ -56,7 +56,8 @@ declare
 begin
   perform set_config('app.retention_cleanup', 'on', true);
 
-  -- Slet billederne fra den offentlige storage-bucket.
+  -- Slet billeder fra storage. Understøtter både gamle offentlige URL'er,
+  -- beskyttede proxy-URL'er og nye rene storage-stier.
   for image_url in
     select jsonb_array_elements_text(coalesce(images::jsonb, '[]'::jsonb))
     from public.handover_notes
@@ -67,6 +68,16 @@ begin
       '/storage/v1/object/public/handover-images/',
       2
     );
+
+    if object_name = '' then
+      object_name := split_part(image_url, '/api/handover-images/', 2);
+    end if;
+
+    if object_name = '' and image_url !~ '^https?://' then
+      object_name := image_url;
+    end if;
+
+    object_name := split_part(object_name, '?', 1);
 
     if object_name <> '' then
       delete from storage.objects
