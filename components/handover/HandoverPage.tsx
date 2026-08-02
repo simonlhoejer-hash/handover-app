@@ -107,7 +107,10 @@ export default function HandoverPage({
 
   async function saveDraft() {
     const trimmedNote = getPlainText(note)
-    if (!trimmedNote) return
+    const hasDraftContent = Boolean(
+      name.trim() || receiver.trim() || trimmedNote || images.length
+    )
+    if (!draftId && !hasDraftContent) return
 
     setDraftStatus('saving')
     setDraftError('')
@@ -248,7 +251,10 @@ export default function HandoverPage({
     if (!draftHydratedRef.current) return
 
     const trimmedNote = getPlainText(note)
-    if (!trimmedNote) return
+    const hasDraftContent = Boolean(
+      name.trim() || receiver.trim() || trimmedNote || images.length
+    )
+    if (!draftId && !hasDraftContent) return
 
     const timer = window.setTimeout(() => {
       void saveDraft()
