@@ -138,7 +138,7 @@ export default function SettingsPage() {
           className={`
             overflow-hidden
             transition-all duration-500 ease-in-out
-            ${privacyOpen ? 'max-h-[1100px] opacity-100 px-6 pb-6' : 'max-h-0 opacity-0'}
+            ${privacyOpen ? 'max-h-[1400px] opacity-100 px-6 pb-6' : 'max-h-0 opacity-0'}
           `}
         >
           <div className="space-y-5 border-t border-black/5 pt-6 text-sm leading-relaxed text-gray-600 dark:border-white/10 dark:text-white/70">
@@ -170,6 +170,13 @@ export default function SettingsPage() {
                 {t.privacyAccessTitle}
               </h3>
               <p className="mt-1">{t.privacyAccess}</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                {t.privacyStorageTitle}
+              </h3>
+              <p className="mt-1">{t.privacyStorage}</p>
             </div>
 
             <div>

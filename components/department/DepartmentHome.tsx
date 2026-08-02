@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
@@ -67,21 +67,17 @@ export default function DepartmentHome({
     }
 
     const fetchStatus = async () => {
-      const { data, error } = await supabase
-        .from('handover_notes')
-        .select(`
-          parti,
-          shift_date,
-          read_by,
-          receiver_name,
-          created_at,
-          updated_at
-        `)
-        .eq('department', department)
-        .or('status.eq.published,status.is.null')
-        .order('shift_date', { ascending: false })
-        .order('updated_at', { ascending: false })
-        .order('created_at', { ascending: false })
+      const ship: AccessShip = department === 'pearl' ? 'pearl' : 'crown'
+      let data: HandoverStatusRow[] = []
+      let error: unknown = null
+      try {
+        const result = await secureFetch<{ data: HandoverStatusRow[] }>(
+          `/api/handovers?${queryString({ ship, mode: 'status' })}`
+        )
+        data = result.data
+      } catch (caught) {
+        error = caught
+      }
 
       if (!isCurrent) return
 

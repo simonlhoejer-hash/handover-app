@@ -9,7 +9,7 @@ import {
   readPendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
-import { supabase } from '@/lib/supabase'
+import { queryString, secureFetch } from '@/lib/secureApi'
 
 type FoodWasteEntry = {
   id: string
@@ -93,13 +93,19 @@ export default function FoodWastePage({
         setLoading(false)
       }
 
-      const { data, error: loadError } = await supabase
-        .from('food_waste_entries')
-        .select('*')
-        .eq('vessel', vessel)
-        .gte('waste_date', today.slice(0, 7) + '-01')
-        .order('waste_date', { ascending: false })
-        .order('created_at', { ascending: false })
+      let data: FoodWasteEntry[] = []
+      let loadError: unknown = null
+      try {
+        const result = await secureFetch<{ data: FoodWasteEntry[] }>(
+          `/api/food-waste/entries?${queryString({
+            ship: vessel,
+            from: today.slice(0, 7) + '-01',
+          })}`
+        )
+        data = result.data
+      } catch (error) {
+        loadError = error
+      }
 
       if (!isCurrent) return
 
@@ -107,7 +113,7 @@ export default function FoodWastePage({
         setError(t.offlineShowingCached)
       } else {
         setError('')
-        const nextEntries = data ?? []
+        const nextEntries = data
         cacheFoodWasteEntries(nextEntries, vessel)
         setEntries([...readPendingFoodWasteEntries(vessel), ...nextEntries])
       }

@@ -5,25 +5,25 @@ export const ACCESS_COOKIE_NAMES: Record<AccessShip, string> = {
   pearl: 'handover_pearl_access',
 }
 
-const DEFAULT_CODES: Record<AccessShip, string> = {
-  crown: 'CROWN26',
-  pearl: 'PEARL26',
-}
-
 function getCode(ship: AccessShip) {
   const environmentCode =
     ship === 'crown'
       ? process.env.CROWN_ACCESS_CODE
       : process.env.PEARL_ACCESS_CODE
 
-  return (environmentCode || DEFAULT_CODES[ship]).trim().toUpperCase()
+  if (!environmentCode) {
+    throw new Error(`Adgangskoden til ${ship} mangler i miljøvariablerne.`)
+  }
+
+  return environmentCode.trim().toUpperCase()
 }
 
 function getSigningSecret() {
-  return (
-    process.env.ACCESS_SESSION_SECRET ||
-    'handoverpro-2026-shared-ship-access-session'
-  )
+  if (!process.env.ACCESS_SESSION_SECRET) {
+    throw new Error('ACCESS_SESSION_SECRET mangler i miljøvariablerne.')
+  }
+
+  return process.env.ACCESS_SESSION_SECRET
 }
 
 async function signValue(value: string) {
@@ -47,7 +47,15 @@ async function signValue(value: string) {
 }
 
 export async function isCorrectAccessCode(ship: AccessShip, code: string) {
-  return code.trim().toUpperCase() === getCode(ship)
+  const candidate = new TextEncoder().encode(code.trim().toUpperCase())
+  const expected = new TextEncoder().encode(getCode(ship))
+  if (candidate.length !== expected.length) return false
+
+  let difference = 0
+  for (let index = 0; index < candidate.length; index += 1) {
+    difference |= candidate[index] ^ expected[index]
+  }
+  return difference === 0
 }
 
 export async function createAccessToken(ship: AccessShip) {

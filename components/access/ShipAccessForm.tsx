@@ -1,7 +1,6 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { AlertCircle, ArrowRight, LockKeyhole } from 'lucide-react'
 import type { AccessShip } from '@/lib/shipAccess'
@@ -17,7 +16,6 @@ export default function ShipAccessForm({
   destination,
   initialCode = '',
 }: Props) {
-  const router = useRouter()
   const [code, setCode] = useState(initialCode)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -44,8 +42,7 @@ export default function ShipAccessForm({
       return
     }
 
-    router.replace(destination)
-    router.refresh()
+    window.location.replace(destination)
   }
 
   return (

@@ -13,7 +13,7 @@ import {
 } from '@/lib/foodWasteOffline'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { displayFoodWasteLocation } from '@/lib/foodWasteLocations'
-import { supabase } from '@/lib/supabase'
+import { queryString, secureFetch } from '@/lib/secureApi'
 
 type FoodWasteEntry = {
   id: string
@@ -105,11 +105,17 @@ export default function FoodWasteLocationPage({
         vessel,
       }
 
-      const { data, error: syncError } = await supabase
-        .from('food_waste_entries')
-        .insert(payload)
-        .select('*')
-        .single()
+      let data: FoodWasteEntry | null = null
+      let syncError: unknown = null
+      try {
+        const result = await secureFetch<{ data: FoodWasteEntry }>(
+          '/api/food-waste/entries',
+          { method: 'POST', body: JSON.stringify(payload) }
+        )
+        data = result.data
+      } catch (error) {
+        syncError = error
+      }
 
       if (syncError || !data) {
         remaining.push(pendingEntry)
@@ -168,14 +174,20 @@ export default function FoodWasteLocationPage({
         setLoading(false)
       }
 
-      const { data, error: loadError } = await supabase
-        .from('food_waste_entries')
-        .select('*')
-        .eq('location_name', locationName)
-        .eq('vessel', vessel)
-        .order('waste_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(20)
+      let data: FoodWasteEntry[] = []
+      let loadError: unknown = null
+      try {
+        const result = await secureFetch<{ data: FoodWasteEntry[] }>(
+          `/api/food-waste/entries?${queryString({
+            ship: vessel,
+            location: locationName,
+            limit: 20,
+          })}`
+        )
+        data = result.data
+      } catch (error) {
+        loadError = error
+      }
 
       if (!isCurrent) return
 
@@ -183,8 +195,8 @@ export default function FoodWasteLocationPage({
         setError(t.offlineShowingCached)
       } else {
         setError('')
-        cacheFoodWasteEntries(data ?? [], vessel)
-        setEntries([...pending, ...(data ?? [])])
+        cacheFoodWasteEntries(data, vessel)
+        setEntries([...pending, ...data])
       }
 
       setLoading(false)
@@ -236,11 +248,17 @@ export default function FoodWasteLocationPage({
       return
     }
 
-    const { data, error: saveError } = await supabase
-      .from('food_waste_entries')
-      .insert(payload)
-      .select('*')
-      .single()
+    let data: FoodWasteEntry | null = null
+    let saveError: unknown = null
+    try {
+      const result = await secureFetch<{ data: FoodWasteEntry }>(
+        '/api/food-waste/entries',
+        { method: 'POST', body: JSON.stringify(payload) }
+      )
+      data = result.data
+    } catch (error) {
+      saveError = error
+    }
 
     if (saveError) {
       saveEntryLocally(payload)
@@ -310,10 +328,15 @@ export default function FoodWasteLocationPage({
       return
     }
 
-    const { error: deleteError } = await supabase
-      .from('food_waste_entries')
-      .delete()
-      .eq('id', id)
+    let deleteError: unknown = null
+    try {
+      await secureFetch(
+        `/api/food-waste/entries?${queryString({ ship: vessel, id })}`,
+        { method: 'DELETE' }
+      )
+    } catch (error) {
+      deleteError = error
+    }
 
     if (deleteError) {
       setError(t.couldNotDeleteRegistration)

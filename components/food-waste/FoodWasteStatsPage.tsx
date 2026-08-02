@@ -12,7 +12,7 @@ import {
   readPendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
-import { supabase } from '@/lib/supabase'
+import { queryString, secureFetch } from '@/lib/secureApi'
 
 type FoodWasteEntry = {
   id: string
@@ -217,22 +217,37 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         setLoading(false)
       }
 
-      const { data, error: loadError } = await supabase
-        .from('food_waste_entries')
-        .select('*')
-        .eq('vessel', vessel)
-        .gte('waste_date', fromDate)
-        .lte('waste_date', toDate)
-        .order('waste_date', { ascending: false })
-        .order('created_at', { ascending: false })
+      let data: FoodWasteEntry[] = []
+      let guests: GuestCount[] = []
+      let loadError: unknown = null
+      let guestsError: unknown = null
 
-      const { data: guests, error: guestsError } = await supabase
-        .from('food_waste_guest_counts')
-        .select('*')
-        .eq('vessel', vessel)
-        .gte('service_date', fromDate)
-        .lte('service_date', toDate)
-        .order('service_date', { ascending: false })
+      try {
+        const result = await secureFetch<{ data: FoodWasteEntry[] }>(
+          `/api/food-waste/entries?${queryString({
+            ship: vessel,
+            from: fromDate,
+            to: toDate,
+            limit: 2000,
+          })}`
+        )
+        data = result.data
+      } catch (error) {
+        loadError = error
+      }
+
+      try {
+        const result = await secureFetch<{ data: GuestCount[] }>(
+          `/api/food-waste/guests?${queryString({
+            ship: vessel,
+            from: fromDate,
+            to: toDate,
+          })}`
+        )
+        guests = result.data
+      } catch (error) {
+        guestsError = error
+      }
 
       if (!isCurrent) return
 
@@ -240,7 +255,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         setError(t.offlineShowingCached)
       } else {
         setError('')
-        const nextEntries = data ?? []
+        const nextEntries = data
         cacheFoodWasteEntries(nextEntries, vessel)
         setEntries(
           [...readPendingFoodWasteEntries(vessel), ...nextEntries].filter(
@@ -253,7 +268,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         setGuestTableError(true)
       } else {
         setGuestTableError(false)
-        const nextGuests = guests ?? []
+        const nextGuests = guests
         cacheFoodWasteGuestCounts(nextGuests, vessel)
         setGuestCounts(nextGuests)
       }
@@ -381,19 +396,25 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     setSavingGuests(true)
     setGuestMessage('')
 
-    const { data, error: saveError } = await supabase
-      .from('food_waste_guest_counts')
-      .upsert(
+    let data: GuestCount | null = null
+    let saveError: unknown = null
+    try {
+      const result = await secureFetch<{ data: GuestCount }>(
+        '/api/food-waste/guests',
         {
+          method: 'PUT',
+          body: JSON.stringify({
           service_date: guestDate,
           guest_count: guests,
           comment: null,
           vessel,
-        },
-        { onConflict: 'vessel,service_date' }
+          }),
+        }
       )
-      .select('*')
-      .single()
+      data = result.data
+    } catch (error) {
+      saveError = error
+    }
 
     if (saveError || !data) {
       setGuestTableError(true)
@@ -510,7 +531,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     1
   )
   const estimatedContainers = stats.grinder.totalKg / 3000
-  const estimatedSavings = estimatedContainers * 5000
+  const estimatedSavings = stats.grinder.totalKg * 1.9
   const grinderLocations: LocationSummary[] = [
     {
       name: t.buffetIncludedInGrinder,

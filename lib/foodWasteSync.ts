@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { secureFetch } from '@/lib/secureApi'
 import {
   cacheFoodWasteEntries,
   readPendingFoodWasteEntries,
@@ -30,17 +30,23 @@ async function runSync(): Promise<FoodWasteSyncResult> {
 
     for (let index = 0; index < queue.length; index += 1) {
       const entry = queue[index]
-      const { data, error } = await supabase
-        .from('food_waste_entries')
-        .insert({
+      let data = null
+      let error: unknown = null
+      try {
+        const result = await secureFetch<{ data: any }>('/api/food-waste/entries', {
+          method: 'POST',
+          body: JSON.stringify({
           waste_date: entry.waste_date,
           location_name: entry.location_name,
           quantity_kg: entry.quantity_kg,
           comment: entry.comment,
-          vessel,
+          ship: vessel,
         })
-        .select('*')
-        .single()
+        })
+        data = result.data
+      } catch (caught) {
+        error = caught
+      }
 
       if (error || !data) {
         failed.push(entry)

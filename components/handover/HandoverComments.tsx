@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 
 type HandoverComment = {
@@ -13,8 +13,10 @@ type HandoverComment = {
 
 export default function HandoverComments({
   handoverId,
+  ship,
 }: {
   handoverId: string
+  ship: AccessShip
 }) {
   const { t, lang } = useTranslation()
   const [comments, setComments] = useState<HandoverComment[]>([])
@@ -25,21 +27,17 @@ export default function HandoverComments({
   const [loading, setLoading] = useState(false)
 
   const fetchAll = async () => {
-    const [{ data }, { count }] = await Promise.all([
-      supabase
-        .from('handover_comments')
-        .select('*')
-        .eq('handover_id', handoverId)
-        .order('created_at', { ascending: true }),
-
-      supabase
-        .from('handover_comments')
-        .select('*', { count: 'exact', head: true })
-        .eq('handover_id', handoverId),
-    ])
-
-    setComments(data || [])
-    setCount(count || 0)
+    try {
+      const { data, count } = await secureFetch<{
+        data: HandoverComment[]
+        count: number
+      }>(`/api/handover-comments?${queryString({ ship, handoverId })}`)
+      setComments(data || [])
+      setCount(count || 0)
+    } catch {
+      setComments([])
+      setCount(0)
+    }
   }
 
   useEffect(() => {
@@ -52,18 +50,18 @@ export default function HandoverComments({
 
     setLoading(true)
 
-    const { error } = await supabase.from('handover_comments').insert({
-      handover_id: handoverId,
-      author_name: author,
-      comment: text,
-    })
-
-    setLoading(false)
-
-    if (error) {
+    try {
+      await secureFetch('/api/handover-comments', {
+        method: 'POST',
+        body: JSON.stringify({ ship, handoverId, authorName: author, comment: text }),
+      })
+    } catch {
+      setLoading(false)
       alert(t.couldNotSaveComment)
       return
     }
+
+    setLoading(false)
 
     setAuthor('')
     setText('')

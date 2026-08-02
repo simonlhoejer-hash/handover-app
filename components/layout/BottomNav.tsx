@@ -155,7 +155,7 @@ export default function BottomNav() {
             <div
               className="
                 absolute bottom-16 right-0
-                w-64
+                w-[min(20rem,calc(100vw-2rem))]
                 rounded-3xl
                 p-5
                 bg-white
@@ -195,7 +195,7 @@ export default function BottomNav() {
                   "
                 >
                   <ShieldCheck size={18} strokeWidth={1.8} />
-                  <span>{t.privacy}</span>
+                  <span className="whitespace-nowrap">{t.privacy}</span>
                 </Link>
 
                 <button

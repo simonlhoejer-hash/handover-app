@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { queryString, secureFetch } from '@/lib/secureApi'
 
 export function useCrewSchedule(
   year:number,
@@ -22,20 +22,13 @@ export function useCrewSchedule(
       const end =
         `${year}-${String(month+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`
 
-      const { data, error } = await supabase
-        .from('crew_schedule')
-        .select('*')
-        .eq('department', department)   // 👈 vigtigt
-        .gte('date',start)
-        .lte('date',end)
-
-      if(error){
-        console.error(error)
-        return
-      }
-
-      if(data){
+      try {
+        const { data } = await secureFetch<{ data: any[] }>(
+          `/api/crew-schedule?${queryString({ department, from: start, to: end })}`
+        )
         setCrew(data)
+      } catch (error) {
+        console.error(error)
       }
 
     }

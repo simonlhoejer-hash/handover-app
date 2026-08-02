@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { secureFetch, type AccessShip } from '@/lib/secureApi'
 import { useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
@@ -20,11 +20,7 @@ export default function ImageUploader({
 }: Props) {
   const { t } = useTranslation()
   const pathname = usePathname()
-  const department = pathname.startsWith('/pearl')
-    ? 'pearl'
-    : pathname.startsWith('/crown')
-      ? 'galley'
-      : 'shop'
+  const ship: AccessShip = pathname.startsWith('/pearl') ? 'pearl' : 'crown'
 
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -74,34 +70,26 @@ export default function ImageUploader({
 
     setUploading(true)
 
-    const ext = file.name.split('.').pop() || 'png'
-    const fileName = Date.now() + '.' + ext
+    const form = new FormData()
+    form.set('ship', ship)
+    form.set('parti', parti)
+    form.set('file', file)
 
-    const safeParti = parti
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9-]/g, '-')
-
-    const filePath = `${department}/${safeParti}/${fileName}`
-
-    const { error } = await supabase.storage
-      .from('handover-images')
-      .upload(filePath, file, { upsert: true })
-
-    if (error) {
-      console.error(error)
-      alert(error.message)
+    let uploadUrl = ''
+    try {
+      const result = await secureFetch<{ url: string }>('/api/handover-images', {
+        method: 'POST',
+        body: form,
+      })
+      uploadUrl = result.url
+    } catch (error) {
+      alert(error instanceof Error ? error.message : t.couldNotGetUrl)
       setUploading(false)
       setPreviewUrl(null)
       return
     }
 
-    const { data } = supabase.storage
-      .from('handover-images')
-      .getPublicUrl(filePath)
-
-    if (!data?.publicUrl) {
+    if (!uploadUrl) {
       alert(t.couldNotGetUrl)
       setUploading(false)
       setPreviewUrl(null)
@@ -109,7 +97,7 @@ export default function ImageUploader({
     }
 
     if (!cancelled) {
-      onUploadComplete(data.publicUrl)
+      onUploadComplete(uploadUrl)
     }
 
     setUploading(false)

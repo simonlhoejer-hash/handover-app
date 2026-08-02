@@ -27,7 +27,7 @@ Produktionssiden findes på [handoverpro.dk](https://handoverpro.dk).
 
 Forsiden og skibsvalget er offentligt tilgængelige. Skibssiderne kræver en fælles skibskode. Et godkendt login gemmes i en sikker cookie i op til seks måneder.
 
-Adgangskoden er en enkel fælles adgangskontrol og ikke et individuelt brugersystem. Supabase-reglerne skal derfor fortsat behandles som den egentlige databasebeskyttelse.
+Adgangskoden er en enkel fælles adgangskontrol og ikke et individuelt brugersystem. Al database- og billedadgang går derfor gennem beskyttede serverruter, som kontrollerer skibets signerede login-cookie. Browseren har ikke direkte adgang til Supabase-tabellerne.
 
 ## Overleveringer og datalagring
 
@@ -79,13 +79,13 @@ Opret `.env.local` lokalt. Filen må ikke lægges på GitHub.
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SECRET_KEY=
 CROWN_ACCESS_CODE=
 PEARL_ACCESS_CODE=
 ACCESS_SESSION_SECRET=
 ```
 
-`ACCESS_SESSION_SECRET` bør være en lang, tilfældig værdi. De samme servervariabler skal oprettes i Vercel.
+`SUPABASE_SECRET_KEY` findes under Supabase-projektets API Keys og må aldrig være offentlig eller begynde med `NEXT_PUBLIC_`. Den ældre `SUPABASE_SERVICE_ROLE_KEY` understøttes som reserve. `ACCESS_SESSION_SECRET` bør være en lang, tilfældig værdi. De samme servervariabler skal oprettes i Vercel.
 
 ## Supabase
 
@@ -96,6 +96,9 @@ De aktuelle SQL-definitioner ligger i [`lib/supabase`](lib/supabase):
 3. `handover-drafts.sql` – kladder, tidsstempler og låsning af publicerede overleveringer
 4. `handover-performance.sql` – indeks til hurtigere statusopslag
 5. `handover-retention.sql` – automatisk sletning efter 12 måneder
+6. `secure-server-access.sql` – fjerner offentlig database- og storageadgang efter den sikre serverudgave er deployet
+
+Kør aldrig `secure-server-access.sql`, før den nye app er udgivet med `SUPABASE_SECRET_KEY`; ellers mister den nuværende app midlertidigt forbindelsen til data.
 
 Filerne er database-dokumentation og må ikke slettes efter kørsel. Engangsmigreringer fjernes, når resultatet er kontrolleret.
 
