@@ -530,7 +530,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     ...stats.grinder.chartPoints.map((point) => point.total),
     1
   )
-  const estimatedContainers = stats.grinder.totalKg / 3000
+  const estimatedContainers = stats.grinder.totalKg / 2000
   const estimatedSavings = stats.grinder.totalKg * 1.9
   const grinderLocations: LocationSummary[] = [
     {
