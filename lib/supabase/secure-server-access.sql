@@ -83,6 +83,11 @@ begin
     execute 'revoke all on function public.set_handover_note_updated_at() from public, anon, authenticated';
   end if;
 
+  if to_regprocedure('public.set_handover_notes_updated_at()') is not null then
+    execute 'alter function public.set_handover_notes_updated_at() set search_path = public';
+    execute 'revoke all on function public.set_handover_notes_updated_at() from public, anon, authenticated';
+  end if;
+
   if to_regprocedure('public.lock_published_handover_notes()') is not null then
     execute 'alter function public.lock_published_handover_notes() set search_path = public';
     execute 'revoke all on function public.lock_published_handover_notes() from public, anon, authenticated';

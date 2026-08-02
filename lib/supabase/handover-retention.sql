@@ -8,6 +8,7 @@ create extension if not exists pg_cron with schema extensions;
 create or replace function public.lock_published_handover_notes()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   if tg_op = 'DELETE' and old.status = 'published' then
