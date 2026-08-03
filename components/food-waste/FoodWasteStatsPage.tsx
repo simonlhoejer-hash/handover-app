@@ -94,6 +94,15 @@ function formatAmount(value: number, lang: string, decimals = 1) {
   })} kg`
 }
 
+type BuffetView = 'all' | 'morning' | 'evening' | 'mess'
+
+function isBuffetLocationForView(name: string, view: BuffetView) {
+  if (view === 'morning') return name === 'Skagerak morgen' || name === 'Commodore morgen'
+  if (view === 'evening') return name === 'Skagerak aften'
+  if (view === 'mess') return name.startsWith('Messen ')
+  return !name.startsWith('Produktion ')
+}
+
 function formatPerGuestAmount(value: number, lang: string) {
   if (value < 1) {
     return `${(value * 1000).toLocaleString(localeFor(lang), {
@@ -188,6 +197,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [guestDate, setGuestDate] = useState(today)
   const [guestCount, setGuestCount] = useState('')
   const [crewCount, setCrewCount] = useState('160')
+  const [buffetView, setBuffetView] = useState<BuffetView>('all')
   const [loading, setLoading] = useState(true)
   const [savingGuests, setSavingGuests] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -378,6 +388,21 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       entries.filter((entry) => !productionNameSet.has(entry.location_name)),
       buffetNames
     )
+    const buffetViews: Record<BuffetView, WasteCategoryStats> = {
+      all: buffet,
+      morning: buildCategoryStats(
+        entries.filter((entry) => isBuffetLocationForView(entry.location_name, 'morning')),
+        buffetNames.filter((name) => isBuffetLocationForView(name, 'morning'))
+      ),
+      evening: buildCategoryStats(
+        entries.filter((entry) => isBuffetLocationForView(entry.location_name, 'evening')),
+        buffetNames.filter((name) => isBuffetLocationForView(name, 'evening'))
+      ),
+      mess: buildCategoryStats(
+        entries.filter((entry) => isBuffetLocationForView(entry.location_name, 'mess')),
+        buffetNames.filter((name) => isBuffetLocationForView(name, 'mess'))
+      ),
+    }
     const production = buildCategoryStats(
       entries.filter((entry) => productionNameSet.has(entry.location_name)),
       productionNames
@@ -394,12 +419,38 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
     return {
       buffet,
+      buffetViews,
       production,
       grinder,
       guestsTotal,
       kgPerGuest: guestsTotal > 0 ? buffet.totalKg / guestsTotal : 0,
     }
   }, [entries, fromDate, guestCounts, lang, t.week, toDate])
+
+  function getGuestsForDates(dates: string[], view: BuffetView) {
+    const selectedDates = new Set(dates)
+
+    if (view === 'mess') {
+      const registeredServices = new Set(
+        entries
+          .filter(
+            (entry) =>
+              selectedDates.has(entry.waste_date) &&
+              isBuffetLocationForView(entry.location_name, 'mess')
+          )
+          .map((entry) => `${entry.waste_date}:${entry.location_name}`)
+      )
+      return registeredServices.size * 160
+    }
+
+    return guestCounts.reduce((total, guest) => {
+      if (!selectedDates.has(guest.service_date)) return total
+      if (view === 'morning' || view === 'evening') {
+        return total + Math.max(guest.guest_count - 160, 0)
+      }
+      return total + guest.guest_count
+    }, 0)
+  }
 
   async function saveGuestCount() {
     const passengers = Number(guestCount)
@@ -540,8 +591,16 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     setExporting(false)
   }
 
+  const activeBuffetStats = stats.buffetViews[buffetView]
+  const buffetGuestTotal = getGuestsForDates(
+    Array.from(new Set(activeBuffetStats.chartPoints.flatMap((point) => point.dates))),
+    buffetView
+  )
+  const buffetKgPerGuest = buffetGuestTotal > 0
+    ? activeBuffetStats.totalKg / buffetGuestTotal
+    : 0
   const maxBuffetChartValue = Math.max(
-    ...stats.buffet.chartPoints.map((point) => point.total),
+    ...activeBuffetStats.chartPoints.map((point) => point.total),
     1
   )
   const maxProductionChartValue = Math.max(
@@ -573,7 +632,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     {
       title: t.buffetDevelopment,
       kind: 'buffet' as const,
-      points: stats.buffet.chartPoints,
+      points: activeBuffetStats.chartPoints,
       maxValue: maxBuffetChartValue,
       barClass: 'bg-amber-500',
       showGuestData: true,
@@ -590,6 +649,12 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     },
   ]
 
+  const buffetViewLabels: Record<BuffetView, string> = lang === 'en'
+    ? { all: 'Total', morning: 'Morning', evening: 'Evening', mess: 'Crew mess' }
+    : lang === 'sv'
+      ? { all: 'Totalt', morning: 'Morgon', evening: 'Kväll', mess: 'Mässen' }
+      : { all: 'Samlet', morning: 'Morgen', evening: 'Aften', mess: 'Messen' }
+
   function getPointBreakdown(point: ChartPoint, kind: 'buffet' | 'grinder') {
     const selectedDates = new Set(point.dates)
     const totals = new Map<string, { total: number; times: Set<string> }>()
@@ -597,6 +662,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     for (const entry of entries) {
       if (!selectedDates.has(entry.waste_date)) continue
       if (kind === 'buffet' && entry.location_name.startsWith('Produktion ')) {
+        continue
+      }
+      if (kind === 'buffet' && !isBuffetLocationForView(entry.location_name, buffetView)) {
         continue
       }
 
@@ -713,6 +781,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               </div>
             </div>
 
+            {chart.kind === 'buffet' && (
+              <div className="mt-4 grid grid-cols-4 gap-1 rounded-xl bg-black/5 p-1 dark:bg-black/20">
+                {(Object.keys(buffetViewLabels) as BuffetView[]).map((view) => (
+                  <button
+                    key={view}
+                    type="button"
+                    onClick={() => {
+                      setBuffetView(view)
+                      setSelectedPoint(null)
+                    }}
+                    className={`min-w-0 rounded-lg px-2 py-2 text-xs font-semibold transition sm:text-sm ${
+                      buffetView === view
+                        ? 'bg-white text-nordic shadow-sm dark:bg-white/15 dark:text-white'
+                        : 'text-gray-500 hover:text-gray-800 dark:text-white/55 dark:hover:text-white'
+                    }`}
+                  >
+                    {buffetViewLabels[view]}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {chart.showEstimate && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-xl bg-nordic-soft px-3 py-2">
@@ -745,7 +835,8 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                       {t.guestsInPeriod}
                     </p>
                     <p className="mt-1 font-semibold text-amber-700 dark:text-amber-300">
-                      {formatNumber(stats.guestsTotal, lang)} {t.guests.toLowerCase()}
+                      {buffetView === 'mess' && (lang === 'en' ? 'Est. ' : lang === 'sv' ? 'Ca ' : 'Anslået ')}
+                      {formatNumber(buffetGuestTotal, lang)} {t.guests.toLowerCase()}
                     </p>
                   </div>
                   <div className="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-400/10">
@@ -753,7 +844,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                       {t.buffetKgPerGuest}
                     </p>
                     <p className="mt-1 font-semibold text-amber-700 dark:text-amber-300">
-                      {formatPerGuestAmount(stats.kgPerGuest, lang)}
+                      {buffetGuestTotal > 0 ? formatPerGuestAmount(buffetKgPerGuest, lang) : '—'}
                     </p>
                   </div>
                 </div>
@@ -774,13 +865,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   if (!activePoint) return null
 
                   const activeDates = new Set(activePoint.dates)
-                  const guestsForPoint = guestCounts.reduce(
-                    (total, guest) =>
-                      activeDates.has(guest.service_date)
-                        ? total + guest.guest_count
-                        : total,
-                    0
-                  )
+                  const guestsForPoint = getGuestsForDates(Array.from(activeDates), buffetView)
                   const wastePerGuest =
                     guestsForPoint > 0 ? activePoint.total / guestsForPoint : 0
                   const sourceBreakdown = getPointBreakdown(activePoint, chart.kind)
@@ -803,6 +888,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                         <div className="border-x border-amber-500/15 px-1">
                           <p className="text-[10px] text-gray-500 dark:text-white/55">{t.guests}</p>
                           <p className="mt-1 text-sm font-semibold">
+                            {buffetView === 'mess' && guestsForPoint > 0
+                              ? lang === 'en' ? 'Est. ' : lang === 'sv' ? 'Ca ' : 'Anslået '
+                              : ''}
                             {guestsForPoint > 0 ? formatNumber(guestsForPoint, lang) : '—'}
                           </p>
                         </div>
@@ -930,15 +1018,8 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           const difference = activePoint && chartAverage > 0
             ? ((activePoint.total - chartAverage) / chartAverage) * 100
             : 0
-          const activeGuestDates = new Set(activePoint?.dates ?? [])
           const guestsForActivePoint = chart.showGuestData
-            ? guestCounts.reduce(
-                (total, guest) =>
-                  activeGuestDates.has(guest.service_date)
-                    ? total + guest.guest_count
-                    : total,
-                0
-              )
+            ? getGuestsForDates(activePoint?.dates ?? [], buffetView)
             : 0
           const wastePerActiveGuest =
             guestsForActivePoint > 0 && activePoint
@@ -976,6 +1057,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     <X size={21} />
                   </button>
                 </div>
+
+                {chart.kind === 'buffet' && (
+                  <div className="grid grid-cols-4 gap-1 border-b border-black/5 bg-black/[0.02] p-2 dark:border-white/10 dark:bg-black/10 sm:px-7">
+                    {(Object.keys(buffetViewLabels) as BuffetView[]).map((view) => (
+                      <button
+                        key={view}
+                        type="button"
+                        onClick={() => {
+                          setBuffetView(view)
+                          setSelectedPoint(null)
+                        }}
+                        className={`rounded-xl px-2 py-2 text-xs font-semibold transition sm:text-sm ${
+                          buffetView === view
+                            ? 'bg-white text-nordic shadow-sm dark:bg-white/15 dark:text-white'
+                            : 'text-gray-500 dark:text-white/55'
+                        }`}
+                      >
+                        {buffetViewLabels[view]}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,.9fr)]">
                   <div className="border-b border-black/5 p-5 dark:border-white/10 lg:border-b-0 lg:border-r sm:p-7">
@@ -1049,6 +1152,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                             <div className="border-x border-amber-500/15 px-1">
                               <p className="text-[10px] text-gray-500 dark:text-white/55">{t.guests}</p>
                               <p className="mt-1 font-semibold">
+                                {buffetView === 'mess' && guestsForActivePoint > 0
+                                  ? lang === 'en' ? 'Est. ' : lang === 'sv' ? 'Ca ' : 'Anslået '
+                                  : ''}
                                 {guestsForActivePoint > 0 ? formatNumber(guestsForActivePoint, lang) : '—'}
                               </p>
                             </div>
