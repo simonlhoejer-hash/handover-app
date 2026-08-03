@@ -733,7 +733,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             )}
 
             {chart.showGuestData && (
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-400/10">
                     <p className="text-[11px] text-gray-500 dark:text-white/60">
@@ -752,6 +752,13 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     </p>
                   </div>
                 </div>
+
+                <p
+                  aria-hidden="true"
+                  className="invisible text-[11px]"
+                >
+                  {t.estimateBasis}
+                </p>
 
                 {expandedChart === chart.title && (() => {
                   const activePoint =
@@ -950,7 +957,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               >
                 <div className="flex items-center justify-between border-b border-black/5 px-5 py-4 dark:border-white/10 sm:px-7">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-nordic/70">
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-nordic/70 dark:text-teal-100/70">
                       {lang === 'sv' ? 'Detaljerad graf' : lang === 'en' ? 'Detailed chart' : 'Detaljeret graf'}
                     </p>
                     <h2 className="mt-1 text-xl font-semibold sm:text-2xl">{chart.title}</h2>
@@ -1005,14 +1012,20 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                       <>
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-nordic/70">
+                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-nordic/70 dark:text-teal-100/70">
                               {lang === 'sv' ? 'Fördelning' : lang === 'en' ? 'Breakdown' : 'Fordeling'}
                             </p>
-                            <h3 className="mt-1 text-xl font-semibold text-nordic">
+                            <h3 className="mt-1 text-xl font-semibold text-nordic dark:text-white">
                               {activePoint.label}
                             </h3>
                           </div>
-                          <span className="rounded-full bg-nordic-soft px-3 py-1.5 text-sm font-semibold text-nordic">
+                          <span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${
+                            difference > 0
+                              ? 'bg-red-100 text-red-700 dark:bg-red-400/15 dark:text-red-200'
+                              : difference < 0
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white/75'
+                          }`}>
                             {Math.abs(difference).toLocaleString(
                               localeFor(lang),
                               { maximumFractionDigits: 0 }
@@ -1060,7 +1073,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                                     </p>
                                   </div>
                                   <div className="shrink-0 text-right">
-                                    <p className="text-lg font-semibold text-nordic">
+                                    <p className="text-lg font-semibold text-nordic dark:text-teal-100">
                                       {formatAmount(location.total, lang)}
                                     </p>
                                     <p className="text-sm font-medium text-gray-500 dark:text-white/55">
@@ -1081,7 +1094,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                         </div>
 
                         {largest && (
-                          <p className="mt-7 rounded-2xl bg-nordic-soft p-4 text-sm leading-relaxed text-gray-700 dark:text-white/70">
+                          <p className="mt-7 rounded-2xl bg-[#e7f1ef] p-4 text-sm leading-relaxed text-gray-700 dark:bg-white/10 dark:text-white/80">
                             {lang === 'sv' ? 'Största bidraget kom från' : lang === 'en' ? 'The largest contribution came from' : 'Det største bidrag kom fra'}{' '}
                             <strong>{largest.name}</strong>. {breakdown.length}{' '}
                             {lang === 'sv' ? 'stationer hade registreringar.' : lang === 'en' ? 'stations had entries.' : 'stationer havde registreringer.'}
