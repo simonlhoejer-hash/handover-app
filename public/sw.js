@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v11'
+const CACHE_NAME = 'handover-offline-v12'
 
 const APP_SHELL = [
   '/',
@@ -57,6 +57,13 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
 
   if (url.hostname.includes('supabase.co')) return
+
+  // API responses contain live operational data and must never come from an
+  // older page cache. Offline-capable features keep their own explicit queue.
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request))
+    return
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith(

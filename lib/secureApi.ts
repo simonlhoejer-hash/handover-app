@@ -6,8 +6,10 @@ export async function secureFetch<T>(
   input: string,
   init?: RequestInit
 ): Promise<T> {
+  const method = init?.method?.toUpperCase() ?? 'GET'
   const response = await fetch(input, {
     ...init,
+    cache: init?.cache ?? (method === 'GET' ? 'no-store' : undefined),
     credentials: 'same-origin',
     headers:
       init?.body instanceof FormData

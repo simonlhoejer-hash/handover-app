@@ -36,6 +36,9 @@ export default function HandoverPage({
   const [items, setItems] = useState<any[]>([])
   const [images, setImages] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [notesLoading, setNotesLoading] = useState(true)
+  const [notesError, setNotesError] = useState('')
+  const [publishMessage, setPublishMessage] = useState('')
   const [open, setOpen] = useState(false)
   const [draftId, setDraftId] = useState<string | null>(null)
   const [draftStatus, setDraftStatus] = useState<
@@ -48,18 +51,24 @@ export default function HandoverPage({
   const ship: AccessShip = department === 'pearl' ? 'pearl' : 'crown'
 
   useEffect(() => {
-    loadNotes()
-    loadDraft()
+    setItems([])
+    setPublishMessage('')
+    void loadNotes()
+    void loadDraft()
   }, [itemName, department])
 
   async function loadNotes() {
+    setNotesLoading(true)
+    setNotesError('')
     try {
       const { data } = await secureFetch<{ data: any[] }>(
         `/api/handovers?${queryString({ ship, parti: itemName, status: 'published' })}`
       )
       setItems(data || [])
     } catch {
-      setItems([])
+      setNotesError(t.handoverLoadFailed)
+    } finally {
+      setNotesLoading(false)
     }
   }
 
@@ -152,6 +161,7 @@ export default function HandoverPage({
 
   async function publishNote() {
     setLoading(true)
+    setPublishMessage('')
     const publishedAt = new Date().toISOString()
 
     const payload = {
@@ -195,6 +205,7 @@ export default function HandoverPage({
     setDraftStatus('idle')
     setDraftSavedAt(null)
     setDraftError('')
+    setPublishMessage(t.handoverPublished)
     await loadNotes()
     setOpen(false)
   }
@@ -343,6 +354,37 @@ parti={itemName}/>
         </div>
 
         <div className="space-y-4">
+          {publishMessage && (
+            <p role="status" className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700 dark:text-emerald-200">
+              {publishMessage}
+            </p>
+          )}
+
+          {notesError && (
+            <div role="alert" className="flex flex-col gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+              <span>{notesError}</span>
+              <button
+                type="button"
+                onClick={() => void loadNotes()}
+                className="shrink-0 rounded-xl bg-amber-500 px-3 py-2 font-semibold text-white transition active:scale-[0.98]"
+              >
+                {t.retry}
+              </button>
+            </div>
+          )}
+
+          {notesLoading && items.length === 0 && (
+            <p className="rounded-2xl bg-black/5 px-4 py-3 text-sm text-gray-500 dark:bg-white/5 dark:text-white/60">
+              {t.loading}
+            </p>
+          )}
+
+          {!notesLoading && !notesError && items.length === 0 && (
+            <p className="rounded-2xl bg-black/5 px-4 py-3 text-sm text-gray-500 dark:bg-white/5 dark:text-white/60">
+              {t.noHandover}
+            </p>
+          )}
+
           {items.map((item) => (
             <HandoverHistoryItem
               key={item.id}
