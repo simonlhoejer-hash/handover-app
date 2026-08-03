@@ -143,12 +143,24 @@ function getGuestBreakdown(guest: GuestCount | undefined): GuestBreakdown | null
 }
 
 type BuffetView = 'all' | 'morning' | 'evening' | 'mess'
+type GrinderView = 'all' | 'buffet' | 'production' | 'deck'
 
 function isBuffetLocationForView(name: string, view: BuffetView) {
   if (view === 'morning') return name === 'Skagerak morgen' || name === 'Commodore morgen'
   if (view === 'evening') return name === 'Skagerak aften'
   if (view === 'mess') return name.startsWith('Messen ')
   return !name.startsWith('Produktion ')
+}
+
+function isGrinderLocationForView(name: string, view: GrinderView) {
+  if (view === 'buffet') return !name.startsWith('Produktion ')
+  if (view === 'production') {
+    return name === 'Produktion Varm Galley' || name === 'Produktion Main Galley' || name === 'Produktion Skagerak Galley'
+  }
+  if (view === 'deck') {
+    return name === 'Produktion Bageri' || name === 'Produktion Slagteri' || name === 'Produktion Proviant'
+  }
+  return true
 }
 
 function formatPerGuestAmount(value: number, lang: string) {
@@ -217,6 +229,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [skagerakEveningGuests, setSkagerakEveningGuests] = useState('')
   const [messGuests, setMessGuests] = useState('160')
   const [buffetView, setBuffetView] = useState<BuffetView>('all')
+  const [grinderView, setGrinderView] = useState<GrinderView>('all')
   const [loading, setLoading] = useState(true)
   const [savingGuests, setSavingGuests] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -439,6 +452,22 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       entries,
       FOOD_WASTE_LOCATIONS.map((location) => location.name)
     )
+    const allLocationNames = FOOD_WASTE_LOCATIONS.map((location) => location.name)
+    const grinderViews: Record<GrinderView, WasteCategoryStats> = {
+      all: grinder,
+      buffet: buildCategoryStats(
+        entries.filter((entry) => isGrinderLocationForView(entry.location_name, 'buffet')),
+        allLocationNames.filter((name) => isGrinderLocationForView(name, 'buffet'))
+      ),
+      production: buildCategoryStats(
+        entries.filter((entry) => isGrinderLocationForView(entry.location_name, 'production')),
+        allLocationNames.filter((name) => isGrinderLocationForView(name, 'production'))
+      ),
+      deck: buildCategoryStats(
+        entries.filter((entry) => isGrinderLocationForView(entry.location_name, 'deck')),
+        allLocationNames.filter((name) => isGrinderLocationForView(name, 'deck'))
+      ),
+    }
 
     const guestsTotal = guestCounts.reduce(
       (total, count) => total + count.guest_count,
@@ -450,6 +479,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       buffetViews,
       production,
       grinder,
+      grinderViews,
       guestsTotal,
       kgPerGuest: guestsTotal > 0 ? buffet.totalKg / guestsTotal : 0,
     }
@@ -658,8 +688,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     ...activeBuffetStats.chartPoints.map((point) => point.total),
     1
   )
+  const activeGrinderStats = stats.grinderViews[grinderView]
   const maxProductionChartValue = Math.max(
-    ...stats.grinder.chartPoints.map((point) => point.total),
+    ...activeGrinderStats.chartPoints.map((point) => point.total),
     1
   )
   const guestDates = new Set(guestCounts.map((guest) => guest.service_date))
@@ -672,8 +703,8 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   )
     .filter((date) => !guestDates.has(date))
     .sort((dateA, dateB) => dateA.localeCompare(dateB))
-  const estimatedContainers = stats.grinder.totalKg / 2000
-  const estimatedSavings = stats.grinder.totalKg * 1.9
+  const estimatedContainers = activeGrinderStats.totalKg / 2000
+  const estimatedSavings = activeGrinderStats.totalKg * 1.9
   const chartConfigs = [
     {
       title: t.buffetDevelopment,
@@ -687,7 +718,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     {
       title: t.productionDevelopment,
       kind: 'grinder' as const,
-      points: stats.grinder.chartPoints,
+      points: activeGrinderStats.chartPoints,
       maxValue: maxProductionChartValue,
       barClass: 'bg-nordic',
       showGuestData: false,
@@ -700,6 +731,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     : lang === 'sv'
       ? { all: 'Totalt', morning: 'Morgon', evening: 'Kväll', mess: 'Mässen' }
       : { all: 'Samlet', morning: 'Morgen', evening: 'Aften', mess: 'Messen' }
+  const grinderViewLabels: Record<GrinderView, string> = lang === 'en'
+    ? { all: 'Total', buffet: 'Buffet', production: 'Production', deck: 'Deck 1' }
+    : lang === 'sv'
+      ? { all: 'Totalt', buffet: 'Buffé', production: 'Produktion', deck: 'Däck 1' }
+      : { all: 'Samlet', buffet: 'Buffet', production: 'Produktion', deck: 'Dæk 1' }
   const guestFieldText = lang === 'en'
     ? { morning: 'Morning', evening: 'Evening', messPerMeal: 'Crew mess per meal', estimated: 'Estimated', morningTotal: 'Morning total', eveningTotal: 'Evening total' }
     : lang === 'sv'
@@ -716,6 +752,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         continue
       }
       if (kind === 'buffet' && !isBuffetLocationForView(entry.location_name, buffetView)) {
+        continue
+      }
+      if (kind === 'grinder' && !isGrinderLocationForView(entry.location_name, grinderView)) {
         continue
       }
 
@@ -849,6 +888,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     }`}
                   >
                     {buffetViewLabels[view]}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {chart.kind === 'grinder' && (
+              <div className="mt-4 grid grid-cols-4 gap-1 rounded-xl bg-black/5 p-1 dark:bg-black/20">
+                {(Object.keys(grinderViewLabels) as GrinderView[]).map((view) => (
+                  <button
+                    key={view}
+                    type="button"
+                    onClick={() => {
+                      setGrinderView(view)
+                      setSelectedPoint(null)
+                    }}
+                    className={`min-w-0 rounded-lg px-2 py-2 text-xs font-semibold transition sm:text-sm ${
+                      grinderView === view
+                        ? 'bg-white text-nordic shadow-sm dark:bg-white/15 dark:text-white'
+                        : 'text-gray-500 hover:text-gray-800 dark:text-white/55 dark:hover:text-white'
+                    }`}
+                  >
+                    {grinderViewLabels[view]}
                   </button>
                 ))}
               </div>
@@ -1126,6 +1187,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                         }`}
                       >
                         {buffetViewLabels[view]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {chart.kind === 'grinder' && (
+                  <div className="grid grid-cols-4 gap-1 border-b border-black/5 bg-black/[0.02] p-2 dark:border-white/10 dark:bg-black/10 sm:px-7">
+                    {(Object.keys(grinderViewLabels) as GrinderView[]).map((view) => (
+                      <button
+                        key={view}
+                        type="button"
+                        onClick={() => {
+                          setGrinderView(view)
+                          setSelectedPoint(null)
+                        }}
+                        className={`rounded-xl px-2 py-2 text-xs font-semibold transition sm:text-sm ${
+                          grinderView === view
+                            ? 'bg-white text-nordic shadow-sm dark:bg-white/15 dark:text-white'
+                            : 'text-gray-500 dark:text-white/55'
+                        }`}
+                      >
+                        {grinderViewLabels[view]}
                       </button>
                     ))}
                   </div>
