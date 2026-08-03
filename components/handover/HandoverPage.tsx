@@ -222,7 +222,9 @@ export default function HandoverPage({
       <header className="relative flex items-center justify-center">
 
 <button
-  onClick={() => router.back()}
+  type="button"
+  onClick={() => router.push(`/${ship}`)}
+  aria-label={t.back}
   className="
     absolute left-0
     flex items-center justify-center
