@@ -93,6 +93,16 @@ function formatAmount(value: number, lang: string, decimals = 1) {
   })} kg`
 }
 
+function formatPerGuestAmount(value: number, lang: string) {
+  if (value < 1) {
+    return `${(value * 1000).toLocaleString(localeFor(lang), {
+      maximumFractionDigits: 0,
+    })} g`
+  }
+
+  return formatAmount(value, lang, 2)
+}
+
 function formatNumber(value: number, lang: string) {
   return value.toLocaleString(localeFor(lang))
 }
@@ -535,9 +545,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   )
   const estimatedContainers = stats.grinder.totalKg / 2000
   const estimatedSavings = stats.grinder.totalKg * 1.9
-  const sortedGuestCounts = [...guestCounts].sort((a, b) =>
-    a.service_date.localeCompare(b.service_date)
-  )
   const grinderLocations: LocationSummary[] = [
     {
       name: t.buffetIncludedInGrinder,
@@ -731,32 +738,66 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                       {t.buffetKgPerGuest}
                     </p>
                     <p className="mt-1 font-semibold text-amber-700 dark:text-amber-300">
-                      {formatAmount(stats.kgPerGuest, lang, 2)}
+                      {formatPerGuestAmount(stats.kgPerGuest, lang)}
                     </p>
                   </div>
                 </div>
 
-                <div>
-                  <p className="text-[11px] font-medium text-gray-500 dark:text-white/60">
-                    {t.guestCountsByDate}
-                  </p>
-                  {sortedGuestCounts.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {sortedGuestCounts.map((guest) => (
-                        <span
-                          key={guest.id}
-                          className="rounded-full border border-amber-500/15 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-400/10 dark:text-amber-200"
-                        >
-                          {formatDate(guest.service_date, lang)} · {formatNumber(guest.guest_count, lang)}
+                {(() => {
+                  const activePoint =
+                    selectedPoint?.chart === chart.title
+                      ? selectedPoint.point
+                      : chart.points[chart.points.length - 1]
+
+                  if (!activePoint) return null
+
+                  const activeDates = new Set(activePoint.dates)
+                  const guestsForPoint = guestCounts.reduce(
+                    (total, guest) =>
+                      activeDates.has(guest.service_date)
+                        ? total + guest.guest_count
+                        : total,
+                    0
+                  )
+                  const wastePerGuest =
+                    guestsForPoint > 0 ? activePoint.total / guestsForPoint : 0
+
+                  return (
+                    <div className="rounded-xl border border-amber-500/15 bg-amber-50 p-3 dark:bg-amber-400/10">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-semibold text-amber-900 dark:text-amber-100">
+                          {activePoint.label}
+                        </p>
+                        <span className="text-xs text-amber-700/70 dark:text-amber-200/70">
+                          {lang === 'sv' ? 'Tryck på en stapel' : lang === 'en' ? 'Tap a bar' : 'Tryk på en søjle'}
                         </span>
-                      ))}
+                      </div>
+                      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <p className="text-[10px] text-gray-500 dark:text-white/55">{t.buffetWaste}</p>
+                          <p className="mt-1 text-sm font-semibold">{formatAmount(activePoint.total, lang)}</p>
+                        </div>
+                        <div className="border-x border-amber-500/15 px-1">
+                          <p className="text-[10px] text-gray-500 dark:text-white/55">{t.guests}</p>
+                          <p className="mt-1 text-sm font-semibold">
+                            {guestsForPoint > 0 ? formatNumber(guestsForPoint, lang) : '—'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-500 dark:text-white/55">{t.buffetKgPerGuest}</p>
+                          <p className="mt-1 text-sm font-semibold">
+                            {guestsForPoint > 0 ? formatPerGuestAmount(wastePerGuest, lang) : '—'}
+                          </p>
+                        </div>
+                      </div>
+                      {guestsForPoint === 0 && (
+                        <p className="mt-2 text-center text-xs text-amber-800/70 dark:text-amber-200/70">
+                          {t.noGuestCountsInPeriod}
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <p className="mt-1 text-xs text-gray-400 dark:text-white/40">
-                      {t.noGuestCountsInPeriod}
-                    </p>
-                  )}
-                </div>
+                  )
+                })()}
               </div>
             )}
 
@@ -773,7 +814,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   key={point.label}
                   onClick={() => {
                     setSelectedPoint({ chart: chart.title, point })
-                    setExpandedChart(chart.title)
+                    if (!chart.showGuestData) setExpandedChart(chart.title)
                   }}
                   aria-label={`${point.label}: ${formatAmount(point.total, lang)}`}
                   className={`group flex h-full min-w-12 flex-col items-center justify-end gap-2 rounded-xl px-1 transition hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-nordic/30 dark:hover:bg-white/5 ${
