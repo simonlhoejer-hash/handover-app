@@ -6,6 +6,7 @@
 
 html {
   min-height: 100%;
+  scrollbar-gutter: stable;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
