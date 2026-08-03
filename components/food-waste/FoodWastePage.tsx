@@ -209,8 +209,8 @@ export default function FoodWastePage({
                     href={`${basePath}/food-waste/${location.slug}`}
                     className="
                       rounded-xl
-                      p-5
-                      h-[110px]
+                      p-4
+                      h-[112px]
                       min-w-[85%]
                       snap-start
                       flex items-center justify-center
@@ -228,12 +228,12 @@ export default function FoodWastePage({
                       dark:text-white
                       dark:shadow-[0_8px_24px_rgba(0,0,0,0.12)]
                       sm:min-w-0
-                      lg:h-[104px]
+                      lg:h-[112px]
                       lg:p-4
                     "
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <h3 className="text-lg font-semibold tracking-tight lg:text-[17px] lg:leading-tight">
+                    <div className="flex h-full flex-col items-center justify-center gap-2">
+                      <h3 className="flex min-h-10 items-center justify-center text-lg font-semibold leading-tight tracking-tight lg:text-[17px]">
                         {group.title === 'Produktion' ? (
                           <>
                             <span className="block">Produktion</span>
