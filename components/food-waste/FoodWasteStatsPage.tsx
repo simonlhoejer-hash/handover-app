@@ -753,7 +753,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   </div>
                 </div>
 
-                {(() => {
+                {expandedChart === chart.title && (() => {
                   const activePoint =
                     selectedPoint?.chart === chart.title
                       ? selectedPoint.point
@@ -858,7 +858,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   key={point.label}
                   onClick={() => {
                     setSelectedPoint({ chart: chart.title, point })
-                    if (!chart.showGuestData) setExpandedChart(chart.title)
+                    setExpandedChart(chart.title)
                   }}
                   aria-label={`${point.label}: ${formatAmount(point.total, lang)}`}
                   className={`group flex h-full min-w-12 flex-col items-center justify-end gap-2 rounded-xl px-1 transition hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-nordic/30 dark:hover:bg-white/5 ${
@@ -918,6 +918,20 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           const difference = activePoint && chartAverage > 0
             ? ((activePoint.total - chartAverage) / chartAverage) * 100
             : 0
+          const activeGuestDates = new Set(activePoint?.dates ?? [])
+          const guestsForActivePoint = chart.showGuestData
+            ? guestCounts.reduce(
+                (total, guest) =>
+                  activeGuestDates.has(guest.service_date)
+                    ? total + guest.guest_count
+                    : total,
+                0
+              )
+            : 0
+          const wastePerActiveGuest =
+            guestsForActivePoint > 0 && activePoint
+              ? activePoint.total / guestsForActivePoint
+              : 0
 
           return (
             <motion.div
@@ -1007,6 +1021,27 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                               : lang === 'sv' ? 'under snittet' : lang === 'en' ? 'below average' : 'under gennemsnittet'}
                           </span>
                         </div>
+
+                        {chart.showGuestData && (
+                          <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-amber-500/15 bg-amber-50 p-3 text-center dark:bg-amber-400/10">
+                            <div>
+                              <p className="text-[10px] text-gray-500 dark:text-white/55">{t.buffetWaste}</p>
+                              <p className="mt-1 font-semibold">{formatAmount(activePoint.total, lang)}</p>
+                            </div>
+                            <div className="border-x border-amber-500/15 px-1">
+                              <p className="text-[10px] text-gray-500 dark:text-white/55">{t.guests}</p>
+                              <p className="mt-1 font-semibold">
+                                {guestsForActivePoint > 0 ? formatNumber(guestsForActivePoint, lang) : '—'}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-gray-500 dark:text-white/55">{t.buffetKgPerGuest}</p>
+                              <p className="mt-1 font-semibold">
+                                {guestsForActivePoint > 0 ? formatPerGuestAmount(wastePerActiveGuest, lang) : '—'}
+                              </p>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="mt-6 space-y-5">
                           {breakdown.map((location) => {
