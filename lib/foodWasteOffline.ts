@@ -114,7 +114,26 @@ export function readCachedFoodWasteGuestCounts(vessel: 'crown' | 'pearl' = 'crow
 export function cacheFoodWasteGuestCounts(counts: CachedFoodWasteGuestCount[], vessel: 'crown' | 'pearl' = 'crown') {
   const byDate = new Map<string, CachedFoodWasteGuestCount>()
 
-  for (const count of [...counts, ...readCachedFoodWasteGuestCounts(vessel)]) {
+  // Keep existing dates, but always let the newest server/local save win.
+  for (const count of [...readCachedFoodWasteGuestCounts(vessel), ...counts]) {
+    byDate.set(count.service_date, count)
+  }
+
+  writeStorageArray(
+    vesselKey(FOOD_WASTE_GUEST_CACHE_KEY, vessel),
+    Array.from(byDate.values())
+      .sort((a, b) => b.service_date.localeCompare(a.service_date))
+      .slice(0, 500)
+  )
+}
+
+export function replaceCachedFoodWasteGuestCounts(
+  counts: CachedFoodWasteGuestCount[],
+  vessel: 'crown' | 'pearl' = 'crown'
+) {
+  const byDate = new Map<string, CachedFoodWasteGuestCount>()
+
+  for (const count of counts) {
     byDate.set(count.service_date, count)
   }
 

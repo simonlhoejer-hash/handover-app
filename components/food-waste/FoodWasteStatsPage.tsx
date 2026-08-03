@@ -9,6 +9,7 @@ import {
   cacheFoodWasteGuestCounts,
   readCachedFoodWasteEntries,
   readCachedFoodWasteGuestCounts,
+  replaceCachedFoodWasteGuestCounts,
   readPendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
@@ -279,8 +280,12 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         setGuestTableError(true)
       } else {
         setGuestTableError(false)
-        const nextGuests = guests
-        cacheFoodWasteGuestCounts(nextGuests, vessel)
+        const nextGuests = Array.from(
+          new Map(guests.map((guest) => [guest.service_date, guest])).values()
+        )
+        // A full server response is authoritative. Replacing the cache here
+        // also removes dates that were deleted directly in Supabase.
+        replaceCachedFoodWasteGuestCounts(nextGuests, vessel)
         setGuestCounts(nextGuests)
       }
 
