@@ -233,7 +233,7 @@ export default function FoodWastePage({
                     "
                   >
                     <div className="flex h-full flex-col items-center justify-center gap-2">
-                      <h3 className="flex min-h-10 items-center justify-center text-lg font-semibold leading-tight tracking-tight lg:text-[17px]">
+                      <h3 className="flex min-h-10 flex-col items-center justify-center text-lg font-semibold leading-tight tracking-tight lg:text-[17px]">
                         {group.title === 'Produktion' ? (
                           <>
                             <span className="block">Produktion</span>
