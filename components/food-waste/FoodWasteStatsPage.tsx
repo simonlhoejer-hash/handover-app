@@ -176,6 +176,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [guestCounts, setGuestCounts] = useState<GuestCount[]>([])
   const [guestDate, setGuestDate] = useState(today)
   const [guestCount, setGuestCount] = useState('')
+  const [crewCount, setCrewCount] = useState('160')
   const [loading, setLoading] = useState(true)
   const [savingGuests, setSavingGuests] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -386,9 +387,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   }, [entries, fromDate, guestCounts, lang, t.week, toDate])
 
   async function saveGuestCount() {
-    const guests = Number(guestCount)
+    const passengers = Number(guestCount)
+    const crew = Number(crewCount)
+    const guests = passengers + crew
 
-    if (!guests || guests <= 0) {
+    if (!Number.isFinite(passengers) || passengers < 0 || !Number.isFinite(crew) || crew < 0 || guests <= 0) {
       setGuestMessage(t.guestCountRequired)
       return
     }
@@ -532,6 +535,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   )
   const estimatedContainers = stats.grinder.totalKg / 2000
   const estimatedSavings = stats.grinder.totalKg * 1.9
+  const sortedGuestCounts = [...guestCounts].sort((a, b) =>
+    a.service_date.localeCompare(b.service_date)
+  )
   const grinderLocations: LocationSummary[] = [
     {
       name: t.buffetIncludedInGrinder,
@@ -548,6 +554,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       points: stats.buffet.chartPoints,
       maxValue: maxBuffetChartValue,
       barClass: 'bg-amber-500',
+      showGuestData: true,
       showEstimate: false,
     },
     {
@@ -556,6 +563,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       points: stats.grinder.chartPoints,
       maxValue: maxProductionChartValue,
       barClass: 'bg-nordic',
+      showGuestData: false,
       showEstimate: true,
     },
   ]
@@ -638,20 +646,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </label>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.buffetWaste}</p>
           <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.buffet.totalKg, lang)}</div>
-        </div>
-
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">{t.guests}</p>
-          <div className="mt-2 text-2xl font-semibold">{formatNumber(stats.guestsTotal, lang)}</div>
-        </div>
-
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">{t.buffetKgPerGuest}</p>
-          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.kgPerGuest, lang, 2)}</div>
         </div>
 
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
@@ -714,6 +712,51 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                 <p className="col-span-2 text-[11px] text-gray-400 dark:text-white/40">
                   {t.estimateBasis}
                 </p>
+              </div>
+            )}
+
+            {chart.showGuestData && (
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-400/10">
+                    <p className="text-[11px] text-gray-500 dark:text-white/60">
+                      {t.guestsInPeriod}
+                    </p>
+                    <p className="mt-1 font-semibold text-amber-700 dark:text-amber-300">
+                      {formatNumber(stats.guestsTotal, lang)} {t.guests.toLowerCase()}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-400/10">
+                    <p className="text-[11px] text-gray-500 dark:text-white/60">
+                      {t.buffetKgPerGuest}
+                    </p>
+                    <p className="mt-1 font-semibold text-amber-700 dark:text-amber-300">
+                      {formatAmount(stats.kgPerGuest, lang, 2)}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-medium text-gray-500 dark:text-white/60">
+                    {t.guestCountsByDate}
+                  </p>
+                  {sortedGuestCounts.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {sortedGuestCounts.map((guest) => (
+                        <span
+                          key={guest.id}
+                          className="rounded-full border border-amber-500/15 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-400/10 dark:text-amber-200"
+                        >
+                          {formatDate(guest.service_date, lang)} · {formatNumber(guest.guest_count, lang)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-gray-400 dark:text-white/40">
+                      {t.noGuestCountsInPeriod}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1045,8 +1088,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   value={guestCount}
                   onChange={(event) => setGuestCount(event.target.value)}
                   className="h-14 w-full rounded-xl border border-black/5 bg-gray-100 px-4 text-2xl font-semibold dark:border-white/10 dark:bg-[#082f2e]"
-                  placeholder={t.guestCountPlaceholder}
+                  placeholder={t.passengerCountPlaceholder}
                 />
+                <label className="grid grid-cols-[1fr_5.5rem] items-center gap-3 rounded-xl border border-black/5 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-[#082f2e]">
+                  <span className="text-sm font-medium text-gray-600 dark:text-white/70">
+                    {t.crewCount}
+                  </span>
+                  <input
+                    inputMode="numeric"
+                    value={crewCount}
+                    onChange={(event) => setCrewCount(event.target.value)}
+                    className="h-10 w-full rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
+                    aria-label={t.crewCount}
+                  />
+                </label>
+                <div className="flex items-center justify-between rounded-xl bg-nordic-soft px-4 py-3 text-sm">
+                  <span className="font-medium text-gray-600 dark:text-white/70">
+                    {t.totalGuestsToday}
+                  </span>
+                  <strong className="text-lg text-nordic">
+                    {formatNumber((Number(guestCount) || 0) + (Number(crewCount) || 0), lang)}
+                  </strong>
+                </div>
                 <button
                   onClick={saveGuestCount}
                   disabled={savingGuests}
