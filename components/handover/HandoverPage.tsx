@@ -8,6 +8,11 @@ import { useEffect, useRef, useState } from 'react'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { ChevronDown } from 'lucide-react'
 import { ChevronLeft } from 'lucide-react'
+import {
+  readLocalHandoverDraft,
+  removeLocalHandoverDraft,
+  writeLocalHandoverDraft,
+} from '@/lib/handoverOffline'
 
 function getPlainText(value: string) {
   return value.replace(/<[^>]*>/g, '').trim()
@@ -39,6 +44,7 @@ export default function HandoverPage({
   const [notesLoading, setNotesLoading] = useState(true)
   const [notesError, setNotesError] = useState('')
   const [publishMessage, setPublishMessage] = useState('')
+  const [isOnline, setIsOnline] = useState(true)
   const [open, setOpen] = useState(false)
   const [draftId, setDraftId] = useState<string | null>(null)
   const [draftStatus, setDraftStatus] = useState<
@@ -49,6 +55,17 @@ export default function HandoverPage({
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
   const draftHydratedRef = useRef(false)
   const ship: AccessShip = department === 'pearl' ? 'pearl' : 'crown'
+
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(navigator.onLine)
+    updateConnection()
+    window.addEventListener('online', updateConnection)
+    window.addEventListener('offline', updateConnection)
+    return () => {
+      window.removeEventListener('online', updateConnection)
+      window.removeEventListener('offline', updateConnection)
+    }
+  }, [])
 
   useEffect(() => {
     setItems([])
@@ -79,6 +96,18 @@ export default function HandoverPage({
     setDraftSavedAt(null)
     setDraftError('')
 
+    const localDraft = readLocalHandoverDraft(ship, itemName)
+    if (localDraft) {
+      setName(localDraft.author_name)
+      setReceiver(localDraft.receiver_name)
+      setDate(localDraft.shift_date)
+      setNote(localDraft.note)
+      setImages(localDraft.images)
+      setDraftSavedAt(localDraft.saved_at)
+      setDraftStatus('saved')
+      setOpen(true)
+    }
+
     let data: any | null = null
     try {
       const result = await secureFetch<{ data: any[] }>(
@@ -87,22 +116,28 @@ export default function HandoverPage({
       data = result.data[0] ?? null
     } catch {
       draftHydratedRef.current = true
-      setDraftStatus('error')
-      setDraftError(t.publishRequiresDraft)
+      if (!localDraft) {
+        setDraftStatus('idle')
+      }
       return
     }
 
-    if (data) {
+    const serverSavedAt = data?.draft_saved_at ?? data?.updated_at ?? data?.created_at ?? null
+    const useServerDraft = data && (
+      !localDraft || !serverSavedAt || serverSavedAt >= localDraft.saved_at
+    )
+
+    if (useServerDraft) {
       setDraftId(data.id)
       setName(data.author_name ?? '')
       setReceiver(data.receiver_name ?? '')
       setDate(data.shift_date ?? new Date().toISOString().split('T')[0])
       setNote(data.note ?? '')
       setImages(data.images ?? [])
-      setDraftSavedAt(data.draft_saved_at ?? data.updated_at ?? data.created_at ?? null)
+      setDraftSavedAt(serverSavedAt)
       setDraftStatus('saved')
       setOpen(true)
-    } else {
+    } else if (!localDraft) {
       setName('')
       setReceiver('')
       setDate(new Date().toISOString().split('T')[0])
@@ -136,6 +171,21 @@ export default function HandoverPage({
       draft_saved_at: now,
     }
 
+    writeLocalHandoverDraft({
+      ship,
+      parti: itemName,
+      author_name: name,
+      receiver_name: receiver,
+      shift_date: date,
+      note,
+      images,
+      saved_at: now,
+    })
+    setDraftStatus('saved')
+    setDraftSavedAt(now)
+
+    if (!navigator.onLine) return
+
     try {
       const { data } = await secureFetch<{ data: any }>('/api/handovers', {
         method: 'POST',
@@ -145,8 +195,8 @@ export default function HandoverPage({
       setDraftStatus('saved')
       setDraftSavedAt(now)
     } catch (error) {
-      setDraftStatus('error')
-      setDraftError(error instanceof Error ? error.message : t.draftSaveFailed)
+      setDraftStatus('saved')
+      setDraftError('')
     }
   }
 
@@ -156,6 +206,7 @@ export default function HandoverPage({
       return
     }
 
+    if (!isOnline) return
     setShowPublishConfirm(true)
   }
 
@@ -205,6 +256,7 @@ export default function HandoverPage({
     setDraftStatus('idle')
     setDraftSavedAt(null)
     setDraftError('')
+    removeLocalHandoverDraft(ship, itemName)
     setPublishMessage(t.handoverPublished)
     await loadNotes()
     setOpen(false)
@@ -225,6 +277,10 @@ export default function HandoverPage({
 
     return () => window.clearTimeout(timer)
   }, [name, receiver, date, note, images, department, itemName, draftId])
+
+  useEffect(() => {
+    if (isOnline && draftHydratedRef.current) void saveDraft()
+  }, [isOnline])
 
   return (
     <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-8">
@@ -335,6 +391,7 @@ className="
   draftStatus={draftStatus}
   draftSavedAt={draftSavedAt}
   draftError={draftError}
+  isOnline={isOnline}
 parti={itemName}/>
           </div>
         </div>

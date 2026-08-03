@@ -21,6 +21,7 @@ type Props = {
   draftStatus?: 'idle' | 'saving' | 'saved' | 'error'
   draftSavedAt?: string | null
   draftError?: string
+  isOnline?: boolean
 }
 
 const cardClass = `
@@ -77,6 +78,7 @@ export default function HandoverForm({
   draftStatus = 'idle',
   draftSavedAt,
   draftError,
+  isOnline = true,
 }: Props) {
   const { t, lang } = useTranslation()
 
@@ -100,7 +102,9 @@ export default function HandoverForm({
         )}`
       : ''
   const floatingDraftDetail =
-    draftStatus === 'error'
+    !isOnline
+      ? t.offlineDraftNotPublished
+      : draftStatus === 'error'
       ? draftError || t.draftSaveFailed
       : lastSavedText || draftStatusText || t.draftNotPublished
 
@@ -176,12 +180,18 @@ export default function HandoverForm({
           {t.images}
         </label>
 
-        <ImageUploader
-          parti={parti}
-          onUploadComplete={(url) =>
-            setImages((prev) => [...prev, url])
-          }
-        />
+        {isOnline ? (
+          <ImageUploader
+            parti={parti}
+            onUploadComplete={(url) =>
+              setImages((prev) => [...prev, url])
+            }
+          />
+        ) : (
+          <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-200">
+            {t.imagesRequireInternet}
+          </p>
+        )}
 
         {images.length > 0 && (
           <div className="grid grid-cols-3 gap-2 mt-3">
@@ -198,7 +208,7 @@ export default function HandoverForm({
 
       <button
         onClick={onSave}
-        disabled={loading}
+        disabled={loading || !isOnline}
 className="
   w-full
   py-3
@@ -219,7 +229,7 @@ className="
   disabled:opacity-50
 "
       >
-        {loading ? t.saving : t.saveHandover}
+        {!isOnline ? t.requiresInternet : loading ? t.saving : t.saveHandover}
       </button>
     </section>
     </>

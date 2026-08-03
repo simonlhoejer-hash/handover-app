@@ -7,11 +7,13 @@ import {
   syncAllPendingFoodWaste,
 } from '@/lib/foodWasteSync'
 import { useTranslation } from '@/lib/LanguageContext'
+import { getLocalHandoverDraftCount } from '@/lib/handoverOffline'
 
 export default function ConnectionStatus() {
   const { t } = useTranslation()
   const [isOnline, setIsOnline] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
+  const [handoverDraftCount, setHandoverDraftCount] = useState(0)
   const [isExpanded, setIsExpanded] = useState(false)
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'retry'>('idle')
   const isSyncingRef = useRef(false)
@@ -40,6 +42,7 @@ export default function ConnectionStatus() {
     function updateStatus() {
       setIsOnline(navigator.onLine)
       setPendingCount(getPendingFoodWasteCount())
+      setHandoverDraftCount(getLocalHandoverDraftCount())
     }
 
     function handleOnline() {
@@ -54,6 +57,7 @@ export default function ConnectionStatus() {
     window.addEventListener('offline', updateStatus)
     window.addEventListener('storage', updateStatus)
     window.addEventListener('food-waste-pending-updated', updateStatus)
+    window.addEventListener('handover-draft-updated', updateStatus)
 
     const timer = window.setInterval(() => {
       updateStatus()
@@ -65,19 +69,32 @@ export default function ConnectionStatus() {
       window.removeEventListener('offline', updateStatus)
       window.removeEventListener('storage', updateStatus)
       window.removeEventListener('food-waste-pending-updated', updateStatus)
+      window.removeEventListener('handover-draft-updated', updateStatus)
       window.clearInterval(timer)
     }
   }, [syncPending])
 
-  const hasPending = pendingCount > 0
+  const totalPending = pendingCount + handoverDraftCount
+  const hasPending = totalPending > 0
   const label = isOnline ? t.online : t.offline
+  const handoverDetail = handoverDraftCount > 0
+    ? `${handoverDraftCount} ${
+        handoverDraftCount === 1
+          ? t.handoverDraftWaitingSingular
+          : t.handoverDraftWaitingPlural
+      }`
+    : ''
+  const waitingDetail = [
+    pendingCount > 0 ? `${pendingCount} ${t.waitingShort}` : '',
+    handoverDetail,
+  ].filter(Boolean).join(' · ')
   const detail =
     syncState === 'syncing'
-      ? `${t.syncing} · ${pendingCount} ${t.waitingShort}`
-      : syncState === 'retry' && hasPending
-        ? `${pendingCount} ${t.waitingShort} · ${t.retrying}`
+      ? `${t.syncing}${waitingDetail ? ` · ${waitingDetail}` : ''}`
+      : syncState === 'retry' && pendingCount > 0
+        ? `${waitingDetail} · ${t.retrying}`
         : hasPending
-          ? `${pendingCount} ${t.waitingShort}`
+          ? waitingDetail
           : t.synced
   const Icon = syncState === 'syncing' ? RefreshCw : isOnline ? Cloud : CloudOff
 
@@ -122,7 +139,7 @@ export default function ConnectionStatus() {
           />
           {hasPending && (
             <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white sm:hidden">
-              {pendingCount > 9 ? '9+' : pendingCount}
+              {totalPending > 9 ? '9+' : totalPending}
             </span>
           )}
         </span>
