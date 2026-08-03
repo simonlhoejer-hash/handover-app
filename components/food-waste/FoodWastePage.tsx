@@ -202,6 +202,10 @@ export default function FoodWastePage({
                 if (!location) return null
 
                 const todayAmount = totals.byLocation[location.name] ?? 0
+                const displayName = displayFoodWasteLocation(location.name, lang)
+                const mealNameParts = displayName.split(' ')
+                const mealName = mealNameParts.pop() ?? ''
+                const stationName = mealNameParts.join(' ')
 
                 return (
                   <Link
@@ -238,11 +242,16 @@ export default function FoodWastePage({
                           <>
                             <span className="block">Produktion</span>
                             <span className="block">
-                              {displayFoodWasteLocation(location.name, lang).replace(/^(Produktion|Production)\s+/, '')}
+                              {displayName.replace(/^(Produktion|Production)\s+/, '')}
                             </span>
                           </>
+                        ) : group.title === 'Buffet' || group.title === 'Messen' ? (
+                          <>
+                            <span className="block">{stationName}</span>
+                            <span className="block">{mealName}</span>
+                          </>
                         ) : (
-                          displayFoodWasteLocation(location.name, lang)
+                          displayName
                         )}
                       </h3>
                       <span
