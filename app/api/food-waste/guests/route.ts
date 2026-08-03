@@ -33,6 +33,7 @@ export async function PUT(request: NextRequest) {
   )
   const serviceDate = typeof body?.service_date === 'string' ? body.service_date.slice(0, 10) : ''
   const guestCount = Number(body?.guest_count)
+  const comment = typeof body?.comment === 'string' ? body.comment.slice(0, 1000) : null
 
   if (
     !ship ||
@@ -48,7 +49,7 @@ export async function PUT(request: NextRequest) {
   const { data, error } = await getSupabaseAdmin()
     .from('food_waste_guest_counts')
     .upsert(
-      { service_date: serviceDate, guest_count: guestCount, comment: null, vessel: ship },
+      { service_date: serviceDate, guest_count: guestCount, comment, vessel: ship },
       { onConflict: 'vessel,service_date' }
     )
     .select('*')

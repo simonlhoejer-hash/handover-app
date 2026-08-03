@@ -94,6 +94,31 @@ function formatAmount(value: number, lang: string, decimals = 1) {
   })} kg`
 }
 
+type GuestBreakdown = {
+  type: 'guest_breakdown'
+  skagerakMorning: number
+  commodoreMorning: number
+  skagerakEvening: number
+  messGuests: number
+}
+
+function parseGuestBreakdown(comment: string | null): GuestBreakdown | null {
+  if (!comment) return null
+  try {
+    const value = JSON.parse(comment) as Partial<GuestBreakdown>
+    if (value.type !== 'guest_breakdown') return null
+    return {
+      type: 'guest_breakdown',
+      skagerakMorning: Number(value.skagerakMorning) || 0,
+      commodoreMorning: Number(value.commodoreMorning) || 0,
+      skagerakEvening: Number(value.skagerakEvening) || 0,
+      messGuests: Number(value.messGuests) || 160,
+    }
+  } catch {
+    return null
+  }
+}
+
 type BuffetView = 'all' | 'morning' | 'evening' | 'mess'
 
 function isBuffetLocationForView(name: string, view: BuffetView) {
@@ -195,8 +220,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [guestCounts, setGuestCounts] = useState<GuestCount[]>([])
   const [guestDate, setGuestDate] = useState(today)
-  const [guestCount, setGuestCount] = useState('')
-  const [crewCount, setCrewCount] = useState('160')
+  const [skagerakMorningGuests, setSkagerakMorningGuests] = useState('')
+  const [commodoreMorningGuests, setCommodoreMorningGuests] = useState('')
+  const [skagerakEveningGuests, setSkagerakEveningGuests] = useState('')
+  const [messGuests, setMessGuests] = useState('160')
   const [buffetView, setBuffetView] = useState<BuffetView>('all')
   const [loading, setLoading] = useState(true)
   const [savingGuests, setSavingGuests] = useState(false)
@@ -308,6 +335,15 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       isCurrent = false
     }
   }, [fromDate, t.offlineShowingCached, toDate, vessel])
+
+  useEffect(() => {
+    const saved = guestCounts.find((guest) => guest.service_date === guestDate)
+    const breakdown = parseGuestBreakdown(saved?.comment ?? null)
+    setSkagerakMorningGuests(breakdown ? String(breakdown.skagerakMorning || '') : '')
+    setCommodoreMorningGuests(breakdown ? String(breakdown.commodoreMorning || '') : '')
+    setSkagerakEveningGuests(breakdown ? String(breakdown.skagerakEvening || '') : '')
+    setMessGuests(String(breakdown?.messGuests ?? 160))
+  }, [guestCounts, guestDate])
 
   const stats = useMemo(() => {
     const daysInRange = getDateRangeDays(fromDate, toDate)
@@ -431,33 +467,51 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     const selectedDates = new Set(dates)
 
     if (view === 'mess') {
-      const registeredServices = new Set(
-        entries
-          .filter(
-            (entry) =>
-              selectedDates.has(entry.waste_date) &&
-              isBuffetLocationForView(entry.location_name, 'mess')
-          )
-          .map((entry) => `${entry.waste_date}:${entry.location_name}`)
-      )
-      return registeredServices.size * 160
+      const servicesByDate = new Map<string, Set<string>>()
+      for (const entry of entries) {
+        if (!selectedDates.has(entry.waste_date) || !isBuffetLocationForView(entry.location_name, 'mess')) continue
+        const services = servicesByDate.get(entry.waste_date) ?? new Set<string>()
+        services.add(entry.location_name)
+        servicesByDate.set(entry.waste_date, services)
+      }
+
+      return Array.from(servicesByDate.entries()).reduce((total, [date, services]) => {
+        const guest = guestCounts.find((count) => count.service_date === date)
+        const estimatedMessGuests = parseGuestBreakdown(guest?.comment ?? null)?.messGuests ?? 160
+        return total + services.size * estimatedMessGuests
+      }, 0)
     }
 
     return guestCounts.reduce((total, guest) => {
       if (!selectedDates.has(guest.service_date)) return total
-      if (view === 'morning' || view === 'evening') {
-        return total + Math.max(guest.guest_count - 160, 0)
+      const breakdown = parseGuestBreakdown(guest.comment)
+      if (view === 'morning') {
+        return total + (breakdown
+          ? breakdown.skagerakMorning + breakdown.commodoreMorning
+          : Math.max(guest.guest_count - 160, 0))
+      }
+      if (view === 'evening') {
+        return total + (breakdown?.skagerakEvening ?? Math.max(guest.guest_count - 160, 0))
       }
       return total + guest.guest_count
     }, 0)
   }
 
   async function saveGuestCount() {
-    const passengers = Number(guestCount)
-    const crew = Number(crewCount)
-    const guests = passengers + crew
+    const breakdown: GuestBreakdown = {
+      type: 'guest_breakdown',
+      skagerakMorning: Number(skagerakMorningGuests) || 0,
+      commodoreMorning: Number(commodoreMorningGuests) || 0,
+      skagerakEvening: Number(skagerakEveningGuests) || 0,
+      messGuests: Number(messGuests) || 0,
+    }
+    const morningTotal = breakdown.skagerakMorning + breakdown.commodoreMorning
+    const guests = Math.max(morningTotal, breakdown.skagerakEvening) + breakdown.messGuests
 
-    if (!Number.isFinite(passengers) || passengers < 0 || !Number.isFinite(crew) || crew < 0 || guests <= 0) {
+    if (
+      Object.values(breakdown).some((value) => typeof value === 'number' && (!Number.isFinite(value) || value < 0)) ||
+      guests <= 0
+    ) {
       setGuestMessage(t.guestCountRequired)
       return
     }
@@ -475,7 +529,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           body: JSON.stringify({
           service_date: guestDate,
           guest_count: guests,
-          comment: null,
+          comment: JSON.stringify(breakdown),
           vessel,
           }),
         }
@@ -491,7 +545,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     } else {
       setGuestTableError(false)
       setGuestMessage(t.guestsSaved)
-      setGuestCount('')
       setGuestPanelOpen(false)
       setGuestCounts((current) => [
         data,
@@ -555,11 +608,17 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       [t.created]: entry.created_at,
     }))
 
-    const guestRows = guestCounts.map((guest) => ({
-      [t.date]: guest.service_date,
-      [t.guests]: guest.guest_count,
-      [t.comment]: guest.comment ?? '',
-    }))
+    const guestRows = guestCounts.map((guest) => {
+      const breakdown = parseGuestBreakdown(guest.comment)
+      return {
+        [t.date]: guest.service_date,
+        'Skagerak morgen': breakdown?.skagerakMorning ?? '',
+        'Commodore morgen': breakdown?.commodoreMorning ?? '',
+        'Skagerak aften': breakdown?.skagerakEvening ?? '',
+        Messen: breakdown?.messGuests ?? '',
+        [t.guests]: guest.guest_count,
+      }
+    })
 
     XLSX.utils.book_append_sheet(
       workbook,
@@ -654,6 +713,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     : lang === 'sv'
       ? { all: 'Totalt', morning: 'Morgon', evening: 'Kväll', mess: 'Mässen' }
       : { all: 'Samlet', morning: 'Morgen', evening: 'Aften', mess: 'Messen' }
+  const guestFieldText = lang === 'en'
+    ? { morning: 'Morning', evening: 'Evening', estimated: 'Estimated', morningTotal: 'Morning total', eveningTotal: 'Evening total' }
+    : lang === 'sv'
+      ? { morning: 'Morgon', evening: 'Kväll', estimated: 'Uppskattat', morningTotal: 'Morgon totalt', eveningTotal: 'Kväll totalt' }
+      : { morning: 'Morgen', evening: 'Aften', estimated: 'Anslået', morningTotal: 'Morgen i alt', eveningTotal: 'Aften i alt' }
 
   function getPointBreakdown(point: ChartPoint, kind: 'buffet' | 'grinder') {
     const selectedDates = new Set(point.dates)
@@ -1295,7 +1359,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       <aside className="fixed bottom-24 right-4 z-40 hidden lg:block xl:right-6">
         <div
           className={`overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl transition-[width] duration-300 dark:border-white/10 dark:bg-[#0d3b3a] ${
-            guestPanelOpen ? 'w-72' : 'w-44'
+            guestPanelOpen ? 'w-96 max-w-[calc(100vw-2rem)]' : 'w-44'
           }`}
         >
           <button
@@ -1362,32 +1426,59 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   onChange={(event) => setGuestDate(event.target.value)}
                   className="h-12 w-full rounded-xl border border-black/5 bg-gray-100 px-4 dark:border-white/10 dark:bg-[#082f2e]"
                 />
-                <input
-                  inputMode="numeric"
-                  value={guestCount}
-                  onChange={(event) => setGuestCount(event.target.value)}
-                  className="h-14 w-full rounded-xl border border-black/5 bg-gray-100 px-4 text-2xl font-semibold dark:border-white/10 dark:bg-[#082f2e]"
-                  placeholder={t.passengerCountPlaceholder}
-                />
-                <label className="grid grid-cols-[1fr_5.5rem] items-center gap-3 rounded-xl border border-black/5 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-[#082f2e]">
-                  <span className="text-sm font-medium text-gray-600 dark:text-white/70">
-                    {t.crewCount}
-                  </span>
+                <fieldset className="grid gap-2 rounded-xl border border-black/5 bg-gray-50 p-3 dark:border-white/10 dark:bg-[#082f2e]">
+                  <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-white/55">
+                    {guestFieldText.morning}
+                  </legend>
+                  {[
+                    ['Skagerak', skagerakMorningGuests, setSkagerakMorningGuests],
+                    ['Commodore', commodoreMorningGuests, setCommodoreMorningGuests],
+                  ].map(([label, value, setter]) => (
+                    <label key={label as string} className="grid grid-cols-[1fr_6rem] items-center gap-3">
+                      <span className="text-sm font-medium">{label as string}</span>
+                      <input
+                        inputMode="numeric"
+                        value={value as string}
+                        onChange={(event) => (setter as (value: string) => void)(event.target.value)}
+                        className="h-10 rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
+                        placeholder="0"
+                      />
+                    </label>
+                  ))}
+                </fieldset>
+                <fieldset className="grid gap-2 rounded-xl border border-black/5 bg-gray-50 p-3 dark:border-white/10 dark:bg-[#082f2e]">
+                  <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-white/55">
+                    {guestFieldText.evening}
+                  </legend>
+                  <label className="grid grid-cols-[1fr_6rem] items-center gap-3">
+                    <span className="text-sm font-medium">Skagerak</span>
+                    <input
+                      inputMode="numeric"
+                      value={skagerakEveningGuests}
+                      onChange={(event) => setSkagerakEveningGuests(event.target.value)}
+                      className="h-10 rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
+                      placeholder="0"
+                    />
+                  </label>
+                </fieldset>
+                <label className="grid grid-cols-[1fr_6rem] items-center gap-3 rounded-xl border border-black/5 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-[#082f2e]">
+                  <span className="text-sm font-medium">Messen <small className="block font-normal text-gray-500 dark:text-white/50">{guestFieldText.estimated}</small></span>
                   <input
                     inputMode="numeric"
-                    value={crewCount}
-                    onChange={(event) => setCrewCount(event.target.value)}
-                    className="h-10 w-full rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
-                    aria-label={t.crewCount}
+                    value={messGuests}
+                    onChange={(event) => setMessGuests(event.target.value)}
+                    className="h-10 rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
                   />
                 </label>
-                <div className="flex items-center justify-between rounded-xl bg-nordic-soft px-4 py-3 text-sm">
-                  <span className="font-medium text-gray-600 dark:text-white/70">
-                    {t.totalGuestsToday}
-                  </span>
-                  <strong className="text-lg text-nordic">
-                    {formatNumber((Number(guestCount) || 0) + (Number(crewCount) || 0), lang)}
-                  </strong>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-nordic-soft px-3 py-2 text-sm">
+                    <span className="block text-xs text-gray-500 dark:text-white/55">{guestFieldText.morningTotal}</span>
+                    <strong className="text-lg text-nordic">{formatNumber((Number(skagerakMorningGuests) || 0) + (Number(commodoreMorningGuests) || 0), lang)}</strong>
+                  </div>
+                  <div className="rounded-xl bg-nordic-soft px-3 py-2 text-sm">
+                    <span className="block text-xs text-gray-500 dark:text-white/55">{guestFieldText.eveningTotal}</span>
+                    <strong className="text-lg text-nordic">{formatNumber(Number(skagerakEveningGuests) || 0, lang)}</strong>
+                  </div>
                 </div>
                 <button
                   onClick={saveGuestCount}
