@@ -1315,11 +1315,18 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       </AnimatePresence>
 
       <section className="hidden items-stretch gap-6 lg:grid lg:grid-cols-2">
-        <div className="h-full rounded-2xl border border-amber-500/15 bg-amber-50/60 p-4 shadow-sm dark:bg-amber-400/5">
-          <h2 className="text-lg font-semibold">{t.buffetByLocation}</h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
-            {t.buffetWasteExplanation}
-          </p>
+        <div className="h-full rounded-2xl border border-black/5 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#0d3b3a]">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">{t.buffetByLocation}</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
+                {t.buffetWasteExplanation}
+              </p>
+            </div>
+            <p className="text-sm font-semibold text-teal-700 dark:text-teal-200">
+              {formatAmount(stats.buffet.averagePerDay, lang)} {t.perDay}
+            </p>
+          </div>
           <LocationList locations={stats.buffet.locations} lang={lang} perDay={t.perDay} />
         </div>
 
@@ -1331,7 +1338,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                 {t.productionWasteExplanation}
               </p>
             </div>
-            <p className="text-sm font-semibold text-nordic">
+            <p className="text-sm font-semibold text-teal-700 dark:text-teal-200">
               {formatAmount(stats.grinder.averagePerDay, lang)} {t.perDay}
             </p>
           </div>
@@ -1349,7 +1356,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             title: t.buffetByLocation,
             explanation: t.buffetWasteExplanation,
             locations: stats.buffet.locations,
-            className: 'border-amber-500/15 bg-amber-50/60 dark:bg-amber-400/5',
+            className: 'border-black/5 bg-white dark:border-white/10 dark:bg-[#0d3b3a]',
           },
           {
             title: t.productionByLocation,
