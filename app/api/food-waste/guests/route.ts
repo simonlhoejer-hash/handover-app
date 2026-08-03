@@ -34,6 +34,11 @@ export async function PUT(request: NextRequest) {
   const serviceDate = typeof body?.service_date === 'string' ? body.service_date.slice(0, 10) : ''
   const guestCount = Number(body?.guest_count)
   const comment = typeof body?.comment === 'string' ? body.comment.slice(0, 1000) : null
+  const skagerakMorning = Number(body?.skagerak_morning ?? 0)
+  const commodoreMorning = Number(body?.commodore_morning ?? 0)
+  const skagerakEvening = Number(body?.skagerak_evening ?? 0)
+  const messGuests = Number(body?.mess_guests ?? 160)
+  const serviceCounts = [skagerakMorning, commodoreMorning, skagerakEvening, messGuests]
 
   if (
     !ship ||
@@ -41,19 +46,41 @@ export async function PUT(request: NextRequest) {
     !Number.isInteger(guestCount) ||
     guestCount <= 0 ||
     guestCount > 10000 ||
+    serviceCounts.some((count) => !Number.isInteger(count) || count < 0 || count > 10000) ||
     !(await requestHasShipAccess(request, ship))
   ) {
     return NextResponse.json({ error: 'Ugyldigt gæstetal.' }, { status: 400 })
   }
 
-  const { data, error } = await getSupabaseAdmin()
+  const values = {
+    service_date: serviceDate,
+    guest_count: guestCount,
+    comment: null,
+    vessel: ship,
+    skagerak_morning: skagerakMorning,
+    commodore_morning: commodoreMorning,
+    skagerak_evening: skagerakEvening,
+    mess_guests: messGuests,
+  }
+  let { data, error } = await getSupabaseAdmin()
     .from('food_waste_guest_counts')
-    .upsert(
-      { service_date: serviceDate, guest_count: guestCount, comment, vessel: ship },
-      { onConflict: 'vessel,service_date' }
-    )
+    .upsert(values, { onConflict: 'vessel,service_date' })
     .select('*')
     .single()
+
+  // Keep saving safely while a deployment and its database migration overlap.
+  if (error?.code === 'PGRST204' || error?.code === '42703') {
+    const fallback = await getSupabaseAdmin()
+      .from('food_waste_guest_counts')
+      .upsert(
+        { service_date: serviceDate, guest_count: guestCount, comment, vessel: ship },
+        { onConflict: 'vessel,service_date' }
+      )
+      .select('*')
+      .single()
+    data = fallback.data
+    error = fallback.error
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ data })

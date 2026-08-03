@@ -30,6 +30,10 @@ type GuestCount = {
   guest_count: number
   comment: string | null
   vessel?: 'crown' | 'pearl'
+  skagerak_morning?: number | null
+  commodore_morning?: number | null
+  skagerak_evening?: number | null
+  mess_guests?: number | null
 }
 
 type LocationSummary = {
@@ -117,6 +121,25 @@ function parseGuestBreakdown(comment: string | null): GuestBreakdown | null {
   } catch {
     return null
   }
+}
+
+function getGuestBreakdown(guest: GuestCount | undefined): GuestBreakdown | null {
+  if (!guest) return null
+  if (
+    guest.skagerak_morning != null ||
+    guest.commodore_morning != null ||
+    guest.skagerak_evening != null ||
+    guest.mess_guests != null
+  ) {
+    return {
+      type: 'guest_breakdown',
+      skagerakMorning: Number(guest.skagerak_morning) || 0,
+      commodoreMorning: Number(guest.commodore_morning) || 0,
+      skagerakEvening: Number(guest.skagerak_evening) || 0,
+      messGuests: Number(guest.mess_guests) || 160,
+    }
+  }
+  return parseGuestBreakdown(guest.comment)
 }
 
 type BuffetView = 'all' | 'morning' | 'evening' | 'mess'
@@ -338,7 +361,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
   useEffect(() => {
     const saved = guestCounts.find((guest) => guest.service_date === guestDate)
-    const breakdown = parseGuestBreakdown(saved?.comment ?? null)
+    const breakdown = getGuestBreakdown(saved)
     setSkagerakMorningGuests(breakdown ? String(breakdown.skagerakMorning || '') : '')
     setCommodoreMorningGuests(breakdown ? String(breakdown.commodoreMorning || '') : '')
     setSkagerakEveningGuests(breakdown ? String(breakdown.skagerakEvening || '') : '')
@@ -477,14 +500,14 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
       return Array.from(servicesByDate.entries()).reduce((total, [date, services]) => {
         const guest = guestCounts.find((count) => count.service_date === date)
-        const estimatedMessGuests = parseGuestBreakdown(guest?.comment ?? null)?.messGuests ?? 160
+        const estimatedMessGuests = getGuestBreakdown(guest)?.messGuests ?? 160
         return total + services.size * estimatedMessGuests
       }, 0)
     }
 
     return guestCounts.reduce((total, guest) => {
       if (!selectedDates.has(guest.service_date)) return total
-      const breakdown = parseGuestBreakdown(guest.comment)
+      const breakdown = getGuestBreakdown(guest)
       if (view === 'morning') {
         return total + (breakdown
           ? breakdown.skagerakMorning + breakdown.commodoreMorning
@@ -530,6 +553,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           service_date: guestDate,
           guest_count: guests,
           comment: JSON.stringify(breakdown),
+          skagerak_morning: breakdown.skagerakMorning,
+          commodore_morning: breakdown.commodoreMorning,
+          skagerak_evening: breakdown.skagerakEvening,
+          mess_guests: breakdown.messGuests,
           vessel,
           }),
         }
@@ -609,7 +636,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     }))
 
     const guestRows = guestCounts.map((guest) => {
-      const breakdown = parseGuestBreakdown(guest.comment)
+      const breakdown = getGuestBreakdown(guest)
       return {
         [t.date]: guest.service_date,
         'Skagerak morgen': breakdown?.skagerakMorning ?? '',
