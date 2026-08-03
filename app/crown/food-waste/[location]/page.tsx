@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
 import FoodWasteLocationPage from '@/components/food-waste/FoodWasteLocationPage'
-import { getFoodWasteLocation } from '@/lib/foodWasteLocations'
+import { FOOD_WASTE_LOCATIONS, getFoodWasteLocation } from '@/lib/foodWasteLocations'
 
-export const dynamic = 'force-dynamic'
+export function generateStaticParams() {
+  return FOOD_WASTE_LOCATIONS.map((location) => ({ location: location.slug }))
+}
 
 type Props = {
   params: Promise<{
