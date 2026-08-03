@@ -741,10 +741,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       ? { all: 'Totalt', morning: 'Morgon', evening: 'Kväll', mess: 'Mässen' }
       : { all: 'Samlet', morning: 'Morgen', evening: 'Aften', mess: 'Messen' }
   const guestFieldText = lang === 'en'
-    ? { morning: 'Morning', evening: 'Evening', estimated: 'Estimated', morningTotal: 'Morning total', eveningTotal: 'Evening total' }
+    ? { morning: 'Morning', evening: 'Evening', messPerMeal: 'Crew mess per meal', estimated: 'Estimated', morningTotal: 'Morning total', eveningTotal: 'Evening total' }
     : lang === 'sv'
-      ? { morning: 'Morgon', evening: 'Kväll', estimated: 'Uppskattat', morningTotal: 'Morgon totalt', eveningTotal: 'Kväll totalt' }
-      : { morning: 'Morgen', evening: 'Aften', estimated: 'Anslået', morningTotal: 'Morgen i alt', eveningTotal: 'Aften i alt' }
+      ? { morning: 'Morgon', evening: 'Kväll', messPerMeal: 'Mässen per måltid', estimated: 'Uppskattat', morningTotal: 'Morgon totalt', eveningTotal: 'Kväll totalt' }
+      : { morning: 'Morgen', evening: 'Aften', messPerMeal: 'Messen pr. måltid', estimated: 'Anslået', morningTotal: 'Morgen i alt', eveningTotal: 'Aften i alt' }
 
   function getPointBreakdown(point: ChartPoint, kind: 'buffet' | 'grinder') {
     const selectedDates = new Set(point.dates)
@@ -1496,7 +1496,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   </label>
                 </fieldset>
                 <label className="grid grid-cols-[1fr_6rem] items-center gap-3 rounded-xl border border-black/5 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-[#082f2e]">
-                  <span className="text-sm font-medium">Messen <small className="block font-normal text-gray-500 dark:text-white/50">{guestFieldText.estimated}</small></span>
+                  <span className="text-sm font-medium">{guestFieldText.messPerMeal} <small className="block font-normal text-gray-500 dark:text-white/50">{guestFieldText.estimated}</small></span>
                   <input
                     inputMode="numeric"
                     value={messGuests}
