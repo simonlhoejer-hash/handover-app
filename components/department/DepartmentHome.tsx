@@ -188,6 +188,7 @@ export default function DepartmentHome({
               <Link
                 key={item}
                 href={`${basePath}/${encodeURIComponent(item)}`}
+                prefetch
                 className="
                   group rounded-xl
                   p-5

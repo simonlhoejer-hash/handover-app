@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
@@ -17,6 +17,7 @@ import {
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -47,6 +48,12 @@ export default function BottomNav() {
       label: t.overview,
     },
   ]
+
+  useEffect(() => {
+    router.prefetch(basePath)
+    router.prefetch(`${basePath}/food-waste`)
+    router.prefetch(`${basePath}/food-waste/overblik`)
+  }, [basePath, router])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

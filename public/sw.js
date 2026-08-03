@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v10'
+const CACHE_NAME = 'handover-offline-v11'
 
 const APP_SHELL = [
   '/',
@@ -60,17 +60,23 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
-          return response
-        })
-        .catch(() =>
-          caches
-            .match(request)
-            .then((cached) => cached || caches.match('/crown/food-waste'))
-        )
+      caches.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const copy = response.clone()
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+            }
+            return response
+          })
+
+        if (cached) {
+          event.waitUntil(network.catch(() => undefined))
+          return cached
+        }
+
+        return network.catch(() => caches.match('/crown/food-waste'))
+      })
     )
     return
   }

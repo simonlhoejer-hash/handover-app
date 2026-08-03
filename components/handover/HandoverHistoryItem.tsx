@@ -132,6 +132,8 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
             <img
               key={url}
               src={url}
+              loading="lazy"
+              decoding="async"
               onClick={() => setSelectedImage(url)}
               className="
                 h-24 w-full object-cover
