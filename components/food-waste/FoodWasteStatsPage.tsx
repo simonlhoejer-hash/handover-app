@@ -543,6 +543,16 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     ...stats.grinder.chartPoints.map((point) => point.total),
     1
   )
+  const guestDates = new Set(guestCounts.map((guest) => guest.service_date))
+  const missingGuestDates = Array.from(
+    new Set(
+      entries
+        .filter((entry) => !entry.location_name.startsWith('Produktion '))
+        .map((entry) => entry.waste_date)
+    )
+  )
+    .filter((date) => !guestDates.has(date))
+    .sort((dateA, dateB) => dateA.localeCompare(dateB))
   const estimatedContainers = stats.grinder.totalKg / 2000
   const estimatedSavings = stats.grinder.totalKg * 1.9
   const grinderLocations: LocationSummary[] = [
@@ -1138,6 +1148,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             <span className="flex items-center gap-2">
               <Users size={18} className="text-nordic" />
               {t.writeGuests}
+              {missingGuestDates.length > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-bold text-white">
+                  {missingGuestDates.length}
+                </span>
+              )}
             </span>
             <ChevronDown
               size={17}
@@ -1152,6 +1167,36 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           >
             <div className="overflow-hidden">
               <div className="grid gap-3 border-t border-black/5 p-4 dark:border-white/10">
+                {missingGuestDates.length > 0 ? (
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-50 p-3 dark:bg-amber-400/10">
+                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                      {t.missingGuestDates}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {missingGuestDates.map((date) => (
+                        <button
+                          key={date}
+                          type="button"
+                          onClick={() => {
+                            setGuestDate(date)
+                            setGuestMessage('')
+                          }}
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                            guestDate === date
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-white text-amber-800 hover:bg-amber-100 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/15'
+                          }`}
+                        >
+                          {formatDate(date, lang)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="rounded-xl bg-nordic-soft px-3 py-2 text-xs font-medium text-nordic">
+                    {t.allGuestDatesComplete}
+                  </p>
+                )}
                 <input
                   type="date"
                   value={guestDate}
