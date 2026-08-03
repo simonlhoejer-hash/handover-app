@@ -761,6 +761,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   )
                   const wastePerGuest =
                     guestsForPoint > 0 ? activePoint.total / guestsForPoint : 0
+                  const sourceBreakdown = getPointBreakdown(activePoint, chart.kind)
 
                   return (
                     <div className="rounded-xl border border-amber-500/15 bg-amber-50 p-3 dark:bg-amber-400/10">
@@ -794,6 +795,39 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                         <p className="mt-2 text-center text-xs text-amber-800/70 dark:text-amber-200/70">
                           {t.noGuestCountsInPeriod}
                         </p>
+                      )}
+                      {sourceBreakdown.length > 0 && (
+                        <div className="mt-3 border-t border-amber-500/15 pt-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-800/65 dark:text-amber-200/65">
+                            {lang === 'sv' ? 'Var kom svinnet från?' : lang === 'en' ? 'Where did the waste come from?' : 'Hvor kom spildet fra?'}
+                          </p>
+                          <div className="mt-2 space-y-2">
+                            {sourceBreakdown.map((location) => {
+                              const percentage = activePoint.total > 0
+                                ? (location.total / activePoint.total) * 100
+                                : 0
+
+                              return (
+                                <div key={location.name}>
+                                  <div className="flex items-center justify-between gap-3 text-xs">
+                                    <span className="truncate font-medium">
+                                      {displayFoodWasteLocation(location.name, lang)}
+                                    </span>
+                                    <span className="shrink-0 font-semibold">
+                                      {formatAmount(location.total, lang)} · {formatDecimal(percentage, lang, 0)}%
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-amber-950/10 dark:bg-white/10">
+                                    <div
+                                      className="h-full rounded-full bg-amber-500"
+                                      style={{ width: `${Math.max(percentage, 2)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
                       )}
                     </div>
                   )
