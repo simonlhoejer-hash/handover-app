@@ -1,26 +1,30 @@
-const CACHE_NAME = 'handover-offline-v12'
+const CACHE_NAME = 'handover-offline-v13'
+
+const SHIPS = ['crown', 'pearl']
+const FOOD_WASTE_ROUTES = [
+  '',
+  '/overblik',
+  '/skagerak-morgen',
+  '/skagerak-aften',
+  '/messen-morgen',
+  '/messen-frokost',
+  '/messen-aften',
+  '/commodore-morgen',
+  '/produktion-main-galley',
+  '/produktion-skagerak-galley',
+  '/produktion-bageri',
+  '/produktion-slagteri',
+  '/produktion-proviant-daek-1',
+]
 
 const APP_SHELL = [
   '/',
   '/ships',
-  '/crown',
-  '/crown/food-waste',
-  '/crown/food-waste/overblik',
-  '/crown/food-waste/skagerak-morgen',
-  '/crown/food-waste/skagerak-aften',
-  '/crown/food-waste/messen-morgen',
-  '/crown/food-waste/messen-frokost',
-  '/crown/food-waste/messen-aften',
-  '/crown/food-waste/commodore-morgen',
-  '/crown/food-waste/produktion-main-galley',
-  '/crown/food-waste/produktion-skagerak-galley',
-  '/crown/food-waste/produktion-bageri',
-  '/crown/food-waste/produktion-slagteri',
-  '/crown/food-waste/produktion-proviant-daek-1',
+  ...SHIPS.flatMap((ship) => [
+    `/${ship}`,
+    ...FOOD_WASTE_ROUTES.map((route) => `/${ship}/food-waste${route}`),
+  ]),
   '/manifest-galley.json',
-  '/pearl',
-  '/pearl/food-waste',
-  '/pearl/food-waste/overblik',
   '/manifest-pearl.json',
   '/icon-192.png',
   '/icon-512.png',
