@@ -711,6 +711,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       kind: 'buffet' as const,
       points: activeBuffetStats.chartPoints,
       maxValue: maxBuffetChartValue,
+      averageValue: activeBuffetStats.chartPoints.reduce((sum, point) => sum + point.total, 0) / Math.max(activeBuffetStats.chartPoints.length, 1),
       barClass: 'bg-amber-500',
       showGuestData: true,
       showEstimate: false,
@@ -720,6 +721,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       kind: 'grinder' as const,
       points: activeGrinderStats.chartPoints,
       maxValue: maxProductionChartValue,
+      averageValue: activeGrinderStats.chartPoints.reduce((sum, point) => sum + point.total, 0) / Math.max(activeGrinderStats.chartPoints.length, 1),
       barClass: 'bg-nordic',
       showGuestData: false,
       showEstimate: true,
@@ -741,6 +743,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     : lang === 'sv'
       ? { morning: 'Morgon', evening: 'Kväll', messPerMeal: 'Mässen per måltid', estimated: 'Uppskattat', morningTotal: 'Morgon totalt', eveningTotal: 'Kväll totalt' }
       : { morning: 'Morgen', evening: 'Aften', messPerMeal: 'Messen pr. måltid', estimated: 'Anslået', morningTotal: 'Morgen i alt', eveningTotal: 'Aften i alt' }
+  const averageLabel = lang === 'en' ? 'Average' : lang === 'sv' ? 'Genomsnitt' : 'Gennemsnit'
 
   function getPointBreakdown(point: ChartPoint, kind: 'buffet' | 'grinder') {
     const selectedDates = new Set(point.dates)
@@ -1057,7 +1060,17 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               </div>
             )}
 
-            <div className="mt-5 flex h-48 items-end gap-2 overflow-x-auto pb-2">
+            <div className="relative mt-5 flex h-48 items-end gap-2 overflow-x-auto pb-2">
+              {chart.points.length > 1 && chart.averageValue > 0 && (
+                <div
+                  className="pointer-events-none absolute left-0 right-0 z-10 border-t border-dashed border-gray-400/70 dark:border-white/40"
+                  style={{ bottom: `${30 + (chart.averageValue / chart.maxValue) * 130}px` }}
+                >
+                  <span className="absolute right-0 -top-5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-[#0d3b3a]/90 dark:text-white/60">
+                    {averageLabel} {formatAmount(chart.averageValue, lang)}
+                  </span>
+                </div>
+              )}
               {!loading && chart.points.length === 0 && (
                 <p className="self-center text-sm text-gray-500 dark:text-white/60">
                   {t.noRegistrationsInPeriod}
@@ -1216,7 +1229,17 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
                 <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,.9fr)]">
                   <div className="border-b border-black/5 p-5 dark:border-white/10 lg:border-b-0 lg:border-r sm:p-7">
-                    <div className="flex h-[360px] items-end gap-3 overflow-x-auto pb-3">
+                    <div className="relative flex h-[360px] items-end gap-3 overflow-x-auto pb-3">
+                      {chart.points.length > 1 && chart.averageValue > 0 && (
+                        <div
+                          className="pointer-events-none absolute left-0 right-0 z-10 border-t-2 border-dashed border-gray-400/70 dark:border-white/40"
+                          style={{ bottom: `${45 + (chart.averageValue / chart.maxValue) * 250}px` }}
+                        >
+                          <span className="absolute right-0 -top-7 rounded-lg bg-white px-2 py-1 text-xs font-semibold text-gray-600 shadow-sm dark:bg-[#0d3b3a] dark:text-white/70">
+                            {averageLabel} {formatAmount(chart.averageValue, lang)}
+                          </span>
+                        </div>
+                      )}
                       {chart.points.map((point, pointIndex) => (
                         <button
                           type="button"
