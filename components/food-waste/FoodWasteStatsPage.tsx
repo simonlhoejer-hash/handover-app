@@ -199,37 +199,6 @@ function formatTime(value: string, lang: string) {
   )
 }
 
-function LocationList({
-  locations,
-  lang,
-  perDay,
-}: {
-  locations: LocationSummary[]
-  lang: string
-  perDay: string
-}) {
-  return (
-    <div className="mt-4 space-y-3">
-      {locations.map((location) => (
-        <div
-          key={location.name}
-          className="grid grid-cols-[1fr_auto] items-center gap-3"
-        >
-          <div className="min-w-0">
-            <p className="truncate font-medium">{displayFoodWasteLocation(location.name, lang)}</p>
-            <p className="text-xs text-gray-500 dark:text-white/60">
-              {formatAmount(location.averagePerDay, lang)} {perDay}
-            </p>
-          </div>
-          <span className="rounded-full bg-nordic-soft px-3 py-1 text-sm font-semibold text-nordic">
-            {formatAmount(location.total, lang)}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 type Props = {
   vessel?: 'crown' | 'pearl'
 }
@@ -705,15 +674,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     .sort((dateA, dateB) => dateA.localeCompare(dateB))
   const estimatedContainers = stats.grinder.totalKg / 2000
   const estimatedSavings = stats.grinder.totalKg * 1.9
-  const grinderLocations: LocationSummary[] = [
-    {
-      name: t.buffetIncludedInGrinder,
-      total: stats.buffet.totalKg,
-      averagePerDay: stats.buffet.averagePerDay,
-    },
-    ...stats.production.locations,
-  ]
-
   const chartConfigs = [
     {
       title: t.buffetDevelopment,
@@ -1313,82 +1273,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           )
         })()}
       </AnimatePresence>
-
-      <section className="hidden items-stretch gap-6 lg:grid lg:grid-cols-2">
-        <div className="h-full rounded-2xl border border-black/5 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#0d3b3a]">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">{t.buffetByLocation}</h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
-                {t.buffetWasteExplanation}
-              </p>
-            </div>
-            <p className="text-sm font-semibold text-teal-700 dark:text-teal-200">
-              {formatAmount(stats.buffet.averagePerDay, lang)} {t.perDay}
-            </p>
-          </div>
-          <LocationList locations={stats.buffet.locations} lang={lang} perDay={t.perDay} />
-        </div>
-
-        <div className="h-full rounded-2xl border border-black/5 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#0d3b3a]">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">{t.productionByLocation}</h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
-                {t.productionWasteExplanation}
-              </p>
-            </div>
-            <p className="text-sm font-semibold text-teal-700 dark:text-teal-200">
-              {formatAmount(stats.grinder.averagePerDay, lang)} {t.perDay}
-            </p>
-          </div>
-          <LocationList
-            locations={grinderLocations}
-            lang={lang}
-            perDay={t.perDay}
-          />
-        </div>
-      </section>
-
-      <section className="grid gap-3 lg:hidden">
-        {[
-          {
-            title: t.buffetByLocation,
-            explanation: t.buffetWasteExplanation,
-            locations: stats.buffet.locations,
-            className: 'border-black/5 bg-white dark:border-white/10 dark:bg-[#0d3b3a]',
-          },
-          {
-            title: t.productionByLocation,
-            explanation: t.productionWasteExplanation,
-            locations: grinderLocations,
-            className: 'border-black/5 bg-white dark:border-white/10 dark:bg-[#0d3b3a]',
-          },
-        ].map((overview) => (
-          <details
-            key={overview.title}
-            className={`group rounded-2xl border shadow-sm ${overview.className}`}
-          >
-            <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 px-4 font-semibold [&::-webkit-details-marker]:hidden">
-              {overview.title}
-              <ChevronDown
-                size={19}
-                className="shrink-0 transition-transform group-open:rotate-180"
-              />
-            </summary>
-            <div className="border-t border-black/5 px-4 pb-4 pt-3 dark:border-white/10">
-              <p className="text-sm text-gray-500 dark:text-white/60">
-                {overview.explanation}
-              </p>
-              <LocationList
-                locations={overview.locations}
-                lang={lang}
-                perDay={t.perDay}
-              />
-            </div>
-          </details>
-        ))}
-      </section>
 
       <aside className="fixed bottom-24 right-4 z-40 hidden lg:block xl:right-6">
         <div
