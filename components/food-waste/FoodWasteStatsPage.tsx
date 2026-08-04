@@ -1523,30 +1523,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </div>
       </aside>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">{t.latestRegistrations}</h2>
-
-        {entries.slice(0, 3).map((entry) => (
-          <article
-            key={entry.id}
-            className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="font-semibold">{displayFoodWasteLocation(entry.location_name, lang)}</h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
-                  {formatDate(entry.waste_date, lang)} · kl.{' '}
-                  {formatTime(entry.created_at, lang)}
-                </p>
-              </div>
-              <span className="rounded-full bg-black px-3 py-1 text-sm font-semibold text-white dark:bg-white dark:text-black">
-                {formatAmount(getEntryAmount(entry), lang)}
-              </span>
-            </div>
-          </article>
-        ))}
-      </section>
-
       <div className="flex justify-center pt-2">
         <button
           onClick={() => void exportOverview()}
