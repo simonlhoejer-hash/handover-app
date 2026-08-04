@@ -920,19 +920,19 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
             {chart.showEstimate && (
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <div className="rounded-xl bg-nordic-soft px-3 py-2">
+                <div className="rounded-xl border border-teal-500/10 bg-teal-50 px-3 py-2 dark:border-teal-300/10 dark:bg-teal-300/10">
                   <p className="text-[11px] text-gray-500 dark:text-white/60">
                     {t.estimatedContainerEquivalent}
                   </p>
-                  <p className="mt-1 font-semibold text-nordic">
+                  <p className="mt-1 font-semibold text-teal-800 dark:text-teal-200">
                     {formatDecimal(estimatedContainers, lang)} {t.containerShort}
                   </p>
                 </div>
-                <div className="rounded-xl bg-nordic-soft px-3 py-2">
+                <div className="rounded-xl border border-teal-500/10 bg-teal-50 px-3 py-2 dark:border-teal-300/10 dark:bg-teal-300/10">
                   <p className="text-[11px] text-gray-500 dark:text-white/60">
                     {t.estimatedRenovationSavings}
                   </p>
-                  <p className="mt-1 font-semibold text-nordic">
+                  <p className="mt-1 font-semibold text-teal-800 dark:text-teal-200">
                     {formatCurrency(estimatedSavings, lang)} kr.
                   </p>
                 </div>
