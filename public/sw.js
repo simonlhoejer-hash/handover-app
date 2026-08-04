@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v15'
+const CACHE_NAME = 'handover-offline-v16'
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
