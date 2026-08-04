@@ -42,7 +42,9 @@ export default function ShipAccessForm({
       return
     }
 
-    window.location.replace(destination)
+    // Force the first protected navigation through the network so an older
+    // offline shell can never mask a successful login.
+    window.location.replace(`${destination}?login=1`)
   }
 
   return (

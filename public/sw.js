@@ -1,4 +1,8 @@
-const CACHE_NAME = 'handover-offline-v14'
+const CACHE_NAME = 'handover-offline-v15'
+
+function normalizedPath(pathname) {
+  return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
+}
 
 const SHIPS = ['crown', 'pearl']
 const FOOD_WASTE_ROUTES = [
@@ -37,7 +41,16 @@ self.addEventListener('install', (event) => {
       Promise.allSettled(
         APP_SHELL.map(async (path) => {
           const response = await fetch(path, { cache: 'reload' })
-          if (response.ok) await cache.put(path, response)
+          const finalUrl = new URL(response.url)
+          // A protected page may redirect to login when the worker installs.
+          // Never store that redirected response under the protected URL.
+          if (
+            response.ok &&
+            finalUrl.origin === self.location.origin &&
+            normalizedPath(finalUrl.pathname) === normalizedPath(path)
+          ) {
+            await cache.put(path, response)
+          }
         })
       )
     )
@@ -84,15 +97,16 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
-        const normalizedPath = url.pathname.length > 1
-          ? url.pathname.replace(/\/+$/, '')
-          : '/'
-        const cached = await caches.match(request) || await cache.match(normalizedPath)
+        const pathKey = normalizedPath(url.pathname)
+        const forceFreshLogin = url.searchParams.has('login')
+        const cached = forceFreshLogin
+          ? null
+          : await caches.match(request) || await cache.match(pathKey)
         const network = (async () => {
           const preloaded = await event.preloadResponse
           const response = preloaded || await fetch(request)
           if (!response || !response.ok) throw new Error('Navigation failed')
-          await cache.put(normalizedPath, response.clone())
+          await cache.put(pathKey, response.clone())
           return response
         })()
 
@@ -102,9 +116,9 @@ self.addEventListener('fetch', (event) => {
         }
 
         return network.catch(async () => {
-          const ship = normalizedPath.startsWith('/pearl') ? 'pearl' : 'crown'
+          const ship = pathKey.startsWith('/pearl') ? 'pearl' : 'crown'
           return (
-            await cache.match(normalizedPath) ||
+            await cache.match(pathKey) ||
             await cache.match(`/${ship}/food-waste`) ||
             await cache.match('/ships') ||
             await cache.match('/')
