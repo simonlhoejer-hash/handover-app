@@ -78,10 +78,21 @@ export async function POST(request: NextRequest) {
 
   if (action === 'mark-read') {
     const id = text(body.id, 100)
-    const readBy = text(body.readBy, 100).trim()
-    if (!id || !readBy) {
-      return NextResponse.json({ error: 'Navn mangler.' }, { status: 400 })
+    if (!id) {
+      return NextResponse.json({ error: 'Overlevering mangler.' }, { status: 400 })
     }
+
+    const { data: handover, error: lookupError } = await supabase
+      .from('handover_notes')
+      .select('receiver_name')
+      .eq('id', id)
+      .eq('department', ship)
+      .eq('status', 'published')
+      .single()
+
+    if (lookupError) return NextResponse.json({ error: lookupError.message }, { status: 500 })
+    const readBy = text(handover?.receiver_name, 100).trim()
+    if (!readBy) return NextResponse.json({ error: 'Modtager mangler.' }, { status: 400 })
 
     const { error } = await supabase
       .from('handover_notes')

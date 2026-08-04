@@ -18,25 +18,18 @@ type Props = {
 export default function HandoverHistoryItem({ item, ship, reload }: Props) {
   const { t, lang } = useTranslation()
 
-  const [readName, setReadName] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const isOral = isOralHandoverNote(item.note ?? '')
 
   async function markAsRead() {
-    if (!readName) {
-      alert(t.enterFirstName)
-      return
-    }
-
     setLoading(true)
 
     try {
       await secureFetch('/api/handovers', {
         method: 'POST',
-        body: JSON.stringify({ action: 'mark-read', ship, id: item.id, readBy: readName }),
+        body: JSON.stringify({ action: 'mark-read', ship, id: item.id }),
       })
-      setReadName('')
       reload()
     } catch (error) {
       alert(error instanceof Error ? error.message : t.couldNotSaveComment)
@@ -149,37 +142,11 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
       {/* Mark as read */}
       <div className="border-t border-black/5 dark:border-white/10 mt-6 pt-4">
         {!item.read_by ? (
-          <div className="flex gap-3">
-            <input
-              className="
-                w-full
-                rounded-2xl
-                px-4 py-3
-                transition
-
-                bg-gray-100
-                border border-black/5
-                text-gray-900
-
-                dark:bg-[#0d3b3a]
-                dark:border-white/10
-                dark:text-white
-
-                focus:outline-none
-                focus:ring-2
-                focus:ring-black/10
-                dark:focus:ring-white/20
-              "
-              placeholder={t.firstNamePlaceholder}
-              value={readName}
-              onChange={(e) => setReadName(e.target.value)}
-            />
-
             <button
               onClick={markAsRead}
               disabled={loading}
               className="
-                h-[44px]
+                min-h-12 w-full
                 px-5
                 rounded-2xl
                 font-semibold
@@ -199,7 +166,6 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
             >
               {t.markAsRead}
             </button>
-          </div>
         ) : (
           <p className="text-emerald-600 text-sm font-medium">
             {t.readBy} {item.read_by}
