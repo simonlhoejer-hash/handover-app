@@ -8,11 +8,6 @@ import { useEffect, useRef, useState } from 'react'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { ChevronDown } from 'lucide-react'
 import { ChevronLeft } from 'lucide-react'
-import {
-  readLocalHandoverDraft,
-  removeLocalHandoverDraft,
-  writeLocalHandoverDraft,
-} from '@/lib/handoverOffline'
 
 function getPlainText(value: string) {
   return value.replace(/<[^>]*>/g, '').trim()
@@ -96,18 +91,6 @@ export default function HandoverPage({
     setDraftSavedAt(null)
     setDraftError('')
 
-    const localDraft = readLocalHandoverDraft(ship, itemName)
-    if (localDraft) {
-      setName(localDraft.author_name)
-      setReceiver(localDraft.receiver_name)
-      setDate(localDraft.shift_date)
-      setNote(localDraft.note)
-      setImages(localDraft.images)
-      setDraftSavedAt(localDraft.saved_at)
-      setDraftStatus('saved')
-      setOpen(true)
-    }
-
     let data: any | null = null
     try {
       const result = await secureFetch<{ data: any[] }>(
@@ -116,18 +99,12 @@ export default function HandoverPage({
       data = result.data[0] ?? null
     } catch {
       draftHydratedRef.current = true
-      if (!localDraft) {
-        setDraftStatus('idle')
-      }
+      setDraftStatus('idle')
       return
     }
 
     const serverSavedAt = data?.draft_saved_at ?? data?.updated_at ?? data?.created_at ?? null
-    const useServerDraft = data && (
-      !localDraft || !serverSavedAt || serverSavedAt >= localDraft.saved_at
-    )
-
-    if (useServerDraft) {
+    if (data) {
       setDraftId(data.id)
       setName(data.author_name ?? '')
       setReceiver(data.receiver_name ?? '')
@@ -137,7 +114,7 @@ export default function HandoverPage({
       setDraftSavedAt(serverSavedAt)
       setDraftStatus('saved')
       setOpen(true)
-    } else if (!localDraft) {
+    } else {
       setName('')
       setReceiver('')
       setDate(new Date().toISOString().split('T')[0])
@@ -149,6 +126,8 @@ export default function HandoverPage({
   }
 
   async function saveDraft() {
+    if (!navigator.onLine) return
+
     const trimmedNote = getPlainText(note)
     const hasDraftContent = Boolean(
       name.trim() || receiver.trim() || trimmedNote || images.length
@@ -171,21 +150,6 @@ export default function HandoverPage({
       draft_saved_at: now,
     }
 
-    writeLocalHandoverDraft({
-      ship,
-      parti: itemName,
-      author_name: name,
-      receiver_name: receiver,
-      shift_date: date,
-      note,
-      images,
-      saved_at: now,
-    })
-    setDraftStatus('saved')
-    setDraftSavedAt(now)
-
-    if (!navigator.onLine) return
-
     try {
       const { data } = await secureFetch<{ data: any }>('/api/handovers', {
         method: 'POST',
@@ -194,9 +158,9 @@ export default function HandoverPage({
       if (data?.id) setDraftId(data.id)
       setDraftStatus('saved')
       setDraftSavedAt(now)
-    } catch (error) {
-      setDraftStatus('saved')
-      setDraftError('')
+    } catch {
+      setDraftStatus('error')
+      setDraftError(t.draftSaveFailed)
     }
   }
 
@@ -256,7 +220,6 @@ export default function HandoverPage({
     setDraftStatus('idle')
     setDraftSavedAt(null)
     setDraftError('')
-    removeLocalHandoverDraft(ship, itemName)
     setPublishMessage(t.handoverPublished)
     await loadNotes()
     setOpen(false)

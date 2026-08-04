@@ -82,15 +82,6 @@ export default function HandoverForm({
 }: Props) {
   const { t, lang } = useTranslation()
 
-  const draftStatusText =
-    draftStatus === 'saving'
-      ? t.draftSaving
-      : draftStatus === 'saved'
-        ? t.draftSaved
-        : draftStatus === 'error'
-          ? t.draftSaveFailed
-          : ''
-
   const lastSavedText =
     draftSavedAt && draftStatus === 'saved'
       ? `${t.lastSavedAt} ${new Date(draftSavedAt).toLocaleTimeString(
@@ -101,40 +92,7 @@ export default function HandoverForm({
           }
         )}`
       : ''
-  const floatingDraftDetail =
-    !isOnline
-      ? t.offlineDraftNotPublished
-      : draftStatus === 'error'
-      ? draftError || t.draftSaveFailed
-      : lastSavedText || draftStatusText || t.draftNotPublished
-
   return (
-    <>
-      <div className="fixed bottom-24 left-4 z-30 pointer-events-none">
-        <div
-          className={`
-            max-w-[calc(100vw-2rem)] sm:max-w-xs
-            rounded-2xl
-            border
-            px-4 py-3
-            shadow-lg
-            backdrop-blur-xl
-            ${
-              draftStatus === 'error'
-                ? 'border-red-500/20 bg-red-50/95 text-red-700 dark:bg-red-500/15 dark:text-red-200'
-                : 'border-amber-500/20 bg-amber-50/95 text-amber-800 dark:bg-amber-400/15 dark:text-amber-200'
-            }
-          `}
-        >
-          <div className="text-xs font-semibold">
-            {t.draftNotPublished}
-          </div>
-          <div className="mt-0.5 text-xs opacity-80">
-            {floatingDraftDetail}
-          </div>
-        </div>
-      </div>
-
 <section className={cardClass}>
       <input
         className={inputClass}
@@ -232,6 +190,5 @@ className="
         {!isOnline ? t.requiresInternet : loading ? t.saving : t.saveHandover}
       </button>
     </section>
-    </>
   )
 }

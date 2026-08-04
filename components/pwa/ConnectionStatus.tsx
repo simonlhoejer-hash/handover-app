@@ -7,13 +7,24 @@ import {
   syncAllPendingFoodWaste,
 } from '@/lib/foodWasteSync'
 import { useTranslation } from '@/lib/LanguageContext'
-import { getLocalHandoverDraftCount } from '@/lib/handoverOffline'
+
+function clearLegacyLocalHandoverDrafts() {
+  try {
+    const keys: string[] = []
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index)
+      if (key?.startsWith('handover-local-draft:')) keys.push(key)
+    }
+    for (const key of keys) window.localStorage.removeItem(key)
+  } catch {
+    // Browser storage may be unavailable; no action is required.
+  }
+}
 
 export default function ConnectionStatus() {
   const { t } = useTranslation()
   const [isOnline, setIsOnline] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
-  const [handoverDraftCount, setHandoverDraftCount] = useState(0)
   const [isExpanded, setIsExpanded] = useState(false)
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'retry'>('idle')
   const isSyncingRef = useRef(false)
@@ -39,10 +50,11 @@ export default function ConnectionStatus() {
   }, [])
 
   useEffect(() => {
+    clearLegacyLocalHandoverDrafts()
+
     function updateStatus() {
       setIsOnline(navigator.onLine)
       setPendingCount(getPendingFoodWasteCount())
-      setHandoverDraftCount(getLocalHandoverDraftCount())
     }
 
     function handleOnline() {
@@ -57,7 +69,6 @@ export default function ConnectionStatus() {
     window.addEventListener('offline', updateStatus)
     window.addEventListener('storage', updateStatus)
     window.addEventListener('food-waste-pending-updated', updateStatus)
-    window.addEventListener('handover-draft-updated', updateStatus)
 
     const timer = window.setInterval(() => {
       updateStatus()
@@ -69,25 +80,14 @@ export default function ConnectionStatus() {
       window.removeEventListener('offline', updateStatus)
       window.removeEventListener('storage', updateStatus)
       window.removeEventListener('food-waste-pending-updated', updateStatus)
-      window.removeEventListener('handover-draft-updated', updateStatus)
       window.clearInterval(timer)
     }
   }, [syncPending])
 
-  const totalPending = pendingCount + handoverDraftCount
-  const hasPending = totalPending > 0
+  const totalPending = pendingCount
+  const hasPending = pendingCount > 0
   const label = isOnline ? t.online : t.offline
-  const handoverDetail = handoverDraftCount > 0
-    ? `${handoverDraftCount} ${
-        handoverDraftCount === 1
-          ? t.handoverDraftWaitingSingular
-          : t.handoverDraftWaitingPlural
-      }`
-    : ''
-  const waitingDetail = [
-    pendingCount > 0 ? `${pendingCount} ${t.waitingShort}` : '',
-    handoverDetail,
-  ].filter(Boolean).join(' · ')
+  const waitingDetail = pendingCount > 0 ? `${pendingCount} ${t.waitingShort}` : ''
   const detail =
     syncState === 'syncing'
       ? `${t.syncing}${waitingDetail ? ` · ${waitingDetail}` : ''}`
