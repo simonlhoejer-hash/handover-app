@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v13'
+const CACHE_NAME = 'handover-offline-v14'
 
 const SHIPS = ['crown', 'pearl']
 const FOOD_WASTE_ROUTES = [
@@ -33,22 +33,34 @@ const APP_SHELL = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(
+        APP_SHELL.map(async (path) => {
+          const response = await fetch(path, { cache: 'reload' })
+          if (response.ok) await cache.put(path, response)
+        })
+      )
+    )
   )
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-        )
-      )
+    Promise.all([
+      caches
+        .keys()
+        .then((keys) =>
+          Promise.all(
+            keys
+              .filter((key) => key !== CACHE_NAME)
+              .map((key) => caches.delete(key))
+          )
+        ),
+      self.registration.navigationPreload
+        ? self.registration.navigationPreload.enable()
+        : Promise.resolve(),
+    ])
   )
   self.clients.claim()
 })
@@ -71,22 +83,33 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        const network = fetch(request)
-          .then((response) => {
-            if (response && response.status === 200) {
-              const copy = response.clone()
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
-            }
-            return response
-          })
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const normalizedPath = url.pathname.length > 1
+          ? url.pathname.replace(/\/+$/, '')
+          : '/'
+        const cached = await caches.match(request) || await cache.match(normalizedPath)
+        const network = (async () => {
+          const preloaded = await event.preloadResponse
+          const response = preloaded || await fetch(request)
+          if (!response || !response.ok) throw new Error('Navigation failed')
+          await cache.put(normalizedPath, response.clone())
+          return response
+        })()
 
         if (cached) {
           event.waitUntil(network.catch(() => undefined))
           return cached
         }
 
-        return network.catch(() => caches.match('/crown/food-waste'))
+        return network.catch(async () => {
+          const ship = normalizedPath.startsWith('/pearl') ? 'pearl' : 'crown'
+          return (
+            await cache.match(normalizedPath) ||
+            await cache.match(`/${ship}/food-waste`) ||
+            await cache.match('/ships') ||
+            await cache.match('/')
+          )
+        })
       })
     )
     return

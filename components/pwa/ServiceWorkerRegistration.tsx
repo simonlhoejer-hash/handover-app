@@ -7,7 +7,10 @@ export default function ServiceWorkerRegistration() {
     if (!('serviceWorker' in navigator)) return
 
     const registerServiceWorker = () => {
-      void navigator.serviceWorker.register('/sw.js')
+      void navigator.serviceWorker
+        .register('/sw.js', { updateViaCache: 'none' })
+        .then((registration) => registration.update())
+        .catch(() => undefined)
     }
 
     if (document.readyState === 'complete') {
