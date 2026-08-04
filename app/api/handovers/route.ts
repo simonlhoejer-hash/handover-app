@@ -5,6 +5,17 @@ import {
 } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
 
+function todayInCopenhagen() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Copenhagen',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date())
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${value.year}-${value.month}-${value.day}`
+}
+
 function text(value: unknown, max = 20000) {
   return typeof value === 'string' ? value.slice(0, max) : ''
 }
@@ -115,6 +126,9 @@ export async function POST(request: NextRequest) {
 
   if (!parti || !shiftDate) {
     return NextResponse.json({ error: 'Ugyldige data.' }, { status: 400 })
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(shiftDate) || shiftDate < todayInCopenhagen()) {
+    return NextResponse.json({ error: 'Datoen kan ikke være før i dag.' }, { status: 400 })
   }
 
   if (action === 'save-draft') {

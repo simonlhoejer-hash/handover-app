@@ -11,6 +11,7 @@ type Props = {
   setReceiver: (v: string) => void
   date: string
   setDate: (v: string) => void
+  minDate: string
   note: string
   setNote: (v: string) => void
   images: string[]
@@ -68,6 +69,7 @@ export default function HandoverForm({
   setReceiver,
   date,
   setDate,
+  minDate,
   note,
   setNote,
   images,
@@ -111,7 +113,8 @@ export default function HandoverForm({
 <input
   type="date"
   value={date}
-  onChange={(e) => setDate(e.target.value)}
+  min={minDate}
+  onChange={(e) => setDate(e.target.value < minDate ? minDate : e.target.value)}
   className={`${inputClass} appearance-none`}
   style={{ WebkitAppearance: 'none' }}
 />

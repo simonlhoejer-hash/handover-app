@@ -13,6 +13,17 @@ function getPlainText(value: string) {
   return value.replace(/<[^>]*>/g, '').trim()
 }
 
+function getTodayInCopenhagen() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Copenhagen',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date())
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${value.year}-${value.month}-${value.day}`
+}
+
 type Props = {
   department: 'crown' | 'shop' | 'admin' | 'pearl'
   itemName: string
@@ -28,10 +39,11 @@ export default function HandoverPage({
 }: Props) {
   const router = useRouter()
   const { t } = useTranslation()
+  const today = getTodayInCopenhagen()
 
   const [name, setName] = useState('')
   const [receiver, setReceiver] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(getTodayInCopenhagen)
   const [note, setNote] = useState('')
   const [items, setItems] = useState<any[]>([])
   const [images, setImages] = useState<string[]>([])
@@ -108,7 +120,7 @@ export default function HandoverPage({
       setDraftId(data.id)
       setName(data.author_name ?? '')
       setReceiver(data.receiver_name ?? '')
-      setDate(data.shift_date ?? new Date().toISOString().split('T')[0])
+      setDate(data.shift_date && data.shift_date >= today ? data.shift_date : today)
       setNote(data.note ?? '')
       setImages(data.images ?? [])
       setDraftSavedAt(serverSavedAt)
@@ -117,7 +129,7 @@ export default function HandoverPage({
     } else {
       setName('')
       setReceiver('')
-      setDate(new Date().toISOString().split('T')[0])
+      setDate(today)
       setNote('')
       setImages([])
     }
@@ -167,6 +179,12 @@ export default function HandoverPage({
   async function saveNote() {
     if (!name || !receiver || !getPlainText(note)) {
       alert(t.requiredFields)
+      return
+    }
+
+    if (date < today) {
+      setDate(today)
+      alert(t.handoverDateCannotBePast)
       return
     }
 
@@ -345,6 +363,7 @@ className="
   setReceiver={setReceiver}
   date={date}
   setDate={setDate}
+  minDate={today}
   note={note}
   setNote={setNote}
   images={images}

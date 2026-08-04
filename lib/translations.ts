@@ -93,6 +93,7 @@ export const translations = {
     handoversFor: 'Overleveringer for',
     history: 'Historik',
     requiredFields: 'Afsender, modtager og overlevering skal udfyldes',
+    handoverDateCannotBePast: 'Datoen kan ikke være før i dag.',
 
     // History item
     cannotEditRead: 'Overleveringen er allerede læst og kan ikke redigeres',
@@ -352,6 +353,7 @@ Skriv hvor tingene står.`,
     handoversFor: 'Överlämningar för',
     history: 'Historik',
     requiredFields: 'Avsändare, mottagare och överlämning måste fyllas i',
+    handoverDateCannotBePast: 'Datumet kan inte vara tidigare än idag.',
 
     // History item
     cannotEditRead: 'Överlämningen är redan läst och kan inte redigeras',
@@ -591,6 +593,7 @@ Skriv var sakerna står.`,
     handoversFor: 'Handovers for',
     history: 'History',
     requiredFields: 'Sender, recipient and handover are required',
+    handoverDateCannotBePast: 'The date cannot be earlier than today.',
     cannotEditRead: 'The handover has already been read and cannot be edited',
     enterFirstName: 'Enter your first name to acknowledge',
     edit: 'Edit',
