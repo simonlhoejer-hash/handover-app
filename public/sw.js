@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v16'
+const CACHE_NAME = 'handover-offline-v17'
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
@@ -24,10 +24,12 @@ const FOOD_WASTE_ROUTES = [
 const APP_SHELL = [
   '/',
   '/ships',
-  ...SHIPS.flatMap((ship) => [
-    `/${ship}`,
-    ...FOOD_WASTE_ROUTES.map((route) => `/${ship}/food-waste${route}`),
-  ]),
+  '/crown',
+  ...FOOD_WASTE_ROUTES.map((route) => `/crown/food-waste${route}`),
+  '/pearl',
+  ...FOOD_WASTE_ROUTES
+    .filter((route) => !route.startsWith('/produktion-'))
+    .map((route) => `/pearl/food-waste${route}`),
   '/manifest-galley.json',
   '/manifest-pearl.json',
   '/icon-192.png',

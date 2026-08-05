@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseAccessShip, requestHasShipAccess } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
+import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 
 export async function GET(request: NextRequest) {
   const ship = parseAccessShip(request.nextUrl.searchParams.get('ship'))
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
   if (from) query = query.gte('waste_date', from)
   if (to) query = query.lte('waste_date', to)
   if (location) query = query.eq('location_name', location)
+  if (ship === 'pearl') query = query.not('location_name', 'like', 'Produktion %')
 
   const { data, error } = await query
     .order('waste_date', { ascending: false })
@@ -48,8 +50,13 @@ export async function POST(request: NextRequest) {
   const locationName = typeof body.location_name === 'string' ? body.location_name.trim().slice(0, 200) : ''
   const quantityKg = Number(body.quantity_kg)
   const comment = typeof body.comment === 'string' ? body.comment.slice(0, 1000) : null
+  const locationIsAllowed = FOOD_WASTE_LOCATIONS.some(
+    (location) =>
+      location.name === locationName &&
+      (ship === 'crown' || !location.name.startsWith('Produktion '))
+  )
 
-  if (!wasteDate || !locationName || !Number.isFinite(quantityKg) || quantityKg <= 0 || quantityKg > 10000) {
+  if (!wasteDate || !locationIsAllowed || !Number.isFinite(quantityKg) || quantityKg <= 0 || quantityKg > 10000) {
     return NextResponse.json({ error: 'Ugyldig registrering.' }, { status: 400 })
   }
 

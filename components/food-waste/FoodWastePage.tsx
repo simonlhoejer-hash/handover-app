@@ -70,6 +70,10 @@ const LOCATION_GROUPS = [
   },
 ]
 
+function isLocationVisibleForVessel(locationName: string, vessel: 'crown' | 'pearl') {
+  return vessel === 'crown' || !locationName.startsWith('Produktion ')
+}
+
 export default function FoodWastePage({
   vessel = 'crown',
   basePath = '/crown',
@@ -89,7 +93,11 @@ export default function FoodWastePage({
       const pendingEntries = readPendingFoodWasteEntries(vessel)
 
       if (cachedEntries.length > 0 || pendingEntries.length > 0) {
-        setEntries([...pendingEntries, ...cachedEntries])
+        setEntries(
+          [...pendingEntries, ...cachedEntries].filter((entry) =>
+            isLocationVisibleForVessel(entry.location_name, vessel)
+          )
+        )
         setLoading(false)
       }
 
@@ -115,7 +123,11 @@ export default function FoodWastePage({
         setError('')
         const nextEntries = data
         cacheFoodWasteEntries(nextEntries, vessel)
-        setEntries([...readPendingFoodWasteEntries(vessel), ...nextEntries])
+        setEntries(
+          [...readPendingFoodWasteEntries(vessel), ...nextEntries].filter((entry) =>
+            isLocationVisibleForVessel(entry.location_name, vessel)
+          )
+        )
       }
 
       setLoading(false)
@@ -164,7 +176,9 @@ export default function FoodWastePage({
       )}
 
       <div className="space-y-9 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
-        {LOCATION_GROUPS.map((group) => (
+        {LOCATION_GROUPS
+          .filter((group) => vessel === 'crown' || group.title === 'Buffet' || group.title === 'Messen')
+          .map((group) => (
           <section
             key={group.title}
             className="lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]"
@@ -278,7 +292,7 @@ export default function FoodWastePage({
               })}
             </div>
           </section>
-        ))}
+          ))}
       </div>
     </main>
   )

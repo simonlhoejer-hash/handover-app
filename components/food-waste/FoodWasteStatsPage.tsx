@@ -200,6 +200,10 @@ function getEntryAmount(entry: FoodWasteEntry) {
   return Number(entry.quantity_kg) || 0
 }
 
+function isEntryVisibleForVessel(entry: FoodWasteEntry, vessel: 'crown' | 'pearl') {
+  return vessel === 'crown' || !entry.location_name.startsWith('Produktion ')
+}
+
 function formatTime(value: string, lang: string) {
   return new Date(value).toLocaleTimeString(
     localeFor(lang),
@@ -260,7 +264,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       ) {
         setEntries(
           [...pendingEntries, ...cachedEntries].filter(
-            (entry) => entry.waste_date >= fromDate && entry.waste_date <= toDate
+            (entry) =>
+              entry.waste_date >= fromDate &&
+              entry.waste_date <= toDate &&
+              isEntryVisibleForVessel(entry, vessel)
           )
         )
         setGuestCounts(
@@ -313,7 +320,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         cacheFoodWasteEntries(nextEntries, vessel)
         setEntries(
           [...readPendingFoodWasteEntries(vessel), ...nextEntries].filter(
-            (entry) => entry.waste_date >= fromDate && entry.waste_date <= toDate
+            (entry) =>
+              entry.waste_date >= fromDate &&
+              entry.waste_date <= toDate &&
+              isEntryVisibleForVessel(entry, vessel)
           )
         )
       }
@@ -592,10 +602,14 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       [t.periodFrom, fromDate],
       [t.periodTo, toDate],
       [t.buffetWaste, stats.buffet.totalKg],
-      [t.productionWaste, stats.grinder.totalKg],
       [t.guests, stats.guestsTotal],
       [t.buffetKgPerGuest, stats.kgPerGuest],
-      [t.productionAveragePerDay, stats.production.averagePerDay],
+      ...(vessel === 'crown'
+        ? [
+            [t.productionWaste, stats.grinder.totalKg],
+            [t.productionAveragePerDay, stats.production.averagePerDay],
+          ]
+        : []),
     ]
 
     const locationRows = [
@@ -605,12 +619,14 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         [t.kgInPeriod]: location.total,
         [t.averageKgPerDay]: location.averagePerDay,
       })),
-      ...stats.production.locations.map((location) => ({
-        [t.category]: t.productionAndDeckOne,
-        [t.location]: displayFoodWasteLocation(location.name, lang),
-        [t.kgInPeriod]: location.total,
-        [t.averageKgPerDay]: location.averagePerDay,
-      })),
+      ...(vessel === 'crown'
+        ? stats.production.locations.map((location) => ({
+            [t.category]: t.productionAndDeckOne,
+            [t.location]: displayFoodWasteLocation(location.name, lang),
+            [t.kgInPeriod]: location.total,
+            [t.averageKgPerDay]: location.averagePerDay,
+          }))
+        : []),
     ]
 
     const chartRows = [
@@ -619,11 +635,13 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         [t.period]: point.label,
         [t.kg]: point.total,
       })),
-      ...stats.grinder.chartPoints.map((point) => ({
-        [t.category]: t.productionWaste,
-        [t.period]: point.label,
-        [t.kg]: point.total,
-      })),
+      ...(vessel === 'crown'
+        ? stats.grinder.chartPoints.map((point) => ({
+            [t.category]: t.productionWaste,
+            [t.period]: point.label,
+            [t.kg]: point.total,
+          }))
+        : []),
     ]
 
     const entryRows = entries.map((entry) => ({
@@ -716,7 +734,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       showGuestData: true,
       showEstimate: false,
     },
-    {
+    ...(vessel === 'crown' ? [{
       title: t.productionDevelopment,
       kind: 'grinder' as const,
       points: activeGrinderStats.chartPoints,
@@ -725,7 +743,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       barClass: 'bg-nordic',
       showGuestData: false,
       showEstimate: true,
-    },
+    }] : []),
   ]
 
   const buffetViewLabels: Record<BuffetView, string> = lang === 'en'
@@ -787,7 +805,13 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           {t.foodWasteOverview}
         </h1>
         <p className="text-sm text-gray-500 mt-1 dark:text-white/60">
-          {t.foodWasteOverviewSubtitle}
+          {vessel === 'pearl'
+            ? lang === 'en'
+              ? 'Compare buffet waste by service and period.'
+              : lang === 'sv'
+                ? 'Jämför buffésvinn per måltid och period.'
+                : 'Sammenlign buffetspild pr. måltid og periode.'
+            : t.foodWasteOverviewSubtitle}
         </p>
       </header>
 
@@ -803,7 +827,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </p>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className={`grid gap-3 ${vessel === 'crown' ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
         <label className="space-y-2">
           <span className="text-sm font-medium text-gray-500 dark:text-white/60">
             {t.fromDate}
@@ -835,13 +859,15 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.buffet.totalKg, lang)}</div>
         </div>
 
-        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
-          <p className="text-sm text-gray-500 dark:text-white/60">{t.productionWaste}</p>
-          <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.grinder.totalKg, lang)}</div>
-        </div>
+        {vessel === 'crown' && (
+          <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
+            <p className="text-sm text-gray-500 dark:text-white/60">{t.productionWaste}</p>
+            <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.grinder.totalKg, lang)}</div>
+          </div>
+        )}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
+      <section className={`grid gap-6 ${vessel === 'crown' ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
         {chartConfigs.map((chart) => (
           <div
             key={chart.title}
