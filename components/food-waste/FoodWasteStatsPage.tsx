@@ -799,7 +799,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   }
 
   return (
-    <main className="max-w-5xl mx-auto px-4 pt-4 pb-24 space-y-6">
+    <main className={`${vessel === 'pearl' ? 'max-w-7xl' : 'max-w-5xl'} mx-auto px-4 pt-4 pb-24 space-y-6`}>
       <header className="text-center">
         <h1 className="text-3xl font-semibold tracking-tight">
           {t.foodWasteOverview}
@@ -827,7 +827,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </p>
       )}
 
-      <section className={`grid gap-3 ${vessel === 'crown' ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+      <section className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-2">
           <span className="text-sm font-medium text-gray-500 dark:text-white/60">
             {t.fromDate}
@@ -853,7 +853,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </label>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className={`grid gap-3 ${vessel === 'crown' ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.buffetWaste}</p>
           <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.buffet.totalKg, lang)}</div>

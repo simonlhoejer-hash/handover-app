@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
+import { displayPartiName } from '@/lib/partis'
 
 type Props = {
   department: 'admin' | 'shop' | 'crown' | 'pearl'
@@ -234,7 +235,7 @@ export default function DepartmentHome({
                 <div className="w-full flex flex-col items-center text-center space-y-2">
 
                   <h2 className="text-xl font-semibold tracking-tight text-[#102f2e] dark:text-white">
-                    {item}
+                    {displayPartiName(item, department)}
                   </h2>
 
                   {/* STATUS */}

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { ChevronDown } from 'lucide-react'
 import { ChevronLeft } from 'lucide-react'
+import { displayPartiName } from '@/lib/partis'
 
 function getPlainText(value: string) {
   return value.replace(/<[^>]*>/g, '').trim()
@@ -62,6 +63,7 @@ export default function HandoverPage({
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
   const draftHydratedRef = useRef(false)
   const ship: AccessShip = department === 'pearl' ? 'pearl' : 'crown'
+  const displayedItemName = displayPartiName(itemName, department)
 
   useEffect(() => {
     const updateConnection = () => setIsOnline(navigator.onLine)
@@ -297,11 +299,11 @@ export default function HandoverPage({
 
         <div className="text-center">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">
-            {itemName}
+            {displayedItemName}
           </h1>
 
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {t.handoversFor} {itemName}
+            {t.handoversFor} {displayedItemName}
           </p>
         </div>
 
