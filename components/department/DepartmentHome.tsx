@@ -9,6 +9,7 @@ type Props = {
   department: 'admin' | 'shop' | 'crown' | 'pearl'
   items: string[]
   basePath: string
+  groups?: Array<{ title: string; items: string[] }>
 }
 
 type StatusMap = Record<
@@ -46,6 +47,7 @@ export default function DepartmentHome({
   department,
   items,
   basePath,
+  groups,
 }: Props) {
   const { t, lang } = useTranslation()
   const [status, setStatus] = useState<StatusMap>({})
@@ -152,9 +154,26 @@ export default function DepartmentHome({
         </div>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-        {[...items]
+      <div className="space-y-10">
+        {(groups ?? [{ title: '', items }]).map((group) => (
+          <section key={group.title || 'all'}>
+            {group.title && (
+              <div className="mb-5 flex items-center gap-4">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-300 dark:to-white/20" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/65">
+                  {group.title === 'Partier'
+                    ? t.partier
+                    : lang === 'en'
+                      ? 'Dishwashing areas'
+                      : lang === 'sv'
+                        ? 'Diskavdelningar'
+                        : 'Skyllerier'}
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-300 dark:to-white/20" />
+              </div>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {[...group.items]
           .sort((a, b) => {
             const aInfo = status[a]
             const bInfo = status[b]
@@ -296,6 +315,9 @@ export default function DepartmentHome({
             )
           })}
 
+            </div>
+          </section>
+        ))}
       </div>
     </main>
   )

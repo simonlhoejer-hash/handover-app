@@ -4,6 +4,7 @@ import {
   requestHasShipAccess,
 } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
+import { PARTIS } from '@/lib/partis'
 
 function todayInCopenhagen() {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -54,7 +55,15 @@ export async function GET(request: NextRequest) {
     )
     .eq('department', ship)
 
-  if (parti) query = query.eq('parti', parti)
+  if (parti) {
+    const validPartis = ship === 'pearl' ? PARTIS.pearl : PARTIS.galley
+    if (!validPartis.includes(parti)) {
+      return NextResponse.json({ error: 'Ukendt parti.' }, { status: 400 })
+    }
+    query = parti === 'Varm Skagerak'
+      ? query.in('parti', ['Varm Skagerak', 'Skagerak'])
+      : query.eq('parti', parti)
+  }
   if (status === 'draft' || status === 'published') {
     query = query.eq('status', status)
   } else if (mode === 'status') {
@@ -71,6 +80,7 @@ export async function GET(request: NextRequest) {
 
   const notes = ((data ?? []) as unknown as Array<Record<string, unknown>>).map((note) => ({
     ...note,
+    parti: note.parti === 'Skagerak' ? 'Varm Skagerak' : note.parti,
     images: normalizeImageUrls(note.images, ship),
   }))
 
@@ -123,8 +133,9 @@ export async function POST(request: NextRequest) {
   const note = sanitizeHandoverHtml(text(body.note))
   const images = stringArray(body.images).map(imageStorageValue)
   const draftId = text(body.id, 100)
+  const validPartis = ship === 'pearl' ? PARTIS.pearl : PARTIS.galley
 
-  if (!parti || !shiftDate) {
+  if (!parti || !validPartis.includes(parti) || !shiftDate) {
     return NextResponse.json({ error: 'Ugyldige data.' }, { status: 400 })
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(shiftDate) || shiftDate < todayInCopenhagen()) {
