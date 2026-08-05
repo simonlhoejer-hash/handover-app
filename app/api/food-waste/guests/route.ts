@@ -36,9 +36,10 @@ export async function PUT(request: NextRequest) {
   const comment = typeof body?.comment === 'string' ? body.comment.slice(0, 1000) : null
   const skagerakMorning = Number(body?.skagerak_morning ?? 0)
   const commodoreMorning = Number(body?.commodore_morning ?? 0)
+  const breakfastGuests = Number(body?.breakfast_guests ?? (skagerakMorning + commodoreMorning))
   const skagerakEvening = Number(body?.skagerak_evening ?? 0)
   const messGuests = Number(body?.mess_guests ?? 160)
-  const serviceCounts = [skagerakMorning, commodoreMorning, skagerakEvening, messGuests]
+  const serviceCounts = [breakfastGuests, skagerakMorning, commodoreMorning, skagerakEvening, messGuests]
 
   if (
     !ship ||
@@ -57,6 +58,7 @@ export async function PUT(request: NextRequest) {
     guest_count: guestCount,
     comment: null,
     vessel: ship,
+    breakfast_guests: breakfastGuests,
     skagerak_morning: skagerakMorning,
     commodore_morning: commodoreMorning,
     skagerak_evening: skagerakEvening,

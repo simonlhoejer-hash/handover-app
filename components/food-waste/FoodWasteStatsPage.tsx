@@ -30,6 +30,7 @@ type GuestCount = {
   guest_count: number
   comment: string | null
   vessel?: 'crown' | 'pearl'
+  breakfast_guests?: number | null
   skagerak_morning?: number | null
   commodore_morning?: number | null
   skagerak_evening?: number | null
@@ -100,6 +101,7 @@ function formatAmount(value: number, lang: string, decimals = 1) {
 
 type GuestBreakdown = {
   type: 'guest_breakdown'
+  breakfastGuests: number
   skagerakMorning: number
   commodoreMorning: number
   skagerakEvening: number
@@ -111,8 +113,12 @@ function parseGuestBreakdown(comment: string | null): GuestBreakdown | null {
   try {
     const value = JSON.parse(comment) as Partial<GuestBreakdown>
     if (value.type !== 'guest_breakdown') return null
+    const legacyBreakfast = (Number(value.skagerakMorning) || 0) + (Number(value.commodoreMorning) || 0)
     return {
       type: 'guest_breakdown',
+      breakfastGuests: value.breakfastGuests == null
+        ? legacyBreakfast
+        : Number(value.breakfastGuests) || 0,
       skagerakMorning: Number(value.skagerakMorning) || 0,
       commodoreMorning: Number(value.commodoreMorning) || 0,
       skagerakEvening: Number(value.skagerakEvening) || 0,
@@ -126,6 +132,7 @@ function parseGuestBreakdown(comment: string | null): GuestBreakdown | null {
 function getGuestBreakdown(guest: GuestCount | undefined): GuestBreakdown | null {
   if (!guest) return null
   if (
+    guest.breakfast_guests != null ||
     guest.skagerak_morning != null ||
     guest.commodore_morning != null ||
     guest.skagerak_evening != null ||
@@ -133,6 +140,9 @@ function getGuestBreakdown(guest: GuestCount | undefined): GuestBreakdown | null
   ) {
     return {
       type: 'guest_breakdown',
+      breakfastGuests: guest.breakfast_guests == null
+        ? (Number(guest.skagerak_morning) || 0) + (Number(guest.commodore_morning) || 0)
+        : Number(guest.breakfast_guests) || 0,
       skagerakMorning: Number(guest.skagerak_morning) || 0,
       commodoreMorning: Number(guest.commodore_morning) || 0,
       skagerakEvening: Number(guest.skagerak_evening) || 0,
@@ -228,8 +238,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [guestCounts, setGuestCounts] = useState<GuestCount[]>([])
   const [guestDate, setGuestDate] = useState(today)
-  const [skagerakMorningGuests, setSkagerakMorningGuests] = useState('')
-  const [commodoreMorningGuests, setCommodoreMorningGuests] = useState('')
+  const [breakfastGuests, setBreakfastGuests] = useState('')
   const [skagerakEveningGuests, setSkagerakEveningGuests] = useState('')
   const [messGuests, setMessGuests] = useState('160')
   const [buffetView, setBuffetView] = useState<BuffetView>('all')
@@ -354,8 +363,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   useEffect(() => {
     const saved = guestCounts.find((guest) => guest.service_date === guestDate)
     const breakdown = getGuestBreakdown(saved)
-    setSkagerakMorningGuests(breakdown ? String(breakdown.skagerakMorning || '') : '')
-    setCommodoreMorningGuests(breakdown ? String(breakdown.commodoreMorning || '') : '')
+    setBreakfastGuests(breakdown ? String(breakdown.breakfastGuests || '') : '')
     setSkagerakEveningGuests(breakdown ? String(breakdown.skagerakEvening || '') : '')
     setMessGuests(String(breakdown?.messGuests ?? 160))
   }, [guestCounts, guestDate])
@@ -519,7 +527,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       const breakdown = getGuestBreakdown(guest)
       if (view === 'morning') {
         return total + (breakdown
-          ? breakdown.skagerakMorning + breakdown.commodoreMorning
+          ? breakdown.breakfastGuests
           : Math.max(guest.guest_count - 160, 0))
       }
       if (view === 'evening') {
@@ -532,12 +540,13 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   async function saveGuestCount() {
     const breakdown: GuestBreakdown = {
       type: 'guest_breakdown',
-      skagerakMorning: Number(skagerakMorningGuests) || 0,
-      commodoreMorning: Number(commodoreMorningGuests) || 0,
+      breakfastGuests: Number(breakfastGuests) || 0,
+      skagerakMorning: Number(breakfastGuests) || 0,
+      commodoreMorning: 0,
       skagerakEvening: Number(skagerakEveningGuests) || 0,
       messGuests: Number(messGuests) || 0,
     }
-    const morningTotal = breakdown.skagerakMorning + breakdown.commodoreMorning
+    const morningTotal = breakdown.breakfastGuests
     const guests = Math.max(morningTotal, breakdown.skagerakEvening) + breakdown.messGuests
 
     if (
@@ -562,6 +571,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           service_date: guestDate,
           guest_count: guests,
           comment: JSON.stringify(breakdown),
+          breakfast_guests: breakdown.breakfastGuests,
           skagerak_morning: breakdown.skagerakMorning,
           commodore_morning: breakdown.commodoreMorning,
           skagerak_evening: breakdown.skagerakEvening,
@@ -656,8 +666,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       const breakdown = getGuestBreakdown(guest)
       return {
         [t.date]: guest.service_date,
-        'Skagerak morgen': breakdown?.skagerakMorning ?? '',
-        'Commodore morgen': breakdown?.commodoreMorning ?? '',
+        [guestFieldText.breakfastTotal]: breakdown?.breakfastGuests ?? '',
         'Skagerak aften': breakdown?.skagerakEvening ?? '',
         Messen: breakdown?.messGuests ?? '',
         [t.guests]: guest.guest_count,
@@ -757,10 +766,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       ? { all: 'Totalt', buffet: 'Buffé', production: 'Produktion', deck: 'Däck 1' }
       : { all: 'Samlet', buffet: 'Buffet', production: 'Produktion', deck: 'Dæk 1' }
   const guestFieldText = lang === 'en'
-    ? { morning: 'Morning', evening: 'Evening', messPerMeal: 'Crew mess per meal', estimated: 'Estimated', morningTotal: 'Morning total', eveningTotal: 'Evening total' }
+    ? { morning: 'Breakfast', breakfastTotal: 'Breakfast guests in total', evening: 'Evening', messPerMeal: 'Crew mess per meal', estimated: 'Estimated', morningTotal: 'Breakfast total', eveningTotal: 'Evening total' }
     : lang === 'sv'
-      ? { morning: 'Morgon', evening: 'Kväll', messPerMeal: 'Mässen per måltid', estimated: 'Uppskattat', morningTotal: 'Morgon totalt', eveningTotal: 'Kväll totalt' }
-      : { morning: 'Morgen', evening: 'Aften', messPerMeal: 'Messen pr. måltid', estimated: 'Anslået', morningTotal: 'Morgen i alt', eveningTotal: 'Aften i alt' }
+      ? { morning: 'Frukost', breakfastTotal: 'Frukostgäster totalt', evening: 'Kväll', messPerMeal: 'Mässen per måltid', estimated: 'Uppskattat', morningTotal: 'Frukost totalt', eveningTotal: 'Kväll totalt' }
+      : { morning: 'Morgenmad', breakfastTotal: 'Morgengæster i alt', evening: 'Aften', messPerMeal: 'Messen pr. måltid', estimated: 'Anslået', morningTotal: 'Morgen i alt', eveningTotal: 'Aften i alt' }
   const averageLabel = lang === 'en' ? 'Average' : lang === 'sv' ? 'Genomsnitt' : 'Gennemsnit'
 
   function getPointBreakdown(point: ChartPoint, kind: 'buffet' | 'grinder') {
@@ -1480,21 +1489,16 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-white/55">
                     {guestFieldText.morning}
                   </legend>
-                  {[
-                    ['Skagerak', skagerakMorningGuests, setSkagerakMorningGuests],
-                    ['Commodore', commodoreMorningGuests, setCommodoreMorningGuests],
-                  ].map(([label, value, setter]) => (
-                    <label key={label as string} className="grid grid-cols-[1fr_6rem] items-center gap-3">
-                      <span className="text-sm font-medium">{label as string}</span>
-                      <input
-                        inputMode="numeric"
-                        value={value as string}
-                        onChange={(event) => (setter as (value: string) => void)(event.target.value)}
-                        className="h-10 rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
-                        placeholder="0"
-                      />
-                    </label>
-                  ))}
+                  <label className="grid grid-cols-[1fr_6rem] items-center gap-3">
+                    <span className="text-sm font-medium">{guestFieldText.breakfastTotal}</span>
+                    <input
+                      inputMode="numeric"
+                      value={breakfastGuests}
+                      onChange={(event) => setBreakfastGuests(event.target.value)}
+                      className="h-10 rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
+                      placeholder="0"
+                    />
+                  </label>
                 </fieldset>
                 <fieldset className="grid gap-2 rounded-xl border border-black/5 bg-gray-50 p-3 dark:border-white/10 dark:bg-[#082f2e]">
                   <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-white/55">
@@ -1523,7 +1527,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-xl bg-nordic-soft px-3 py-2 text-sm">
                     <span className="block text-xs text-gray-500 dark:text-white/55">{guestFieldText.morningTotal}</span>
-                    <strong className="text-lg text-nordic">{formatNumber((Number(skagerakMorningGuests) || 0) + (Number(commodoreMorningGuests) || 0), lang)}</strong>
+                    <strong className="text-lg text-nordic">{formatNumber(Number(breakfastGuests) || 0, lang)}</strong>
                   </div>
                   <div className="rounded-xl bg-nordic-soft px-3 py-2 text-sm">
                     <span className="block text-xs text-gray-500 dark:text-white/55">{guestFieldText.eveningTotal}</span>
