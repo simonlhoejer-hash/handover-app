@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v18'
+const CACHE_NAME = 'handover-offline-v19'
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
@@ -100,26 +100,29 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const pathKey = normalizedPath(url.pathname)
-        const forceFreshLogin = url.searchParams.has('login')
-        const cached = forceFreshLogin
-          ? null
-          : await caches.match(request) || await cache.match(pathKey)
-        const network = (async () => {
+        const network = async () => {
           const preloaded = await event.preloadResponse
           const response = preloaded || await fetch(request)
           if (!response || !response.ok) throw new Error('Navigation failed')
-          await cache.put(pathKey, response.clone())
-          return response
-        })()
 
-        if (cached) {
-          event.waitUntil(network.catch(() => undefined))
-          return cached
+          const finalUrl = new URL(response.url)
+          if (
+            finalUrl.origin === self.location.origin &&
+            normalizedPath(finalUrl.pathname) === pathKey
+          ) {
+            await cache.put(pathKey, response.clone())
+          }
+
+          return response
         }
 
-        return network.catch(async () => {
+        // Always prefer the current app while online. The cache is only the
+        // offline fallback, preventing installed iOS apps from keeping an old
+        // home screen after a deployment.
+        return network().catch(async () => {
           const ship = pathKey.startsWith('/pearl') ? 'pearl' : 'crown'
           return (
+            await caches.match(request) ||
             await cache.match(pathKey) ||
             await cache.match(`/${ship}/food-waste`) ||
             await cache.match('/ships') ||
