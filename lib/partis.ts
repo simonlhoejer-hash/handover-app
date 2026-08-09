@@ -10,6 +10,7 @@ export const PARTIS: Record<string, string[]> = {
     'Stilling 2',
     'Stilling 1',
     'Slagter',
+    'Natskyller',
   ],
   pearl: [
     'SYD',
