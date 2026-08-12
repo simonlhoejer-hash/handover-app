@@ -30,6 +30,7 @@ export const PARTIS: Record<string, string[]> = {
     'STOR SKYLLERI',
     'KULL SKYLLERI',
     'SKAGERAK',
+    'NATSKYLLER',
   ],
   shop: [
   'Tøj',
@@ -60,7 +61,7 @@ export const PEARL_PARTI_GROUPS = [
   },
   {
     title: 'Skyllerier',
-    items: ['POTTEN', 'STOR SKYLLERI', 'KULL SKYLLERI', 'SKAGERAK'],
+    items: ['POTTEN', 'STOR SKYLLERI', 'KULL SKYLLERI', 'SKAGERAK', 'NATSKYLLER'],
   },
 ] as const
 
@@ -77,6 +78,7 @@ const PEARL_PARTI_LABELS: Record<string, string> = {
   'STOR SKYLLERI': 'Stor skylleri',
   'KULL SKYLLERI': 'Kull skylleri',
   SKAGERAK: 'Skagerak',
+  NATSKYLLER: 'Natskyller',
 }
 
 export function displayPartiName(name: string, department: string) {

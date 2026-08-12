@@ -4,6 +4,7 @@ import {
   AccessShip,
   createAccessToken,
   isCorrectAccessCode,
+  LEGACY_ACCESS_COOKIE_NAMES,
 } from '@/lib/shipAccess'
 
 function isAccessShip(value: unknown): value is AccessShip {
@@ -49,13 +50,30 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 24 * 180,
   })
 
+  if (body.ship === 'pearl') {
+    for (const cookieName of LEGACY_ACCESS_COOKIE_NAMES) {
+      response.cookies.set({
+        name: cookieName,
+        value: '',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+      })
+    }
+  }
+
   return response
 }
 
 export async function DELETE() {
   const response = NextResponse.json({ ok: true })
 
-  for (const cookieName of Object.values(ACCESS_COOKIE_NAMES)) {
+  for (const cookieName of [
+    ...Object.values(ACCESS_COOKIE_NAMES),
+    ...LEGACY_ACCESS_COOKIE_NAMES,
+  ]) {
     response.cookies.set({
       name: cookieName,
       value: '',
