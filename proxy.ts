@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import {
   ACCESS_COOKIE_NAMES,
   AccessShip,
+  LEGACY_ACCESS_COOKIE_NAMES,
   verifyAccessToken,
 } from '@/lib/shipAccess'
 
@@ -22,7 +23,23 @@ export async function proxy(request: NextRequest) {
   }
 
   const accessUrl = new URL(`/${ship}/adgang`, request.url)
-  return NextResponse.redirect(accessUrl)
+  const response = NextResponse.redirect(accessUrl)
+
+  if (ship === 'pearl') {
+    for (const cookieName of LEGACY_ACCESS_COOKIE_NAMES) {
+      response.cookies.set({
+        name: cookieName,
+        value: '',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+      })
+    }
+  }
+
+  return response
 }
 
 export const config = {

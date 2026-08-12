@@ -2,8 +2,10 @@ export type AccessShip = 'crown' | 'pearl'
 
 export const ACCESS_COOKIE_NAMES: Record<AccessShip, string> = {
   crown: 'handover_crown_access',
-  pearl: 'handover_pearl_access',
+  pearl: 'handover_pearl_access_v2',
 }
+
+export const LEGACY_ACCESS_COOKIE_NAMES = ['handover_pearl_access'] as const
 
 function getCode(ship: AccessShip) {
   const environmentCode =
