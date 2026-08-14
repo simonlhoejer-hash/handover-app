@@ -2,7 +2,7 @@
 
 import { ChevronDown, Download, Maximize2, Users, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
   cacheFoodWasteEntries,
@@ -65,13 +65,31 @@ function getToday() {
   return `${year}-${month}-${day}`
 }
 
-function getMonthStart(dateString: string) {
-  return `${dateString.slice(0, 7)}-01`
-}
-
 function parseLocalDate(dateString: string) {
   const [year, month, day] = dateString.split('-').map(Number)
   return new Date(year, month - 1, day)
+}
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function getWeekRange(dateString: string) {
+  const monday = parseLocalDate(dateString)
+  const daysSinceMonday = (monday.getDay() + 6) % 7
+  monday.setDate(monday.getDate() - daysSinceMonday)
+
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+
+  return {
+    from: formatLocalDate(monday),
+    to: formatLocalDate(sunday),
+  }
 }
 
 function getDateRangeDays(fromDate: string, toDate: string) {
@@ -232,9 +250,11 @@ type Props = {
 export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const { t, lang } = useTranslation()
   const today = getToday()
+  const initialWeek = getWeekRange(today)
 
-  const [fromDate, setFromDate] = useState(getMonthStart(today))
-  const [toDate, setToDate] = useState(today)
+  const [fromDate, setFromDate] = useState(initialWeek.from)
+  const [toDate, setToDate] = useState(initialWeek.to)
+  const automaticWeekRef = useRef(true)
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [guestCounts, setGuestCounts] = useState<GuestCount[]>([])
   const [guestDate, setGuestDate] = useState(today)
@@ -255,6 +275,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     point: ChartPoint
   } | null>(null)
   const [expandedChart, setExpandedChart] = useState<string | null>(null)
+
+  useEffect(() => {
+    function refreshAutomaticWeek() {
+      if (!automaticWeekRef.current) return
+
+      const week = getWeekRange(getToday())
+      setFromDate(week.from)
+      setToDate(week.to)
+    }
+
+    const interval = window.setInterval(refreshAutomaticWeek, 60_000)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshAutomaticWeek()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   useEffect(() => {
     let isCurrent = true
@@ -844,7 +886,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           <input
             type="date"
             value={fromDate}
-            onChange={(event) => setFromDate(event.target.value)}
+            onChange={(event) => {
+              automaticWeekRef.current = false
+              setFromDate(event.target.value)
+            }}
             className="h-12 w-full rounded-2xl bg-white px-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
           />
         </label>
@@ -856,7 +901,10 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           <input
             type="date"
             value={toDate}
-            onChange={(event) => setToDate(event.target.value)}
+            onChange={(event) => {
+              automaticWeekRef.current = false
+              setToDate(event.target.value)
+            }}
             className="h-12 w-full rounded-2xl bg-white px-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
           />
         </label>
