@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, ChevronLeft, Trash2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ChevronLeft, Trash2 } from 'lucide-react'
 import {
   cacheFoodWasteEntries,
   readCachedFoodWasteEntries,
@@ -48,6 +48,15 @@ function getToday() {
   return `${year}-${month}-${day}`
 }
 
+function getDateDaysAgo(days: number) {
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function formatDate(value: string, lang: string) {
   return new Date(value).toLocaleDateString(localeFor(lang), {
     day: 'numeric',
@@ -79,6 +88,8 @@ export default function FoodWasteLocationPage({
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [syncMessage, setSyncMessage] = useState('')
+  const [wasteReason, setWasteReason] = useState('')
+  const [showReasonPrompt, setShowReasonPrompt] = useState(false)
   const [isOnline, setIsOnline] = useState(
     typeof navigator === 'undefined' ? true : navigator.onLine
   )
@@ -181,7 +192,8 @@ export default function FoodWasteLocationPage({
           `/api/food-waste/entries?${queryString({
             ship: vessel,
             location: locationName,
-            limit: 20,
+            from: getDateDaysAgo(28),
+            limit: 200,
           })}`
         )
         data = result.data
@@ -221,7 +233,30 @@ export default function FoodWasteLocationPage({
     }, 0)
   }, [entries, today])
 
-  async function saveEntry(value: string) {
+  const historicalDailyAverage = useMemo(() => {
+    if (!locationName.startsWith('Messen ')) return 0
+
+    const dailyTotals = new Map<string, number>()
+    for (const entry of entries) {
+      if (entry.waste_date === today || entry.pending) continue
+      dailyTotals.set(
+        entry.waste_date,
+        (dailyTotals.get(entry.waste_date) ?? 0) + getEntryAmount(entry)
+      )
+    }
+
+    const totals = Array.from(dailyTotals.values())
+    if (totals.length < 3) return 0
+    return totals.reduce((sum, total) => sum + total, 0) / totals.length
+  }, [entries, locationName, today])
+
+  const enteredQuantity = Number(quantityKg.trim().replace(',', '.')) || 0
+  const projectedTodayTotal = todayTotal + enteredQuantity
+  const requiresWasteReason =
+    historicalDailyAverage > 0 &&
+    projectedTodayTotal > historicalDailyAverage * 1.25
+
+  async function saveEntry(value: string, comment: string | null = null) {
     const quantity = Number(value.replace(',', '.'))
 
     if (!quantity || quantity <= 0) {
@@ -237,7 +272,7 @@ export default function FoodWasteLocationPage({
       waste_date: today,
       location_name: locationName,
       quantity_kg: quantity,
-      comment: null,
+      comment,
       vessel,
     }
 
@@ -266,6 +301,8 @@ export default function FoodWasteLocationPage({
       cacheFoodWasteEntries([data], vessel)
       setEntries((current) => [data, ...current])
       setQuantityKg('')
+      setWasteReason('')
+      setShowReasonPrompt(false)
     }
 
     setSaving(false)
@@ -288,6 +325,8 @@ export default function FoodWasteLocationPage({
 
     setEntries((current) => [localEntry, ...current])
     setQuantityKg('')
+    setWasteReason('')
+    setShowReasonPrompt(false)
     setSyncMessage(t.savedLocally)
   }
 
@@ -304,10 +343,19 @@ export default function FoodWasteLocationPage({
 
     if (!value || !Number.isFinite(quantity) || quantity <= 0) {
       saveStartedRef.current = false
+      setShowReasonPrompt(false)
       return
     }
 
     if (saving || saved || saveStartedRef.current) return
+
+    if (requiresWasteReason) {
+      setShowReasonPrompt(true)
+      saveStartedRef.current = false
+      return
+    }
+
+    setShowReasonPrompt(false)
 
     const timer = window.setTimeout(() => {
       saveStartedRef.current = true
@@ -315,7 +363,7 @@ export default function FoodWasteLocationPage({
     }, 2000)
 
     return () => window.clearTimeout(timer)
-  }, [quantityKg, saved, saving])
+  }, [quantityKg, requiresWasteReason, saved, saving])
 
   async function deleteEntry(id: string) {
     if (id.startsWith('local-')) {
@@ -408,8 +456,83 @@ export default function FoodWasteLocationPage({
         </div>
 
         <p className="mt-3 text-center text-sm text-gray-500 dark:text-white/60">
-          {saving ? t.saving : t.foodWasteAutoSaveHint}
+          {saving ? t.saving : showReasonPrompt ? '' : t.foodWasteAutoSaveHint}
         </p>
+
+        {showReasonPrompt && (
+          <div className="mt-3 rounded-2xl border-2 border-red-500/50 bg-red-50 p-4 dark:bg-red-500/10">
+            <div className="flex items-start gap-3 text-red-700 dark:text-red-200">
+              <AlertTriangle className="mt-0.5 shrink-0" size={20} />
+              <div>
+                <p className="font-semibold">
+                  {lang === 'en'
+                    ? 'More waste than usual'
+                    : lang === 'sv'
+                      ? 'Mer svinn än vanligt'
+                      : 'Mere spild end normalt'}
+                </p>
+                <p className="mt-1 text-sm opacity-80">
+                  {lang === 'en'
+                    ? `Today will be ${formatAmount(projectedTodayTotal, lang)}. Briefly explain why.`
+                    : lang === 'sv'
+                      ? `Dagens mängd blir ${formatAmount(projectedTodayTotal, lang)}. Skriv kort varför.`
+                      : `Dagens mængde bliver ${formatAmount(projectedTodayTotal, lang)}. Skriv kort hvorfor.`}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(
+                lang === 'en'
+                  ? ['Dish was not popular', 'Too much produced', 'Fewer guests', 'Quality issue']
+                  : lang === 'sv'
+                    ? ['Rätten var inte populär', 'För mycket producerat', 'Färre gäster', 'Kvalitetsproblem']
+                    : ['Retten var ikke populær', 'For meget produceret', 'Færre gæster', 'Kvalitetsproblem']
+              ).map((reason) => (
+                <button
+                  key={reason}
+                  type="button"
+                  onClick={() => setWasteReason(reason)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    wasteReason === reason
+                      ? 'border-red-600 bg-red-600 text-white'
+                      : 'border-red-500/25 bg-white/70 text-red-700 dark:bg-white/5 dark:text-red-200'
+                  }`}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={wasteReason}
+              onChange={(event) => setWasteReason(event.target.value)}
+              maxLength={500}
+              rows={2}
+              className="mt-3 w-full resize-none rounded-xl border border-red-500/30 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-red-500/30 dark:bg-[#082f2e] dark:text-white"
+              placeholder={lang === 'en' ? 'Reason…' : lang === 'sv' ? 'Orsak…' : 'Årsag…'}
+              autoFocus
+            />
+
+            <button
+              type="button"
+              disabled={!wasteReason.trim() || saving}
+              onClick={() => {
+                saveStartedRef.current = true
+                void saveEntry(quantityKg, wasteReason.trim())
+              }}
+              className="mt-3 w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {saving
+                ? t.saving
+                : lang === 'en'
+                  ? 'Save registration'
+                  : lang === 'sv'
+                    ? 'Spara registrering'
+                    : 'Gem registrering'}
+            </button>
+          </div>
+        )}
 
         {saved && (
           <p className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
@@ -455,7 +578,7 @@ export default function FoodWasteLocationPage({
           </div>
         )}
 
-        {entries.map((entry) => (
+        {entries.slice(0, 20).map((entry) => (
           <article
             key={entry.id}
             className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
