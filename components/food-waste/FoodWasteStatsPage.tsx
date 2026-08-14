@@ -171,6 +171,7 @@ function getGuestBreakdown(guest: GuestCount | undefined): GuestBreakdown | null
 }
 
 type BuffetView = 'all' | 'morning' | 'evening' | 'mess'
+type MessView = 'all' | 'morning' | 'lunch' | 'evening'
 type GrinderView = 'all' | 'buffet' | 'production' | 'deck'
 
 function isBuffetLocationForView(name: string, view: BuffetView) {
@@ -178,6 +179,13 @@ function isBuffetLocationForView(name: string, view: BuffetView) {
   if (view === 'evening') return name === 'Skagerak aften'
   if (view === 'mess') return name.startsWith('Messen ')
   return !name.startsWith('Produktion ')
+}
+
+function isMessLocationForView(name: string, view: MessView) {
+  if (view === 'morning') return name === 'Messen morgen'
+  if (view === 'lunch') return name === 'Messen frokost'
+  if (view === 'evening') return name === 'Messen aften'
+  return name.startsWith('Messen ')
 }
 
 function isGrinderLocationForView(name: string, view: GrinderView) {
@@ -262,6 +270,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [skagerakEveningGuests, setSkagerakEveningGuests] = useState('')
   const [messGuests, setMessGuests] = useState('160')
   const [buffetView, setBuffetView] = useState<BuffetView>('all')
+  const [messView, setMessView] = useState<MessView>('all')
   const [grinderView, setGrinderView] = useState<GrinderView>('all')
   const [loading, setLoading] = useState(true)
   const [savingGuests, setSavingGuests] = useState(false)
@@ -504,6 +513,21 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         buffetNames.filter((name) => isBuffetLocationForView(name, 'mess'))
       ),
     }
+    const messViews: Record<MessView, WasteCategoryStats> = {
+      all: buffetViews.mess,
+      morning: buildCategoryStats(
+        entries.filter((entry) => isMessLocationForView(entry.location_name, 'morning')),
+        buffetNames.filter((name) => isMessLocationForView(name, 'morning'))
+      ),
+      lunch: buildCategoryStats(
+        entries.filter((entry) => isMessLocationForView(entry.location_name, 'lunch')),
+        buffetNames.filter((name) => isMessLocationForView(name, 'lunch'))
+      ),
+      evening: buildCategoryStats(
+        entries.filter((entry) => isMessLocationForView(entry.location_name, 'evening')),
+        buffetNames.filter((name) => isMessLocationForView(name, 'evening'))
+      ),
+    }
     const production = buildCategoryStats(
       entries.filter((entry) => productionNameSet.has(entry.location_name)),
       productionNames
@@ -537,6 +561,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     return {
       buffet,
       buffetViews,
+      messViews,
       production,
       grinder,
       grinderViews,
@@ -545,13 +570,16 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     }
   }, [entries, fromDate, guestCounts, lang, t.week, toDate])
 
-  function getGuestsForDates(dates: string[], view: BuffetView) {
+  function getGuestsForDates(dates: string[], view: BuffetView, activeMessView = messView) {
     const selectedDates = new Set(dates)
 
     if (view === 'mess') {
       const servicesByDate = new Map<string, Set<string>>()
       for (const entry of entries) {
-        if (!selectedDates.has(entry.waste_date) || !isBuffetLocationForView(entry.location_name, 'mess')) continue
+        if (
+          !selectedDates.has(entry.waste_date) ||
+          !isMessLocationForView(entry.location_name, activeMessView)
+        ) continue
         const services = servicesByDate.get(entry.waste_date) ?? new Set<string>()
         services.add(entry.location_name)
         servicesByDate.set(entry.waste_date, services)
@@ -745,7 +773,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     setExporting(false)
   }
 
-  const activeBuffetStats = stats.buffetViews[buffetView]
+  const activeBuffetStats = buffetView === 'mess'
+    ? stats.messViews[messView]
+    : stats.buffetViews[buffetView]
   const buffetGuestTotal = getGuestsForDates(
     Array.from(new Set(activeBuffetStats.chartPoints.flatMap((point) => point.dates))),
     buffetView
@@ -802,6 +832,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     : lang === 'sv'
       ? { all: 'Totalt', morning: 'Morgon', evening: 'Kväll', mess: 'Mässen' }
       : { all: 'Samlet', morning: 'Morgen', evening: 'Aften', mess: 'Messen' }
+  const messViewLabels: Record<MessView, string> = lang === 'en'
+    ? { all: 'Total', morning: 'Breakfast', lunch: 'Lunch', evening: 'Dinner' }
+    : lang === 'sv'
+      ? { all: 'Totalt', morning: 'Frukost', lunch: 'Lunch', evening: 'Middag' }
+      : { all: 'Samlet', morning: 'Morgen', lunch: 'Frokost', evening: 'Aften' }
   const grinderViewLabels: Record<GrinderView, string> = lang === 'en'
     ? { all: 'Total', buffet: 'Buffet', production: 'Production', deck: 'Deck 1' }
     : lang === 'sv'
@@ -824,6 +859,13 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         continue
       }
       if (kind === 'buffet' && !isBuffetLocationForView(entry.location_name, buffetView)) {
+        continue
+      }
+      if (
+        kind === 'buffet' &&
+        buffetView === 'mess' &&
+        !isMessLocationForView(entry.location_name, messView)
+      ) {
         continue
       }
       if (kind === 'grinder' && !isGrinderLocationForView(entry.location_name, grinderView)) {
@@ -974,6 +1016,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     }`}
                   >
                     {buffetViewLabels[view]}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {chart.kind === 'buffet' && buffetView === 'mess' && (
+              <div className="mt-2 grid grid-cols-4 gap-1 rounded-xl border border-amber-500/15 bg-amber-50/70 p-1 dark:bg-amber-400/10">
+                {(Object.keys(messViewLabels) as MessView[]).map((view) => (
+                  <button
+                    key={view}
+                    type="button"
+                    onClick={() => {
+                      setMessView(view)
+                      setSelectedPoint(null)
+                    }}
+                    className={`min-w-0 rounded-lg px-2 py-2 text-xs font-semibold transition sm:text-sm ${
+                      messView === view
+                        ? 'bg-amber-500 text-white shadow-sm'
+                        : 'text-amber-900/65 hover:text-amber-950 dark:text-amber-100/60 dark:hover:text-amber-100'
+                    }`}
+                  >
+                    {messViewLabels[view]}
                   </button>
                 ))}
               </div>
@@ -1285,6 +1349,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                         }`}
                       >
                         {buffetViewLabels[view]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {chart.kind === 'buffet' && buffetView === 'mess' && (
+                  <div className="grid grid-cols-4 gap-1 border-b border-amber-500/15 bg-amber-50/70 p-2 dark:bg-amber-400/10 sm:px-7">
+                    {(Object.keys(messViewLabels) as MessView[]).map((view) => (
+                      <button
+                        key={view}
+                        type="button"
+                        onClick={() => {
+                          setMessView(view)
+                          setSelectedPoint(null)
+                        }}
+                        className={`rounded-xl px-2 py-2 text-xs font-semibold transition sm:text-sm ${
+                          messView === view
+                            ? 'bg-amber-500 text-white shadow-sm'
+                            : 'text-amber-900/65 dark:text-amber-100/60'
+                        }`}
+                      >
+                        {messViewLabels[view]}
                       </button>
                     ))}
                   </div>
