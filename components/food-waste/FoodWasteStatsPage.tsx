@@ -246,62 +246,6 @@ function getDatesInRange(fromDate: string, toDate: string) {
   return dates
 }
 
-function createExcelBarChart(
-  points: Array<{ label: string; total: number }>,
-  title: string,
-  color: string,
-  lang: string
-) {
-  const canvas = document.createElement('canvas')
-  canvas.width = 1400
-  canvas.height = 620
-  const context = canvas.getContext('2d')
-  if (!context) return ''
-
-  context.fillStyle = '#ffffff'
-  context.fillRect(0, 0, canvas.width, canvas.height)
-  context.fillStyle = '#0f172a'
-  context.font = '600 34px Arial'
-  context.fillText(title, 70, 62)
-
-  const chartLeft = 90
-  const chartTop = 115
-  const chartWidth = 1220
-  const chartHeight = 390
-  const maxValue = Math.max(...points.map((point) => point.total), 1)
-  const slotWidth = chartWidth / Math.max(points.length, 1)
-  const barWidth = Math.min(slotWidth * 0.56, 110)
-
-  context.strokeStyle = '#dbe4e2'
-  context.lineWidth = 2
-  context.beginPath()
-  context.moveTo(chartLeft, chartTop + chartHeight)
-  context.lineTo(chartLeft + chartWidth, chartTop + chartHeight)
-  context.stroke()
-
-  points.forEach((point, index) => {
-    const height = (point.total / maxValue) * (chartHeight - 55)
-    const x = chartLeft + slotWidth * index + (slotWidth - barWidth) / 2
-    const y = chartTop + chartHeight - height
-
-    context.fillStyle = color
-    context.beginPath()
-    context.roundRect(x, y, barWidth, height, 18)
-    context.fill()
-
-    context.fillStyle = '#334155'
-    context.font = '600 22px Arial'
-    context.textAlign = 'center'
-    context.fillText(formatAmount(point.total, lang), x + barWidth / 2, Math.max(y - 14, chartTop + 22))
-    context.fillStyle = '#64748b'
-    context.font = '20px Arial'
-    context.fillText(point.label, x + barWidth / 2, chartTop + chartHeight + 42)
-  })
-
-  context.textAlign = 'left'
-  return canvas.toDataURL('image/png')
-}
-
 function getEntryAmount(entry: FoodWasteEntry) {
   return Number(entry.quantity_kg) || 0
 }
@@ -870,20 +814,52 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         }
       })
 
-      const buffetChart = createExcelBarChart(stats.buffet.chartPoints, t.buffetDevelopment, '#F59E0B', lang)
-      if (buffetChart) {
-        const imageId = workbook.addImage({ base64: buffetChart, extension: 'png' })
-        dashboard.addImage(imageId, { tl: { col: 0, row: 8 }, ext: { width: 670, height: 300 } })
+      const addDashboardBars = (
+        startColumn: number,
+        title: string,
+        points: Array<{ label: string; total: number }>,
+        color: string
+      ) => {
+        const endColumn = startColumn + 7
+        dashboard.mergeCells(9, startColumn, 9, endColumn)
+        const titleCell = dashboard.getCell(9, startColumn)
+        titleCell.value = title
+        titleCell.font = { name: 'Aptos Display', size: 14, bold: true, color: { argb: darkGreen } }
+        titleCell.alignment = { vertical: 'middle', horizontal: 'left' }
+
+        const visiblePoints = points.slice(-14)
+        const maxValue = Math.max(...visiblePoints.map((point) => point.total), 1)
+        visiblePoints.forEach((point, index) => {
+          const rowNumber = 10 + index
+          dashboard.mergeCells(rowNumber, startColumn, rowNumber, startColumn + 1)
+          dashboard.getCell(rowNumber, startColumn).value = point.label
+          dashboard.getCell(rowNumber, startColumn).font = { name: 'Aptos', size: 9, color: { argb: slate } }
+
+          const filledCells = point.total > 0 ? Math.max(1, Math.round((point.total / maxValue) * 4)) : 0
+          for (let barIndex = 0; barIndex < 4; barIndex += 1) {
+            const barCell = dashboard.getCell(rowNumber, startColumn + 2 + barIndex)
+            barCell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: barIndex < filledCells ? color : 'EDF2F1' },
+            }
+          }
+
+          dashboard.mergeCells(rowNumber, startColumn + 6, rowNumber, endColumn)
+          const valueCell = dashboard.getCell(rowNumber, startColumn + 6)
+          valueCell.value = point.total
+          valueCell.numFmt = '#,##0.0 "kg"'
+          valueCell.font = { name: 'Aptos', size: 9, bold: true, color: { argb: darkGreen } }
+          valueCell.alignment = { horizontal: 'right' }
+        })
       }
+
+      addDashboardBars(1, t.buffetDevelopment, stats.buffet.chartPoints, amber)
       const secondChartPoints = vessel === 'crown'
         ? stats.grinder.chartPoints
         : stats.buffet.locations.map((location) => ({ label: displayFoodWasteLocation(location.name, lang), total: location.total }))
       const secondChartTitle = vessel === 'crown' ? t.productionDevelopment : t.sheetPerLocation
-      const secondChart = createExcelBarChart(secondChartPoints, secondChartTitle, '#3B8A84', lang)
-      if (secondChart) {
-        const imageId = workbook.addImage({ base64: secondChart, extension: 'png' })
-        dashboard.addImage(imageId, { tl: { col: 8, row: 8 }, ext: { width: 670, height: 300 } })
-      }
+      addDashboardBars(9, secondChartTitle, secondChartPoints, teal)
       dashboard.mergeCells('A25:P26')
       dashboard.getCell('A25').value = lang === 'en'
         ? 'Generated by HandoverPro. Use the “Day by day” sheet for the complete daily figures.'
