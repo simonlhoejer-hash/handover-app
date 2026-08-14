@@ -837,6 +837,18 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     : lang === 'sv'
       ? { all: 'Totalt', morning: 'Frukost', lunch: 'Lunch', evening: 'Middag' }
       : { all: 'Samlet', morning: 'Morgen', lunch: 'Frokost', evening: 'Aften' }
+  const currentWasteGrams = Math.round(buffetKgPerGuest * 1000)
+  const longTermGoalGrams = 100
+  const nextGoalGrams = currentWasteGrams <= longTermGoalGrams
+    ? longTermGoalGrams
+    : Math.max(longTermGoalGrams, Math.floor((currentWasteGrams - 1) / 25) * 25)
+  const gramsToNextGoal = Math.max(currentWasteGrams - nextGoalGrams, 0)
+  const goalProgress = currentWasteGrams <= longTermGoalGrams
+    ? 100
+    : Math.max(0, Math.min(100, ((nextGoalGrams + 25 - currentWasteGrams) / 25) * 100))
+  const activeBuffetLabel = buffetView === 'mess'
+    ? `${buffetViewLabels.mess} · ${messViewLabels[messView]}`
+    : buffetViewLabels[buffetView]
   const grinderViewLabels: Record<GrinderView, string> = lang === 'en'
     ? { all: 'Total', buffet: 'Buffet', production: 'Production', deck: 'Deck 1' }
     : lang === 'sv'
@@ -896,6 +908,86 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
   return (
     <main className={`${vessel === 'pearl' ? 'max-w-7xl' : 'max-w-5xl'} mx-auto px-4 pt-4 pb-24 space-y-6`}>
+      {buffetGuestTotal > 0 && (
+        <aside className="fixed left-6 top-1/2 z-20 hidden w-64 -translate-y-1/2 min-[1800px]:block">
+          <div className="overflow-hidden rounded-3xl border border-amber-500/20 bg-white/95 p-5 shadow-xl backdrop-blur dark:border-amber-300/15 dark:bg-[#0d3b3a]/95">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
+              {lang === 'en' ? 'This week’s goal' : lang === 'sv' ? 'Veckans mål' : 'Ugens mål'}
+            </p>
+            <h2 className="mt-1 text-lg font-semibold">{activeBuffetLabel}</h2>
+
+            <div className="mt-5 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-white/55">
+                  {lang === 'en' ? 'Current level' : lang === 'sv' ? 'Nuvarande nivå' : 'Aktuelt niveau'}
+                </p>
+                <p className="mt-1 text-3xl font-semibold text-amber-600 dark:text-amber-300">
+                  {formatNumber(currentWasteGrams, lang)} g
+                </p>
+                <p className="text-xs text-gray-500 dark:text-white/55">
+                  {lang === 'en' ? 'per guest' : lang === 'sv' ? 'per gäst' : 'pr. gæst'}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-amber-50 px-3 py-2 text-right dark:bg-amber-400/10">
+                <p className="text-[10px] text-gray-500 dark:text-white/55">
+                  {currentWasteGrams <= longTermGoalGrams
+                    ? lang === 'en' ? 'Goal reached' : lang === 'sv' ? 'Målet nått' : 'Målet nået'
+                    : lang === 'en' ? 'Next step' : lang === 'sv' ? 'Nästa steg' : 'Næste delmål'}
+                </p>
+                <p className="font-semibold text-amber-700 dark:text-amber-200">
+                  {lang === 'en' ? 'under' : lang === 'sv' ? 'under' : 'under'} {nextGoalGrams} g
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  currentWasteGrams <= longTermGoalGrams ? 'bg-emerald-500' : 'bg-amber-500'
+                }`}
+                style={{ width: `${goalProgress}%` }}
+              />
+            </div>
+
+            <p className="mt-3 text-sm font-medium text-gray-700 dark:text-white/80">
+              {currentWasteGrams <= longTermGoalGrams
+                ? lang === 'en'
+                  ? 'Great work – the first main goal has been reached.'
+                  : lang === 'sv'
+                    ? 'Bra jobbat – det första huvudmålet är nått.'
+                    : 'Flot arbejde – det første hovedmål er nået.'
+                : lang === 'en'
+                  ? `Only ${gramsToNextGoal} g per guest to the next step.`
+                  : lang === 'sv'
+                    ? `Bara ${gramsToNextGoal} g per gäst till nästa steg.`
+                    : `Kun ${gramsToNextGoal} g pr. gæst til næste delmål.`}
+            </p>
+
+            <div className="mt-5 border-t border-black/5 pt-4 dark:border-white/10">
+              <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-white/55">
+                <span>{lang === 'en' ? 'Goal ladder' : lang === 'sv' ? 'Måltrappa' : 'Målstige'}</span>
+                <span>{lang === 'en' ? 'Main goal' : lang === 'sv' ? 'Huvudmål' : 'Hovedmål'} &lt;100 g</span>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-1">
+                {[175, 150, 125, 100].map((goal) => (
+                  <div key={goal} className="flex flex-1 flex-col items-center gap-1">
+                    <span className={`h-2.5 w-2.5 rounded-full ${currentWasteGrams <= goal ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-white/15'}`} />
+                    <span className="text-[10px] text-gray-500 dark:text-white/50">{goal} g</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="mt-4 text-[10px] leading-relaxed text-gray-400 dark:text-white/40">
+              {lang === 'en'
+                ? 'An internal improvement target – not an assessment of an individual chef.'
+                : lang === 'sv'
+                  ? 'Ett internt förbättringsmål – inte en bedömning av en enskild kock.'
+                  : 'Et internt forbedringsmål – ikke en vurdering af den enkelte kok.'}
+            </p>
+          </div>
+        </aside>
+      )}
       <header className="text-center">
         <h1 className="text-3xl font-semibold tracking-tight">
           {t.foodWasteOverview}
