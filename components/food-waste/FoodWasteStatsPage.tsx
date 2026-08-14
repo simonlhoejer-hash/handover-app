@@ -1143,7 +1143,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               </div>
             )}
 
-            <div className="relative mt-5 flex h-48 items-end gap-2 overflow-x-auto pb-2">
+            <div className="relative mt-5 h-48">
               {chart.points.length > 1 && chart.averageValue > 0 && (
                 <div
                   className="pointer-events-none absolute left-0 right-0 z-10 border-t border-dashed border-gray-400/70 dark:border-white/40"
@@ -1154,6 +1154,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   </span>
                 </div>
               )}
+              <div className="flex h-full items-end gap-2 overflow-x-auto pb-2">
               {!loading && chart.points.length === 0 && (
                 <p className="self-center text-sm text-gray-500 dark:text-white/60">
                   {t.noRegistrationsInPeriod}
@@ -1169,7 +1170,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     setExpandedChart(chart.title)
                   }}
                   aria-label={`${point.label}: ${formatAmount(point.total, lang)}`}
-                  className={`group flex h-full min-w-12 flex-col items-center justify-end gap-2 rounded-xl px-1 transition hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-nordic/30 dark:hover:bg-white/5 ${
+                  className={`group flex h-full min-w-16 flex-col items-center justify-end gap-2 rounded-xl px-1 transition hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-nordic/30 dark:hover:bg-white/5 ${
                     selectedPoint?.chart === chart.title &&
                     selectedPoint.point.label === point.label
                       ? 'bg-black/5 dark:bg-white/5'
@@ -1196,11 +1197,12 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     }}
                     whileHover={{ scaleX: 1.15 }}
                   />
-                  <span className="text-xs text-gray-500 dark:text-white/60">
+                  <span className="h-4 whitespace-nowrap text-xs leading-4 text-gray-500 dark:text-white/60">
                     {point.label}
                   </span>
                 </button>
               ))}
+              </div>
             </div>
 
           </div>
@@ -1312,7 +1314,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
                 <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,.9fr)]">
                   <div className="border-b border-black/5 p-5 dark:border-white/10 lg:border-b-0 lg:border-r sm:p-7">
-                    <div className="relative flex h-[360px] items-end gap-3 overflow-x-auto pb-3">
+                    <div className="relative h-[360px]">
                       {chart.points.length > 1 && chart.averageValue > 0 && (
                         <div
                           className="pointer-events-none absolute left-0 right-0 z-10 border-t-2 border-dashed border-gray-400/70 dark:border-white/40"
@@ -1323,6 +1325,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                           </span>
                         </div>
                       )}
+                      <div className="flex h-full items-end gap-3 overflow-x-auto pb-3">
                       {chart.points.map((point, pointIndex) => (
                         <button
                           type="button"
@@ -1347,11 +1350,12 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                             }}
                             transition={{ duration: 0.45, delay: Math.min(pointIndex * 0.04, 0.3) }}
                           />
-                          <span className="pb-2 text-sm text-gray-500 dark:text-white/60">
+                          <span className="h-7 whitespace-nowrap pb-2 text-sm leading-5 text-gray-500 dark:text-white/60">
                             {point.label}
                           </span>
                         </button>
                       ))}
+                      </div>
                     </div>
                   </div>
 
