@@ -909,7 +909,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   return (
     <main className={`${vessel === 'pearl' ? 'max-w-7xl' : 'max-w-5xl'} mx-auto px-4 pt-4 pb-24 space-y-6`}>
       {buffetGuestTotal > 0 && (
-        <aside className="fixed left-6 top-1/2 z-20 hidden w-64 -translate-y-1/2 min-[1800px]:block">
+        <aside className={`fixed left-4 top-1/2 z-20 hidden -translate-y-1/2 min-[1800px]:left-6 min-[1800px]:w-64 ${
+          vessel === 'pearl'
+            ? 'w-64 min-[1800px]:block'
+            : 'w-52 min-[1450px]:block min-[1800px]:w-64'
+        }`}>
           <div className="overflow-hidden rounded-3xl border border-amber-500/20 bg-white/95 p-5 shadow-xl backdrop-blur dark:border-amber-300/15 dark:bg-[#0d3b3a]/95">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
               {lang === 'en' ? 'This week’s goal' : lang === 'sv' ? 'Veckans mål' : 'Ugens mål'}
