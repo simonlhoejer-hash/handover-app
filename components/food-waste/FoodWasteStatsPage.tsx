@@ -914,37 +914,37 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             ? 'w-64 min-[1800px]:block'
             : 'w-52 min-[1450px]:block min-[1800px]:w-64'
         }`}>
-          <div className="overflow-hidden rounded-3xl border border-amber-500/20 bg-white/95 p-5 shadow-xl backdrop-blur dark:border-amber-300/15 dark:bg-[#0d3b3a]/95">
+          <div className="overflow-hidden rounded-[28px] border border-amber-500/20 bg-white/95 p-4 shadow-[0_18px_45px_rgba(54,38,8,0.14)] backdrop-blur dark:border-amber-300/15 dark:bg-[#0d3b3a]/95 min-[1800px]:p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
               {lang === 'en' ? 'This week’s goal' : lang === 'sv' ? 'Veckans mål' : 'Ugens mål'}
             </p>
             <h2 className="mt-1 text-lg font-semibold">{activeBuffetLabel}</h2>
 
-            <div className="mt-5 flex items-end justify-between gap-3">
-              <div>
+            <div className="mt-4 grid gap-3 min-[1800px]:grid-cols-2">
+              <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 px-3 py-3 dark:from-amber-400/15 dark:to-orange-400/5">
                 <p className="text-xs text-gray-500 dark:text-white/55">
                   {lang === 'en' ? 'Current level' : lang === 'sv' ? 'Nuvarande nivå' : 'Aktuelt niveau'}
                 </p>
-                <p className="mt-1 text-3xl font-semibold text-amber-600 dark:text-amber-300">
+                <p className="mt-1 whitespace-nowrap text-4xl font-semibold tracking-tight text-amber-600 dark:text-amber-300">
                   {formatNumber(currentWasteGrams, lang)} g
                 </p>
                 <p className="text-xs text-gray-500 dark:text-white/55">
                   {lang === 'en' ? 'per guest' : lang === 'sv' ? 'per gäst' : 'pr. gæst'}
                 </p>
               </div>
-              <div className="rounded-2xl bg-amber-50 px-3 py-2 text-right dark:bg-amber-400/10">
+              <div className="rounded-2xl border border-black/5 bg-white/70 px-3 py-3 text-left dark:border-white/10 dark:bg-white/5 min-[1800px]:text-right">
                 <p className="text-[10px] text-gray-500 dark:text-white/55">
                   {currentWasteGrams <= longTermGoalGrams
                     ? lang === 'en' ? 'Goal reached' : lang === 'sv' ? 'Målet nått' : 'Målet nået'
                     : lang === 'en' ? 'Next step' : lang === 'sv' ? 'Nästa steg' : 'Næste delmål'}
                 </p>
-                <p className="font-semibold text-amber-700 dark:text-amber-200">
+                <p className="whitespace-nowrap text-lg font-semibold text-amber-700 dark:text-amber-200">
                   {lang === 'en' ? 'under' : lang === 'sv' ? 'under' : 'under'} {nextGoalGrams} g
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
                   currentWasteGrams <= longTermGoalGrams ? 'bg-emerald-500' : 'bg-amber-500'
@@ -953,7 +953,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               />
             </div>
 
-            <p className="mt-3 text-sm font-medium text-gray-700 dark:text-white/80">
+            <p className="mt-2 text-xs font-medium leading-relaxed text-gray-600 dark:text-white/75">
               {currentWasteGrams <= longTermGoalGrams
                 ? lang === 'en'
                   ? 'Great work – the first main goal has been reached.'
@@ -972,17 +972,17 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                 <span>{lang === 'en' ? 'Goal ladder' : lang === 'sv' ? 'Måltrappa' : 'Målstige'}</span>
                 <span>{lang === 'en' ? 'Main goal' : lang === 'sv' ? 'Huvudmål' : 'Hovedmål'} &lt;100 g</span>
               </div>
-              <div className="mt-3 flex items-center justify-between gap-1">
+              <div className="relative mt-3 flex items-start justify-between gap-1 before:absolute before:left-[12.5%] before:right-[12.5%] before:top-[5px] before:h-px before:bg-gray-200 dark:before:bg-white/10">
                 {[175, 150, 125, 100].map((goal) => (
-                  <div key={goal} className="flex flex-1 flex-col items-center gap-1">
-                    <span className={`h-2.5 w-2.5 rounded-full ${currentWasteGrams <= goal ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-white/15'}`} />
+                  <div key={goal} className="relative z-10 flex flex-1 flex-col items-center gap-1.5">
+                    <span className={`h-2.5 w-2.5 rounded-full ring-4 ring-white dark:ring-[#0d3b3a] ${currentWasteGrams <= goal ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-white/20'}`} />
                     <span className="text-[10px] text-gray-500 dark:text-white/50">{goal} g</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <p className="mt-4 text-[10px] leading-relaxed text-gray-400 dark:text-white/40">
+            <p className="mt-4 border-t border-black/5 pt-3 text-[10px] leading-relaxed text-gray-400 dark:border-white/10 dark:text-white/40">
               {lang === 'en'
                 ? 'An internal improvement target – not an assessment of an individual chef.'
                 : lang === 'sv'
