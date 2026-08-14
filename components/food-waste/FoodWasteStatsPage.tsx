@@ -851,7 +851,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
   function getPointBreakdown(point: ChartPoint, kind: 'buffet' | 'grinder') {
     const selectedDates = new Set(point.dates)
-    const totals = new Map<string, { total: number; times: Set<string> }>()
+    const totals = new Map<string, { total: number; times: Set<string>; comments: Set<string> }>()
 
     for (const entry of entries) {
       if (!selectedDates.has(entry.waste_date)) continue
@@ -875,9 +875,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       const current = totals.get(entry.location_name) ?? {
         total: 0,
         times: new Set<string>(),
+        comments: new Set<string>(),
       }
       current.total += getEntryAmount(entry)
       current.times.add(formatTime(entry.created_at, lang))
+      if (entry.comment?.trim()) current.comments.add(entry.comment.trim())
       totals.set(entry.location_name, current)
     }
 
@@ -886,6 +888,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         name,
         total: details.total,
         times: Array.from(details.times).sort(),
+        comments: Array.from(details.comments),
       }))
       .filter((location) => location.total > 0)
       .sort((a, b) => b.total - a.total)
@@ -1195,6 +1198,14 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                                       style={{ width: `${Math.max(percentage, 2)}%` }}
                                     />
                                   </div>
+                                  {location.comments.map((comment) => (
+                                    <p
+                                      key={comment}
+                                      className="mt-1.5 rounded-lg bg-white/70 px-2 py-1.5 text-[11px] italic text-amber-950/75 dark:bg-black/15 dark:text-amber-100/75"
+                                    >
+                                      “{comment}”
+                                    </p>
+                                  ))}
                                 </div>
                               )
                             })}
@@ -1529,6 +1540,17 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                                     className="h-full rounded-full bg-nordic"
                                   />
                                 </div>
+                                {location.comments.map((comment) => (
+                                  <div
+                                    key={comment}
+                                    className="mt-3 rounded-xl border border-amber-500/15 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-400/10 dark:text-amber-100"
+                                  >
+                                    <span className="mr-1 font-semibold">
+                                      {lang === 'en' ? 'Reason:' : lang === 'sv' ? 'Orsak:' : 'Årsag:'}
+                                    </span>
+                                    {comment}
+                                  </div>
+                                ))}
                               </div>
                             )
                           })}
