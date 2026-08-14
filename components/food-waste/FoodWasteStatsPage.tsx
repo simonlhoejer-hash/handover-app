@@ -3,6 +3,7 @@
 import { ChevronDown, Download, Maximize2, Users, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Row, Worksheet } from 'exceljs'
 import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
   cacheFoodWasteEntries,
@@ -230,6 +231,75 @@ function formatDate(value: string, lang: string) {
     day: 'numeric',
     month: 'short',
   })
+}
+
+function getDatesInRange(fromDate: string, toDate: string) {
+  const dates: string[] = []
+  const current = parseLocalDate(fromDate)
+  const last = parseLocalDate(toDate)
+
+  while (current <= last) {
+    dates.push(formatLocalDate(current))
+    current.setDate(current.getDate() + 1)
+  }
+
+  return dates
+}
+
+function createExcelBarChart(
+  points: Array<{ label: string; total: number }>,
+  title: string,
+  color: string,
+  lang: string
+) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1400
+  canvas.height = 620
+  const context = canvas.getContext('2d')
+  if (!context) return ''
+
+  context.fillStyle = '#ffffff'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.fillStyle = '#0f172a'
+  context.font = '600 34px Arial'
+  context.fillText(title, 70, 62)
+
+  const chartLeft = 90
+  const chartTop = 115
+  const chartWidth = 1220
+  const chartHeight = 390
+  const maxValue = Math.max(...points.map((point) => point.total), 1)
+  const slotWidth = chartWidth / Math.max(points.length, 1)
+  const barWidth = Math.min(slotWidth * 0.56, 110)
+
+  context.strokeStyle = '#dbe4e2'
+  context.lineWidth = 2
+  context.beginPath()
+  context.moveTo(chartLeft, chartTop + chartHeight)
+  context.lineTo(chartLeft + chartWidth, chartTop + chartHeight)
+  context.stroke()
+
+  points.forEach((point, index) => {
+    const height = (point.total / maxValue) * (chartHeight - 55)
+    const x = chartLeft + slotWidth * index + (slotWidth - barWidth) / 2
+    const y = chartTop + chartHeight - height
+
+    context.fillStyle = color
+    context.beginPath()
+    context.roundRect(x, y, barWidth, height, 18)
+    context.fill()
+
+    context.fillStyle = '#334155'
+    context.font = '600 22px Arial'
+    context.textAlign = 'center'
+    context.fillText(formatAmount(point.total, lang), x + barWidth / 2, Math.max(y - 14, chartTop + 22))
+    context.fillStyle = '#64748b'
+    context.font = '20px Arial'
+    context.fillText(point.label, x + barWidth / 2, chartTop + chartHeight + 42)
+  })
+
+  context.textAlign = 'left'
+  return canvas.toDataURL('image/png')
 }
 
 function getEntryAmount(entry: FoodWasteEntry) {
@@ -674,103 +744,278 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
 
   async function exportOverview() {
     setExporting(true)
+    setError('')
 
-    const XLSX = await import('xlsx')
-    const workbook = XLSX.utils.book_new()
+    try {
+      const ExcelJS = await import('exceljs')
+      const workbook = new ExcelJS.Workbook()
+      workbook.creator = 'HandoverPro'
+      workbook.created = new Date()
+      workbook.subject = `${vessel === 'crown' ? 'Nordic Crown' : 'Nordic Pearl'} food waste`
 
-    const overviewRows = [
-      [t.periodFrom, fromDate],
-      [t.periodTo, toDate],
-      [t.buffetWaste, stats.buffet.totalKg],
-      [t.guests, stats.guestsTotal],
-      [t.buffetKgPerGuest, stats.kgPerGuest],
-      ...(vessel === 'crown'
-        ? [
-            [t.productionWaste, stats.grinder.totalKg],
-            [t.productionAveragePerDay, stats.production.averagePerDay],
-          ]
-        : []),
-    ]
+      const darkGreen = '064E4C'
+      const teal = '3B8A84'
+      const paleTeal = 'E7F1EF'
+      const amber = 'F59E0B'
+      const paleAmber = 'FFF7E6'
+      const white = 'FFFFFF'
+      const slate = '334155'
+      const lightBorder = 'DCE5E3'
+      const shipName = vessel === 'crown' ? 'Nordic Crown' : 'Nordic Pearl'
+      const allDates = getDatesInRange(fromDate, toDate)
+      const allLocations = FOOD_WASTE_LOCATIONS.filter(
+        (location) => vessel === 'crown' || !location.name.startsWith('Produktion ')
+      )
+      const entriesForDate = (date: string) => entries.filter((entry) => entry.waste_date === date)
+      const locationTotal = (dateEntries: FoodWasteEntry[], name: string) =>
+        dateEntries.reduce(
+          (total, entry) => total + (entry.location_name === name ? getEntryAmount(entry) : 0),
+          0
+        )
 
-    const locationRows = [
-      ...stats.buffet.locations.map((location) => ({
-        [t.category]: t.buffetWaste,
-        [t.location]: displayFoodWasteLocation(location.name, lang),
-        [t.kgInPeriod]: location.total,
-        [t.averageKgPerDay]: location.averagePerDay,
-      })),
-      ...(vessel === 'crown'
-        ? stats.production.locations.map((location) => ({
-            [t.category]: t.productionAndDeckOne,
-            [t.location]: displayFoodWasteLocation(location.name, lang),
-            [t.kgInPeriod]: location.total,
-            [t.averageKgPerDay]: location.averagePerDay,
-          }))
-        : []),
-    ]
+      const dailyRows = allDates.map((date) => {
+        const dayEntries = entriesForDate(date)
+        const guest = guestCounts.find((count) => count.service_date === date)
+        const guestBreakdown = getGuestBreakdown(guest)
+        const buffetKg = dayEntries.reduce(
+          (total, entry) => total + (entry.location_name.startsWith('Produktion ') ? 0 : getEntryAmount(entry)),
+          0
+        )
+        const grinderKg = dayEntries.reduce((total, entry) => total + getEntryAmount(entry), 0)
+        const guestTotal = guest?.guest_count ?? 0
+        const messGuestsForMeal = guestBreakdown?.messGuests ?? 160
 
-    const chartRows = [
-      ...stats.buffet.chartPoints.map((point) => ({
-        [t.category]: t.buffetWaste,
-        [t.period]: point.label,
-        [t.kg]: point.total,
-      })),
-      ...(vessel === 'crown'
-        ? stats.grinder.chartPoints.map((point) => ({
-            [t.category]: t.productionWaste,
-            [t.period]: point.label,
-            [t.kg]: point.total,
-          }))
-        : []),
-    ]
+        return [
+          parseLocalDate(date),
+          buffetKg,
+          vessel === 'crown' ? grinderKg : null,
+          guestTotal || null,
+          guestTotal > 0 ? (buffetKg * 1000) / guestTotal : null,
+          guestBreakdown?.breakfastGuests ?? null,
+          guestBreakdown?.skagerakEvening ?? null,
+          messGuestsForMeal,
+          ...allLocations.map((location) => locationTotal(dayEntries, location.name)),
+          ...['Messen morgen', 'Messen frokost', 'Messen aften'].map((name) => {
+            const kg = locationTotal(dayEntries, name)
+            return messGuestsForMeal > 0 ? (kg * 1000) / messGuestsForMeal : null
+          }),
+        ]
+      })
 
-    const entryRows = entries.map((entry) => ({
-      [t.date]: entry.waste_date,
-      [t.location]: displayFoodWasteLocation(entry.location_name, lang),
-      [t.kg]: getEntryAmount(entry),
-      [t.comment]: entry.comment ?? '',
-      [t.created]: entry.created_at,
-    }))
-
-    const guestRows = guestCounts.map((guest) => {
-      const breakdown = getGuestBreakdown(guest)
-      return {
-        [t.date]: guest.service_date,
-        [guestFieldText.breakfastTotal]: breakdown?.breakfastGuests ?? '',
-        'Skagerak aften': breakdown?.skagerakEvening ?? '',
-        Messen: breakdown?.messGuests ?? '',
-        [t.guests]: guest.guest_count,
+      const styleTitle = (sheet: Worksheet, range: string, text: string) => {
+        sheet.mergeCells(range)
+        const cell = sheet.getCell(range.split(':')[0])
+        cell.value = text
+        cell.font = { name: 'Aptos Display', size: 22, bold: true, color: { argb: white } }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: darkGreen } }
+        cell.alignment = { vertical: 'middle', horizontal: 'left' }
       }
-    })
+      const styleHeader = (row: Row, fill = darkGreen) => {
+        row.height = 28
+        row.eachCell((cell) => {
+          cell.font = { name: 'Aptos', size: 10, bold: true, color: { argb: white } }
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } }
+          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+          cell.border = { bottom: { style: 'thin', color: { argb: lightBorder } } }
+        })
+      }
+      const addTableStyle = (sheet: Worksheet, headerRow: number, lastRow: number, lastColumn: number) => {
+        styleHeader(sheet.getRow(headerRow))
+        for (let rowNumber = headerRow + 1; rowNumber <= lastRow; rowNumber += 1) {
+          const row = sheet.getRow(rowNumber)
+          row.height = 22
+          if ((rowNumber - headerRow) % 2 === 0) {
+            row.eachCell((cell) => {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F5F8F7' } }
+            })
+          }
+          for (let column = 1; column <= lastColumn; column += 1) {
+            row.getCell(column).border = { bottom: { style: 'hair', color: { argb: lightBorder } } }
+          }
+        }
+      }
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.aoa_to_sheet(overviewRows),
-      t.sheetOverview
-    )
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(locationRows),
-      t.sheetPerLocation
-    )
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(chartRows),
-      t.sheetChartData
-    )
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(entryRows),
-      t.sheetRegistrations
-    )
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(guestRows),
-      t.sheetGuests
-    )
+      const dashboard = workbook.addWorksheet(lang === 'en' ? 'Presentation' : lang === 'sv' ? 'Presentation' : 'Præsentation', {
+        views: [{ showGridLines: false }],
+        properties: { defaultRowHeight: 20 },
+        pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 1 },
+      })
+      dashboard.columns = Array.from({ length: 16 }, () => ({ width: 11 }))
+      styleTitle(dashboard, 'A1:P2', `${shipName} · ${t.foodWasteOverview}`)
+      dashboard.getRow(1).height = 34
+      dashboard.getRow(2).height = 18
+      dashboard.mergeCells('A3:P3')
+      dashboard.getCell('A3').value = `${t.periodFrom}: ${formatDate(fromDate, lang)}  ·  ${t.periodTo}: ${formatDate(toDate, lang)}`
+      dashboard.getCell('A3').font = { italic: true, color: { argb: '64748B' } }
+      dashboard.getCell('A3').alignment = { horizontal: 'left' }
 
-    XLSX.writeFile(workbook, `food-waste-${fromDate}-til-${toDate}.xlsx`)
-    setExporting(false)
+      const cards = [
+        { range: 'A5:D7', label: t.buffetWaste, value: formatAmount(stats.buffet.totalKg, lang), fill: paleAmber, color: amber },
+        { range: 'E5:H7', label: t.guests, value: formatNumber(stats.guestsTotal, lang), fill: paleAmber, color: amber },
+        { range: 'I5:L7', label: t.buffetKgPerGuest, value: formatPerGuestAmount(stats.kgPerGuest, lang), fill: paleTeal, color: darkGreen },
+        { range: 'M5:P7', label: vessel === 'crown' ? t.productionWaste : t.averageKgPerDay, value: vessel === 'crown' ? formatAmount(stats.grinder.totalKg, lang) : formatAmount(stats.buffet.averagePerDay, lang), fill: paleTeal, color: darkGreen },
+      ]
+      cards.forEach((card) => {
+        dashboard.mergeCells(card.range)
+        const cell = dashboard.getCell(card.range.split(':')[0])
+        cell.value = `${card.label}\n${card.value}`
+        cell.font = { name: 'Aptos', size: 16, bold: true, color: { argb: card.color } }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: card.fill } }
+        cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true, indent: 1 }
+        cell.border = {
+          top: { style: 'thin', color: { argb: lightBorder } },
+          bottom: { style: 'thin', color: { argb: lightBorder } },
+          left: { style: 'thin', color: { argb: lightBorder } },
+          right: { style: 'thin', color: { argb: lightBorder } },
+        }
+      })
+
+      const buffetChart = createExcelBarChart(stats.buffet.chartPoints, t.buffetDevelopment, '#F59E0B', lang)
+      if (buffetChart) {
+        const imageId = workbook.addImage({ base64: buffetChart, extension: 'png' })
+        dashboard.addImage(imageId, { tl: { col: 0, row: 8 }, ext: { width: 670, height: 300 } })
+      }
+      const secondChartPoints = vessel === 'crown'
+        ? stats.grinder.chartPoints
+        : stats.buffet.locations.map((location) => ({ label: displayFoodWasteLocation(location.name, lang), total: location.total }))
+      const secondChartTitle = vessel === 'crown' ? t.productionDevelopment : t.sheetPerLocation
+      const secondChart = createExcelBarChart(secondChartPoints, secondChartTitle, '#3B8A84', lang)
+      if (secondChart) {
+        const imageId = workbook.addImage({ base64: secondChart, extension: 'png' })
+        dashboard.addImage(imageId, { tl: { col: 8, row: 8 }, ext: { width: 670, height: 300 } })
+      }
+      dashboard.mergeCells('A25:P26')
+      dashboard.getCell('A25').value = lang === 'en'
+        ? 'Generated by HandoverPro. Use the “Day by day” sheet for the complete daily figures.'
+        : lang === 'sv'
+          ? 'Skapad av HandoverPro. Se fliken ”Dag för dag” för alla dagliga siffror.'
+          : 'Genereret af HandoverPro. Se fanen “Dag for dag” for alle daglige tal.'
+      dashboard.getCell('A25').font = { size: 10, italic: true, color: { argb: '64748B' } }
+      dashboard.getCell('A25').alignment = { vertical: 'middle', wrapText: true }
+
+      const daily = workbook.addWorksheet(lang === 'en' ? 'Day by day' : lang === 'sv' ? 'Dag för dag' : 'Dag for dag', {
+        views: [{ state: 'frozen', ySplit: 4, xSplit: 1, showGridLines: false }],
+      })
+      const dailyHeaders = [
+        t.date,
+        t.buffetWaste,
+        vessel === 'crown' ? t.productionWaste : null,
+        t.guests,
+        t.buffetKgPerGuest,
+        guestFieldText.breakfastTotal,
+        'Skagerak aften',
+        guestFieldText.messPerMeal,
+        ...allLocations.map((location) => displayFoodWasteLocation(location.name, lang)),
+        'Messen morgen · g pr. gæst',
+        'Messen frokost · g pr. gæst',
+        'Messen aften · g pr. gæst',
+      ].filter((header): header is string => Boolean(header))
+      const normalizedDailyRows = dailyRows.map((row) => vessel === 'crown' ? row : row.filter((_, index) => index !== 2))
+      styleTitle(daily, `A1:${daily.getColumn(dailyHeaders.length).letter}2`, `${shipName} · ${lang === 'en' ? 'Daily overview' : lang === 'sv' ? 'Daglig översikt' : 'Daglig oversigt'}`)
+      daily.getRow(3).values = dailyHeaders
+      normalizedDailyRows.forEach((row) => daily.addRow(row))
+      addTableStyle(daily, 3, daily.rowCount, dailyHeaders.length)
+      daily.autoFilter = { from: { row: 3, column: 1 }, to: { row: daily.rowCount, column: dailyHeaders.length } }
+      daily.getColumn(1).numFmt = 'dd-mmm-yyyy'
+      daily.getColumn(1).width = 15
+      for (let column = 2; column <= dailyHeaders.length; column += 1) {
+        daily.getColumn(column).width = column <= 8 ? 16 : 20
+        daily.getColumn(column).numFmt = column === 4 || column === 6 || column === 7 || column === 8 ? '#,##0' : '#,##0.0'
+      }
+
+      const locationsSheet = workbook.addWorksheet(t.sheetPerLocation, {
+        views: [{ state: 'frozen', ySplit: 4, showGridLines: false }],
+      })
+      styleTitle(locationsSheet, 'A1:D2', `${shipName} · ${t.sheetPerLocation}`)
+      locationsSheet.getRow(3).values = [t.category, t.location, t.kgInPeriod, t.averageKgPerDay]
+      const locationRows = [
+        ...stats.buffet.locations.map((location) => [t.buffetWaste, displayFoodWasteLocation(location.name, lang), location.total, location.averagePerDay]),
+        ...(vessel === 'crown'
+          ? stats.production.locations.map((location) => [t.productionAndDeckOne, displayFoodWasteLocation(location.name, lang), location.total, location.averagePerDay])
+          : []),
+      ]
+      locationRows.forEach((row) => locationsSheet.addRow(row))
+      addTableStyle(locationsSheet, 3, locationsSheet.rowCount, 4)
+      locationsSheet.autoFilter = `A3:D${locationsSheet.rowCount}`
+      locationsSheet.columns = [{ width: 24 }, { width: 32 }, { width: 18 }, { width: 22 }]
+      locationsSheet.getColumn(3).numFmt = '#,##0.0'
+      locationsSheet.getColumn(4).numFmt = '#,##0.0'
+
+      const registrations = workbook.addWorksheet(t.sheetRegistrations, {
+        views: [{ state: 'frozen', ySplit: 4, showGridLines: false }],
+      })
+      styleTitle(registrations, 'A1:F2', `${shipName} · ${t.sheetRegistrations}`)
+      registrations.getRow(3).values = [t.date, t.location, t.category, t.kg, t.comment, t.created]
+      entries
+        .slice()
+        .sort((a, b) => `${a.waste_date}${a.created_at}`.localeCompare(`${b.waste_date}${b.created_at}`))
+        .forEach((entry) => registrations.addRow([
+          parseLocalDate(entry.waste_date),
+          displayFoodWasteLocation(entry.location_name, lang),
+          entry.location_name.startsWith('Produktion ') ? t.productionAndDeckOne : t.buffetWaste,
+          getEntryAmount(entry),
+          entry.comment ?? '',
+          new Date(entry.created_at),
+        ]))
+      addTableStyle(registrations, 3, registrations.rowCount, 6)
+      registrations.autoFilter = `A3:F${registrations.rowCount}`
+      registrations.columns = [{ width: 15 }, { width: 30 }, { width: 24 }, { width: 12 }, { width: 45 }, { width: 21 }]
+      registrations.getColumn(1).numFmt = 'dd-mmm-yyyy'
+      registrations.getColumn(4).numFmt = '#,##0.0'
+      registrations.getColumn(6).numFmt = 'dd-mmm-yyyy hh:mm'
+      registrations.getColumn(5).alignment = { wrapText: true, vertical: 'top' }
+
+      const guestsSheet = workbook.addWorksheet(t.sheetGuests, {
+        views: [{ state: 'frozen', ySplit: 4, showGridLines: false }],
+      })
+      styleTitle(guestsSheet, 'A1:F2', `${shipName} · ${t.sheetGuests}`)
+      guestsSheet.getRow(3).values = [t.date, guestFieldText.breakfastTotal, 'Skagerak aften', guestFieldText.messPerMeal, t.guests, t.comment]
+      guestCounts
+        .slice()
+        .sort((a, b) => a.service_date.localeCompare(b.service_date))
+        .forEach((guest) => {
+          const breakdown = getGuestBreakdown(guest)
+          guestsSheet.addRow([
+            parseLocalDate(guest.service_date),
+            breakdown?.breakfastGuests ?? null,
+            breakdown?.skagerakEvening ?? null,
+            breakdown?.messGuests ?? null,
+            guest.guest_count,
+            '',
+          ])
+        })
+      addTableStyle(guestsSheet, 3, guestsSheet.rowCount, 6)
+      guestsSheet.autoFilter = `A3:F${guestsSheet.rowCount}`
+      guestsSheet.columns = [{ width: 15 }, { width: 24 }, { width: 20 }, { width: 22 }, { width: 15 }, { width: 35 }]
+      guestsSheet.getColumn(1).numFmt = 'dd-mmm-yyyy'
+      for (let column = 2; column <= 5; column += 1) guestsSheet.getColumn(column).numFmt = '#,##0'
+
+      workbook.worksheets.forEach((sheet) => {
+        sheet.eachRow((row) => {
+          row.eachCell((cell) => {
+            if (!cell.font) cell.font = { name: 'Aptos', size: 10, color: { argb: slate } }
+          })
+        })
+      })
+
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `HandoverPro-${vessel}-${fromDate}-til-${toDate}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (exportError) {
+      console.error(exportError)
+      setError(lang === 'en' ? 'The Excel file could not be created.' : lang === 'sv' ? 'Excel-filen kunde inte skapas.' : 'Excel-filen kunne ikke oprettes.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   const activeBuffetStats = buffetView === 'mess'
