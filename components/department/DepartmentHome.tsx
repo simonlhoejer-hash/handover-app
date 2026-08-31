@@ -89,7 +89,7 @@ export default function DepartmentHome({
         return
       }
 
-      const RESET_DAYS = 6
+      const RESET_DAYS = 8
       const result: StatusMap = {}
       const latestByParti = new Map<string, HandoverStatusRow>()
 
