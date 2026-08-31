@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Printer } from 'lucide-react'
 import { secureFetch, type AccessShip } from '@/lib/secureApi'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import HandoverComments from './HandoverComments'
@@ -22,6 +23,25 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const isOral = isOralHandoverNote(item.note ?? '')
 
+  function printHandover() {
+    document.documentElement.dataset.printHandover = item.id
+    window.print()
+  }
+
+  useEffect(() => {
+    const clearPrintTarget = () => {
+      if (document.documentElement.dataset.printHandover === item.id) {
+        delete document.documentElement.dataset.printHandover
+      }
+    }
+
+    window.addEventListener('afterprint', clearPrintTarget)
+    return () => {
+      window.removeEventListener('afterprint', clearPrintTarget)
+      clearPrintTarget()
+    }
+  }, [item.id])
+
   async function markAsRead() {
     setLoading(true)
 
@@ -39,6 +59,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
 
   return (
     <div
+      data-handover-print-card={item.id}
       className="
         w-full
         rounded-3xl
@@ -140,7 +161,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
       )}
 
       {/* Mark as read */}
-      <div className="border-t border-black/5 dark:border-white/10 mt-6 pt-4">
+      <div className="handover-print-hidden border-t border-black/5 dark:border-white/10 mt-6 pt-4">
         {!item.read_by ? (
             <button
               onClick={markAsRead}
@@ -174,9 +195,47 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
       </div>
 
       {/* Comments */}
-      <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/10">
+      <div className="handover-print-hidden mt-6 pt-4 border-t border-black/5 dark:border-white/10">
         <HandoverComments handoverId={item.id} ship={ship} />
       </div>
+
+      <div className="handover-print-hidden mt-6 border-t border-black/5 pt-4 dark:border-white/10">
+        <button
+          type="button"
+          onClick={printHandover}
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-black/5 px-5 font-semibold text-gray-800 transition hover:bg-black/10 active:scale-[0.98] dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
+        >
+          <Printer size={19} />
+          {t.printHandover}
+        </button>
+      </div>
+
+      <style jsx global>{`
+        @media print {
+          html[data-print-handover='${item.id}'] body * {
+            visibility: hidden !important;
+          }
+
+          html[data-print-handover='${item.id}'] [data-handover-print-card='${item.id}'],
+          html[data-print-handover='${item.id}'] [data-handover-print-card='${item.id}'] * {
+            visibility: visible !important;
+          }
+
+          html[data-print-handover='${item.id}'] [data-handover-print-card='${item.id}'] {
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 100%;
+            border: 0;
+            box-shadow: none;
+            color: #111;
+            background: white;
+          }
+
+          html[data-print-handover='${item.id}'] .handover-print-hidden {
+            display: none !important;
+          }
+        }
+      `}</style>
 
       {/* Image modal */}
       {selectedImage && (

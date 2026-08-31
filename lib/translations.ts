@@ -113,6 +113,8 @@ export const translations = {
     addComment: 'Tilføj kommentar',
     commentFieldsRequired: 'Udfyld både dit navn og kommentaren',
     couldNotSaveComment: 'Kunne ikke gemme kommentar',
+    removeImage: 'Fjern billede',
+    printHandover: 'Print overlevering',
     timePrefix: 'kl.',
 
     // Editor
@@ -375,6 +377,8 @@ Skriv hvor tingene står.`,
     addComment: 'Lägg till kommentar',
     commentFieldsRequired: 'Fyll i både ditt namn och kommentaren',
     couldNotSaveComment: 'Kunde inte spara kommentar',
+    removeImage: 'Ta bort bild',
+    printHandover: 'Skriv ut överlämning',
     timePrefix: 'kl.',
 
     // Editor
@@ -613,6 +617,8 @@ Skriv var sakerna står.`,
     addComment: 'Add comment',
     commentFieldsRequired: 'Enter both your name and a comment',
     couldNotSaveComment: 'Could not save comment',
+    removeImage: 'Remove image',
+    printHandover: 'Print handover',
     timePrefix: 'at ',
     editorTemplate: `New initiatives:
 • 

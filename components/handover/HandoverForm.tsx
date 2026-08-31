@@ -2,6 +2,7 @@
 
 import HandoverEditor from './HandoverEditor'
 import ImageUploader from '../ui/ImageUploader'
+import { X } from 'lucide-react'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
@@ -157,11 +158,21 @@ export default function HandoverForm({
         {images.length > 0 && (
           <div className="grid grid-cols-3 gap-2 mt-3">
             {images.map((url) => (
-              <img
-                key={url}
-                src={url}
-                className="h-24 w-full object-cover rounded"
-              />
+              <div key={url} className="relative">
+                <img
+                  src={url}
+                  alt=""
+                  className="h-24 w-full rounded-xl object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setImages((current) => current.filter((image) => image !== url))}
+                  aria-label={t.removeImage}
+                  className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white shadow-md transition hover:bg-red-700 active:scale-90"
+                >
+                  <X size={17} strokeWidth={2.5} />
+                </button>
+              </div>
             ))}
           </div>
         )}
