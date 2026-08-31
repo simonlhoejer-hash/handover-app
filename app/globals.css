@@ -204,3 +204,28 @@ input[type="date"] {
   background: #082d2d;
 }
 
+@media print {
+  html[data-print-handover="true"] body * {
+    visibility: hidden !important;
+  }
+
+  html[data-print-handover="true"] [data-print-active="true"],
+  html[data-print-handover="true"] [data-print-active="true"] * {
+    visibility: visible !important;
+  }
+
+  html[data-print-handover="true"] [data-print-active="true"] {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    border: 0;
+    box-shadow: none;
+    color: #111;
+    background: white;
+  }
+
+  html[data-print-handover="true"] .handover-print-hidden {
+    display: none !important;
+  }
+}
+

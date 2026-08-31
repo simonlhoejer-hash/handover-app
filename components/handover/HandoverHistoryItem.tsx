@@ -24,13 +24,23 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
   const isOral = isOralHandoverNote(item.note ?? '')
 
   function printHandover() {
-    document.documentElement.dataset.printHandover = item.id
+    const card = document.querySelector<HTMLElement>(
+      `[data-handover-print-card="${item.id}"]`
+    )
+    if (!card) return
+
+    document.documentElement.dataset.printHandover = 'true'
+    card.dataset.printActive = 'true'
     window.print()
   }
 
   useEffect(() => {
     const clearPrintTarget = () => {
-      if (document.documentElement.dataset.printHandover === item.id) {
+      const card = document.querySelector<HTMLElement>(
+        `[data-handover-print-card="${item.id}"]`
+      )
+      if (card?.dataset.printActive === 'true') {
+        delete card.dataset.printActive
         delete document.documentElement.dataset.printHandover
       }
     }
@@ -209,33 +219,6 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
           {t.printHandover}
         </button>
       </div>
-
-      <style jsx global>{`
-        @media print {
-          html[data-print-handover='${item.id}'] body * {
-            visibility: hidden !important;
-          }
-
-          html[data-print-handover='${item.id}'] [data-handover-print-card='${item.id}'],
-          html[data-print-handover='${item.id}'] [data-handover-print-card='${item.id}'] * {
-            visibility: visible !important;
-          }
-
-          html[data-print-handover='${item.id}'] [data-handover-print-card='${item.id}'] {
-            position: absolute;
-            inset: 0 auto auto 0;
-            width: 100%;
-            border: 0;
-            box-shadow: none;
-            color: #111;
-            background: white;
-          }
-
-          html[data-print-handover='${item.id}'] .handover-print-hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
 
       {/* Image modal */}
       {selectedImage && (
