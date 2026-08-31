@@ -39,6 +39,8 @@ type FoodWastePayload = {
   vessel: 'crown' | 'pearl'
 }
 
+const SAVE_TIMEOUT_MS = 6000
+
 function getToday() {
   const now = new Date()
   const year = now.getFullYear()
@@ -285,18 +287,34 @@ export default function FoodWasteLocationPage({
 
     let data: FoodWasteEntry | null = null
     let saveError: unknown = null
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), SAVE_TIMEOUT_MS)
+
     try {
       const result = await secureFetch<{ data: FoodWasteEntry }>(
         '/api/food-waste/entries',
-        { method: 'POST', body: JSON.stringify(payload) }
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        }
       )
       data = result.data
     } catch (error) {
       saveError = error
+    } finally {
+      window.clearTimeout(timeout)
     }
 
     if (saveError) {
-      saveEntryLocally(payload)
+      try {
+        saveEntryLocally(payload)
+      } catch {
+        setError(t.couldNotSaveRegistration)
+        saveStartedRef.current = false
+        setSaving(false)
+        return
+      }
     } else if (data) {
       cacheFoodWasteEntries([data], vessel)
       setEntries((current) => [data, ...current])

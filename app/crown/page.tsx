@@ -1,5 +1,5 @@
 import DepartmentHome from '@/components/department/DepartmentHome'
-import { PARTIS } from '@/lib/partis'
+import { CROWN_PARTI_GROUPS, PARTIS } from '@/lib/partis'
 
 export default function Page() {
   return (
@@ -8,6 +8,10 @@ export default function Page() {
       <DepartmentHome
         department="crown"
         items={PARTIS.galley}
+        groups={CROWN_PARTI_GROUPS.map((group) => ({
+          title: group.title,
+          items: [...group.items],
+        }))}
         basePath="/crown/parti"
       />
     </>

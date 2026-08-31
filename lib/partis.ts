@@ -10,6 +10,8 @@ export const PARTIS: Record<string, string[]> = {
     'Stilling 2',
     'Stilling 1',
     'Slagter',
+    'Kældermand',
+    'Dagskyller',
     'Natskyller',
   ],
   pearl: [
@@ -39,6 +41,29 @@ export const PARTIS: Record<string, string[]> = {
   'Parfume',
   ],
 }
+
+export const CROWN_PARTI_GROUPS = [
+  {
+    title: 'Partier',
+    items: [
+      'SYD',
+      'KULL varmt',
+      'KULL koldt',
+      'Konditor',
+      'Besætning',
+      'Opsætter',
+      'Varm Skagerak',
+      'Stilling 2',
+      'Stilling 1',
+      'Slagter',
+      'Kældermand',
+    ],
+  },
+  {
+    title: 'Skyllerier',
+    items: ['Dagskyller', 'Natskyller'],
+  },
+] as const
 
 export const PEARL_PARTI_GROUPS = [
   {

@@ -1127,6 +1127,27 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       .sort((a, b) => b.total - a.total)
   }
 
+  function getChartComments(points: ChartPoint[], kind: 'buffet' | 'grinder') {
+    const selectedDates = new Set(points.flatMap((point) => point.dates))
+
+    return entries
+      .filter((entry) => {
+        if (!entry.comment?.trim() || !selectedDates.has(entry.waste_date)) return false
+        if (kind === 'buffet' && entry.location_name.startsWith('Produktion ')) return false
+        if (kind === 'buffet' && !isBuffetLocationForView(entry.location_name, buffetView)) return false
+        if (
+          kind === 'buffet' &&
+          buffetView === 'mess' &&
+          !isMessLocationForView(entry.location_name, messView)
+        ) return false
+        if (kind === 'grinder' && !isGrinderLocationForView(entry.location_name, grinderView)) return false
+        return true
+      })
+      .sort((a, b) =>
+        `${b.waste_date}${b.created_at}`.localeCompare(`${a.waste_date}${a.created_at}`)
+      )
+  }
+
   return (
     <main className={`${vessel === 'pearl' ? 'max-w-7xl' : 'max-w-5xl'} mx-auto px-4 pt-4 pb-24 space-y-6`}>
       {buffetGuestTotal > 0 && (
@@ -1596,6 +1617,37 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               ))}
               </div>
             </div>
+
+            {getChartComments(chart.points, chart.kind).length > 0 && (
+              <div className="mt-4 border-t border-black/5 pt-4 dark:border-white/10">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-white/55">
+                  {lang === 'en' ? 'Comments by day' : lang === 'sv' ? 'Kommentarer per dag' : 'Kommentarer under dagene'}
+                </p>
+                <div className="mt-3 space-y-2">
+                  {getChartComments(chart.points, chart.kind).map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="rounded-xl border border-amber-500/15 bg-amber-50 px-3 py-2.5 text-sm dark:bg-amber-400/10"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-semibold text-amber-950 dark:text-amber-100">
+                          {parseLocalDate(entry.waste_date).toLocaleDateString(localeFor(lang), {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                        </span>
+                        <span className="text-xs text-amber-900/60 dark:text-amber-100/60">
+                          {displayFoodWasteLocation(entry.location_name, lang)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-amber-950/80 dark:text-amber-100/80">
+                        {entry.comment}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
         ))}

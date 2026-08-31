@@ -42,6 +42,12 @@ export default function ShipAccessForm({
       return
     }
 
+    if ('serviceWorker' in navigator) {
+      void navigator.serviceWorker.ready.then((registration) => {
+        registration.active?.postMessage({ type: 'WARM_SHIP', ship })
+      })
+    }
+
     // Force the first protected navigation through the network so an older
     // offline shell can never mask a successful login.
     window.location.replace(`${destination}?login=1`)

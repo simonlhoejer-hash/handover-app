@@ -174,7 +174,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
       </div>
 
       {/* Comments */}
-      <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/10 flex justify-center">
+      <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/10">
         <HandoverComments handoverId={item.id} ship={ship} />
       </div>
 

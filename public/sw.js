@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v31'
+const CACHE_NAME = 'handover-offline-v32'
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
@@ -37,27 +37,40 @@ const APP_SHELL = [
   '/go-nordic-logo.png',
 ]
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      Promise.allSettled(
-        APP_SHELL.map(async (path) => {
-          const response = await fetch(path, { cache: 'reload' })
-          const finalUrl = new URL(response.url)
-          // A protected page may redirect to login when the worker installs.
-          // Never store that redirected response under the protected URL.
-          if (
-            response.ok &&
-            finalUrl.origin === self.location.origin &&
-            normalizedPath(finalUrl.pathname) === normalizedPath(path)
-          ) {
-            await cache.put(path, response)
-          }
-        })
-      )
-    )
+async function cachePaths(paths) {
+  const cache = await caches.open(CACHE_NAME)
+
+  await Promise.allSettled(
+    paths.map(async (path) => {
+      const response = await fetch(path, { cache: 'reload' })
+      const finalUrl = new URL(response.url)
+      if (
+        response.ok &&
+        finalUrl.origin === self.location.origin &&
+        normalizedPath(finalUrl.pathname) === normalizedPath(path)
+      ) {
+        await cache.put(path, response)
+      }
+    })
   )
+}
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(cachePaths(APP_SHELL))
   self.skipWaiting()
+})
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type !== 'WARM_SHIP') return
+
+  const ship = event.data.ship
+  if (!SHIPS.includes(ship)) return
+
+  const routes = FOOD_WASTE_ROUTES
+    .filter((route) => ship === 'crown' || !route.startsWith('/produktion-'))
+    .map((route) => `/${ship}/food-waste${route}`)
+
+  event.waitUntil(cachePaths([`/${ship}`, ...routes]))
 })
 
 self.addEventListener('activate', (event) => {

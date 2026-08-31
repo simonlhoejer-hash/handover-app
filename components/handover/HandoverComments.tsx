@@ -46,18 +46,24 @@ export default function HandoverComments({
   }, [handoverId])
 
   const addComment = async () => {
-    if (!author || !text) return
+    const authorName = author.trim()
+    const comment = text.trim()
+
+    if (!authorName || !comment) {
+      alert(t.commentFieldsRequired)
+      return
+    }
 
     setLoading(true)
 
     try {
       await secureFetch('/api/handover-comments', {
         method: 'POST',
-        body: JSON.stringify({ ship, handoverId, authorName: author, comment: text }),
+        body: JSON.stringify({ ship, handoverId, authorName, comment }),
       })
-    } catch {
+    } catch (error) {
       setLoading(false)
-      alert(t.couldNotSaveComment)
+      alert(error instanceof Error ? error.message : t.couldNotSaveComment)
       return
     }
 
@@ -69,7 +75,7 @@ export default function HandoverComments({
   }
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 w-full">
 
       {/* TOGGLE BUTTON */}
       <div className="flex justify-center">
