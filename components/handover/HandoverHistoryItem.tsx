@@ -173,6 +173,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
       {/* Mark as read */}
       <div className="handover-print-hidden border-t border-black/5 dark:border-white/10 mt-6 pt-4">
         {!item.read_by ? (
+          <div className="space-y-3">
             <button
               onClick={markAsRead}
               disabled={loading}
@@ -197,27 +198,35 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
             >
               {t.markAsRead}
             </button>
+            <button
+              type="button"
+              onClick={printHandover}
+              className="flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-black/5 px-4 text-sm font-medium text-gray-700 transition hover:bg-black/10 active:scale-[0.98] dark:bg-white/10 dark:text-white/80 dark:hover:bg-white/15"
+            >
+              <Printer size={17} />
+              {t.printHandover}
+            </button>
+          </div>
         ) : (
-          <p className="text-emerald-600 text-sm font-medium">
-            {t.readBy} {item.read_by}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-emerald-600 text-sm font-medium">
+              {t.readBy} {item.read_by}
+            </p>
+            <button
+              type="button"
+              onClick={printHandover}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-black/5 px-4 text-sm font-medium text-gray-700 transition hover:bg-black/10 active:scale-95 dark:bg-white/10 dark:text-white/80 dark:hover:bg-white/15"
+            >
+              <Printer size={17} />
+              {t.printHandover}
+            </button>
+          </div>
         )}
       </div>
 
       {/* Comments */}
       <div className="handover-print-hidden mt-6 pt-4 border-t border-black/5 dark:border-white/10">
         <HandoverComments handoverId={item.id} ship={ship} />
-      </div>
-
-      <div className="handover-print-hidden mt-6 border-t border-black/5 pt-4 dark:border-white/10">
-        <button
-          type="button"
-          onClick={printHandover}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-black/5 px-5 font-semibold text-gray-800 transition hover:bg-black/10 active:scale-[0.98] dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
-        >
-          <Printer size={19} />
-          {t.printHandover}
-        </button>
       </div>
 
       {/* Image modal */}

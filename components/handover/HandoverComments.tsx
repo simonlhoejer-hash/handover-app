@@ -75,7 +75,7 @@ export default function HandoverComments({
   }
 
   return (
-    <div className="mt-8 w-full">
+    <div className="w-full">
 
       {/* TOGGLE BUTTON */}
       <div className="flex justify-center">
