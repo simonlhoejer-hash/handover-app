@@ -450,7 +450,7 @@ export default function HandoverPage({
         {portalReady && open && showDraftBadge && (draftStatus !== 'idle' || !isOnline) && createPortal(
           <div
             role="status"
-            className={`fixed bottom-24 left-1/2 z-[100] flex w-fit max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-lg backdrop-blur-xl transition-all duration-500 sm:bottom-6 sm:px-4 sm:text-sm ${
+            className={`fixed bottom-24 left-1/2 z-[100] flex w-fit max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-lg backdrop-blur-xl transition-all duration-500 sm:px-4 sm:text-sm ${
               draftBadgeLeaving ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
             } ${
               !isOnline
