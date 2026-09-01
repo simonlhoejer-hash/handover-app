@@ -104,6 +104,7 @@ export const translations = {
     cancel: 'Annuller',
     firstNamePlaceholder: 'Dit fornavn',
     markAsRead: '✓ Markér som læst',
+    confirmReadFor: '{name} – bekræft at du har læst',
     readBy: '✔️ Læst af',
 
     // Comments
@@ -375,6 +376,7 @@ Skriv hvor tingene står.`,
     cancel: 'Avbryt',
     firstNamePlaceholder: 'Ditt förnamn',
     markAsRead: '✓ Markera som läst',
+    confirmReadFor: '{name} – bekräfta att du har läst',
     readBy: '✔️ Läst av',
 
     // Comments
@@ -624,6 +626,7 @@ Skriv var sakerna står.`,
     cancel: 'Cancel',
     firstNamePlaceholder: 'Your first name',
     markAsRead: '✓ Mark as read',
+    confirmReadFor: '{name} – confirm that you have read it',
     readBy: '✔️ Read by',
     comments: 'Comments',
     noComments: 'No comments yet',

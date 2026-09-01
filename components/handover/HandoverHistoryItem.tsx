@@ -22,6 +22,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
   const [loading, setLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const isOral = isOralHandoverNote(item.note ?? '')
+  const receiverName = String(item.receiver_name ?? '').trim()
 
   function printHandover() {
     const card = document.querySelector<HTMLElement>(
@@ -182,6 +183,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
         {!item.read_by ? (
           <div className="space-y-3">
             <button
+              type="button"
               onClick={markAsRead}
               disabled={loading}
               className="
@@ -201,9 +203,10 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
                 dark:shadow-lg
 
                 hover:opacity-90
+                disabled:opacity-60
               "
             >
-              {t.markAsRead}
+              {loading ? t.saving : t.confirmReadFor.replace('{name}', receiverName)}
             </button>
             <button
               type="button"
