@@ -5,6 +5,7 @@ import HandoverHistoryItem from '@/components/handover/HandoverHistoryItem'
 import HandoverForm from '@/components/handover/HandoverForm'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronLeft, CloudOff, LoaderCircle, Sparkles, X } from 'lucide-react'
 import { displayPartiName } from '@/lib/partis'
@@ -142,9 +143,12 @@ export default function HandoverPage({
   const [draftError, setDraftError] = useState('')
   const [showDraftBadge, setShowDraftBadge] = useState(false)
   const [draftBadgeLeaving, setDraftBadgeLeaving] = useState(false)
+  const [portalReady, setPortalReady] = useState(false)
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
   const [showRepeatedPoints, setShowRepeatedPoints] = useState(false)
   const draftHydratedRef = useRef(false)
+
+  useEffect(() => setPortalReady(true), [])
   const ship: AccessShip = department === 'pearl' ? 'pearl' : 'crown'
   const displayedItemName = displayPartiName(itemName, department)
   const repeatedPoints = findRepeatedPoints(items)
@@ -443,10 +447,10 @@ export default function HandoverPage({
   </span>
 </button>
 
-        {open && showDraftBadge && (draftStatus !== 'idle' || !isOnline) && (
+        {portalReady && open && showDraftBadge && (draftStatus !== 'idle' || !isOnline) && createPortal(
           <div
             role="status"
-            className={`fixed bottom-24 left-1/2 z-40 flex w-fit max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-lg backdrop-blur-xl transition-all duration-500 sm:bottom-6 sm:px-4 sm:text-sm ${
+            className={`fixed bottom-24 left-1/2 z-[100] flex w-fit max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-lg backdrop-blur-xl transition-all duration-500 sm:bottom-6 sm:px-4 sm:text-sm ${
               draftBadgeLeaving ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
             } ${
               !isOnline
@@ -476,7 +480,8 @@ export default function HandoverPage({
                     ? t.draftSaving
                     : `${t.draftSaved}${draftSavedAt ? ` · ${new Date(draftSavedAt).toLocaleTimeString(localeFor(lang), { hour: '2-digit', minute: '2-digit' })}` : ''}`}
             </span>
-          </div>
+          </div>,
+          document.body,
         )}
 
         <div className="text-center">
