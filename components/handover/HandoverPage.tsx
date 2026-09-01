@@ -140,6 +140,8 @@ export default function HandoverPage({
   >('idle')
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
   const [draftError, setDraftError] = useState('')
+  const [showDraftBadge, setShowDraftBadge] = useState(false)
+  const [draftBadgeLeaving, setDraftBadgeLeaving] = useState(false)
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
   const [showRepeatedPoints, setShowRepeatedPoints] = useState(false)
   const draftHydratedRef = useRef(false)
@@ -373,12 +375,37 @@ export default function HandoverPage({
     )
     if (!draftId && !hasDraftContent) return
 
+    if (isOnline) {
+      setDraftStatus('saving')
+      setShowDraftBadge(true)
+      setDraftBadgeLeaving(false)
+    }
+
     const timer = window.setTimeout(() => {
       void saveDraft()
     }, 1800)
 
     return () => window.clearTimeout(timer)
   }, [name, receiver, date, note, images, department, itemName, draftId])
+
+  useEffect(() => {
+    if (!open || !isOnline || draftStatus === 'saving' || draftStatus === 'error') {
+      setShowDraftBadge(open && (!isOnline || draftStatus !== 'idle'))
+      setDraftBadgeLeaving(false)
+      return
+    }
+
+    if (draftStatus !== 'saved') return
+
+    setShowDraftBadge(true)
+    setDraftBadgeLeaving(false)
+    const fadeTimer = window.setTimeout(() => setDraftBadgeLeaving(true), 2000)
+    const hideTimer = window.setTimeout(() => setShowDraftBadge(false), 2500)
+    return () => {
+      window.clearTimeout(fadeTimer)
+      window.clearTimeout(hideTimer)
+    }
+  }, [draftStatus, isOnline, open])
 
   useEffect(() => {
     if (isOnline && draftHydratedRef.current) void saveDraft()
@@ -416,10 +443,12 @@ export default function HandoverPage({
   </span>
 </button>
 
-        {open && (draftStatus !== 'idle' || !isOnline) && (
+        {open && showDraftBadge && (draftStatus !== 'idle' || !isOnline) && (
           <div
             role="status"
-            className={`sticky top-16 z-30 mx-auto flex w-fit max-w-full items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-md backdrop-blur-xl sm:top-3 sm:px-4 sm:text-sm ${
+            className={`fixed bottom-24 left-1/2 z-40 flex w-fit max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-lg backdrop-blur-xl transition-all duration-500 sm:bottom-6 sm:px-4 sm:text-sm ${
+              draftBadgeLeaving ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
+            } ${
               !isOnline
                 ? 'bg-amber-500/15 text-amber-800 dark:text-amber-200'
                 : draftStatus === 'error'
