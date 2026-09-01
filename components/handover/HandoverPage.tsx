@@ -28,6 +28,15 @@ const REPEATED_POINT_STOP_WORDS = new Set([
   'ska', 'och', 'att', 'detta', 'från', 'med', 'har', 'inte', 'nästa',
 ])
 
+const REPEATED_POINT_SMALL_TALK = [
+  /^(hej|hejsa|hallo)(\s|$)/i,
+  /^god(e|t)?\s+(morgen|aften|dag|nat|vagt|tørn|tur|arbejdslyst)(\s|$)/i,
+  /^velkommen(\s|$)/i,
+  /^tak(\s+for)?(\s|$)/i,
+  /^(farvel|på gensyn|vi ses|ses i morgen)(\s|$)/i,
+  /^(mvh|venlig hilsen|hilsen)(\s|$)/i,
+]
+
 function noteLines(value: string) {
   return value
     .replace(/<br\s*\/?>|<\/p>|<\/li>/gi, '\n')
@@ -49,6 +58,17 @@ function keywords(value: string) {
   )
 }
 
+function isUsefulRepeatedPoint(value: string, words: Set<string>) {
+  const normalized = value
+    .normalize('NFKC')
+    .replace(/[^a-zæøåäöüé0-9\s-]/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (words.size < 2 || normalized.length < 10) return false
+  return !REPEATED_POINT_SMALL_TALK.some((pattern) => pattern.test(normalized))
+}
+
 function similarity(left: Set<string>, right: Set<string>) {
   if (left.size === 0 || right.size === 0) return 0
   const shared = [...left].filter((word) => right.has(word)).length
@@ -66,7 +86,7 @@ function findRepeatedPoints(items: any[]): RepeatedPoint[] {
   for (const item of items.slice(0, 60)) {
     for (const line of noteLines(String(item.note ?? ''))) {
       const words = keywords(line)
-      if (words.size === 0) continue
+      if (!isUsefulRepeatedPoint(line, words)) continue
 
       const cluster = clusters.find((candidate) => similarity(candidate.words, words) >= 0.6)
       if (cluster) {
