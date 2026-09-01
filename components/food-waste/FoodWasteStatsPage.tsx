@@ -195,7 +195,7 @@ function isGrinderLocationForView(name: string, view: GrinderView) {
     return name === 'Produktion Varm Galley' || name === 'Produktion Main Galley' || name === 'Produktion Skagerak Galley'
   }
   if (view === 'deck') {
-    return name === 'Produktion Bageri' || name === 'Produktion Slagteri' || name === 'Produktion Proviant'
+    return name === 'Produktion Slagteri' || name === 'Produktion Proviant'
   }
   return true
 }

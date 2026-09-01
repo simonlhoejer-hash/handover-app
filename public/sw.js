@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v32'
+const CACHE_NAME = 'handover-offline-v33'
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
@@ -16,7 +16,6 @@ const FOOD_WASTE_ROUTES = [
   '/commodore-morgen',
   '/produktion-main-galley',
   '/produktion-skagerak-galley',
-  '/produktion-bageri',
   '/produktion-slagteri',
   '/produktion-proviant-daek-1',
 ]

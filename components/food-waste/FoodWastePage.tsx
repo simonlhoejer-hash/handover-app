@@ -63,7 +63,6 @@ const LOCATION_GROUPS = [
   {
     title: 'Dæk 1',
     slugs: [
-      'produktion-bageri',
       'produktion-slagteri',
       'produktion-proviant-daek-1',
     ],

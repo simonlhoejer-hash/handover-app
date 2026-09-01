@@ -7,7 +7,6 @@ export const FOOD_WASTE_LOCATIONS = [
   { name: 'Commodore morgen', slug: 'commodore-morgen' },
   { name: 'Produktion Varm Galley', slug: 'produktion-main-galley' },
   { name: 'Produktion Skagerak Galley', slug: 'produktion-skagerak-galley' },
-  { name: 'Produktion Bageri', slug: 'produktion-bageri' },
   { name: 'Produktion Slagteri', slug: 'produktion-slagteri' },
   { name: 'Produktion Proviant', slug: 'produktion-proviant-daek-1' },
 ]
@@ -28,7 +27,6 @@ export function displayFoodWasteLocation(name: string, lang: string) {
       'Produktion Main Galley': 'Production Hot Galley',
       'Produktion Varm Galley': 'Production Hot Galley',
       'Produktion Skagerak Galley': 'Production Skagerak Galley',
-      'Produktion Bageri': 'Production Bakery',
       'Produktion Slagteri': 'Production Butchery',
       'Produktion Proviant': 'Production Provisions',
     }
@@ -47,7 +45,6 @@ export function displayFoodWasteLocation(name: string, lang: string) {
       'Produktion Main Galley': 'Produktion Varmkök',
       'Produktion Varm Galley': 'Produktion Varmkök',
       'Produktion Skagerak Galley': 'Produktion Skagerak-kök',
-      'Produktion Bageri': 'Produktion Bageri',
       'Produktion Slagteri': 'Produktion Slakteri',
       'Produktion Proviant': 'Produktion Proviant',
     }
