@@ -3,7 +3,7 @@
 import HandoverEditor from './HandoverEditor'
 import ImageUploader from '../ui/ImageUploader'
 import { X } from 'lucide-react'
-import { localeFor, useTranslation } from '@/lib/LanguageContext'
+import { useTranslation } from '@/lib/LanguageContext'
 
 type Props = {
   name: string
@@ -16,13 +16,10 @@ type Props = {
   note: string
   setNote: (v: string) => void
   images: string[]
-  setImages: React.Dispatch<React.SetStateAction<string[]>>
+  onImagesChange: (images: string[]) => void
   loading: boolean
   onSave: () => void
   parti: string
-  draftStatus?: 'idle' | 'saving' | 'saved' | 'error'
-  draftSavedAt?: string | null
-  draftError?: string
   isOnline?: boolean
 }
 
@@ -74,27 +71,13 @@ export default function HandoverForm({
   note,
   setNote,
   images,
-  setImages,
+  onImagesChange,
   loading,
   onSave,
   parti,
-  draftStatus = 'idle',
-  draftSavedAt,
-  draftError,
   isOnline = true,
 }: Props) {
-  const { t, lang } = useTranslation()
-
-  const lastSavedText =
-    draftSavedAt && draftStatus === 'saved'
-      ? `${t.lastSavedAt} ${new Date(draftSavedAt).toLocaleTimeString(
-          localeFor(lang),
-          {
-            hour: '2-digit',
-            minute: '2-digit',
-          }
-        )}`
-      : ''
+  const { t } = useTranslation()
   return (
 <section className={cardClass}>
       <input
@@ -122,21 +105,6 @@ export default function HandoverForm({
 
       <HandoverEditor value={note} onChange={setNote} />
 
-      {(lastSavedText || draftError) && (
-        <p
-          className={`
-            mt-3 text-xs
-            ${
-              draftStatus === 'error'
-                ? 'text-red-600 dark:text-red-300'
-                : 'text-gray-500 dark:text-white/60'
-            }
-          `}
-        >
-          {draftStatus === 'error' ? draftError : lastSavedText}
-        </p>
-      )}
-
       <div className="mb-4">
         <label className="block font-medium mb-1">
           {t.images}
@@ -145,9 +113,7 @@ export default function HandoverForm({
         {isOnline ? (
           <ImageUploader
             parti={parti}
-            onUploadComplete={(url) =>
-              setImages((prev) => [...prev, url])
-            }
+            onUploadComplete={(url) => onImagesChange([...images, url])}
           />
         ) : (
           <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-200">
@@ -166,7 +132,7 @@ export default function HandoverForm({
                 />
                 <button
                   type="button"
-                  onClick={() => setImages((current) => current.filter((image) => image !== url))}
+                  onClick={() => onImagesChange(images.filter((image) => image !== url))}
                   aria-label={t.removeImage}
                   className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white shadow-md transition hover:bg-red-700 active:scale-90"
                 >

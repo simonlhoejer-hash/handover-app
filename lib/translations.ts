@@ -69,8 +69,9 @@ export const translations = {
       'Mundtlig overlevering er valgt. Du behøver ikke skrive tekst.',
     draftNotPublished: 'Kladde - ikke offentliggjort',
     draftSaving: 'Gemmer...',
-    draftSaved: '✓ Gemt kladde',
+    draftSaved: 'Kladde gemt',
     draftSaveFailed: 'Kunne ikke gemme kladde',
+    draftOffline: 'Offline – ændringer er ikke gemt',
     draftLoaded: 'Kladde hentet',
     lastSavedAt: 'Sidst gemt kl.',
     publishConfirmTitle: 'Er du sikker?',
@@ -140,7 +141,7 @@ Rengøring:
     couldNotReadImage: 'Kunne ikke læse billedet',
     couldNotGetUrl: 'Kunne ikke hente public URL',
     preview: 'Preview',
-    editorPlaceholder: `Hjælp den næste vagt 👇
+    editorPlaceholder: `Hjælp den næste, der tager over 👇
 
 Hvad er anderledes i dag?
 Hvad mangler at blive lavet?
@@ -149,6 +150,12 @@ Skriv tal og mængder.
 Skriv hvor tingene står.`,
     bulletList: '• Liste',
     numberedList: '1. Liste',
+    editorBold: 'Fed',
+    editorItalic: 'Kursiv',
+    editorUnderline: 'Understreget',
+    editorHeading: 'Overskrift',
+    editorUndo: 'Fortryd',
+    editorRedo: 'Annullér fortryd',
 
     // Login/admin/kalkulation
     loginTagline: 'Digital overlevering til køkken og ledelse.',
@@ -333,8 +340,9 @@ Skriv hvor tingene står.`,
       'Muntlig överlämning är vald. Du behöver inte skriva text.',
     draftNotPublished: 'Utkast - inte publicerat',
     draftSaving: 'Sparar...',
-    draftSaved: '✓ Utkast sparat',
+    draftSaved: 'Utkast sparat',
     draftSaveFailed: 'Kunde inte spara utkast',
+    draftOffline: 'Offline – ändringarna är inte sparade',
     draftLoaded: 'Utkast hämtat',
     lastSavedAt: 'Senast sparat kl.',
     publishConfirmTitle: 'Är du säker?',
@@ -404,7 +412,7 @@ Städning:
     couldNotReadImage: 'Kunde inte läsa bilden',
     couldNotGetUrl: 'Kunde inte hämta publik URL',
     preview: 'Preview',
-    editorPlaceholder: `Hjälp nästa vakt 👇
+    editorPlaceholder: `Hjälp nästa person som tar över 👇
 
 Vad är annorlunda idag?
 Vad saknas att bli gjort?
@@ -413,6 +421,12 @@ Skriv siffror och mängder.
 Skriv var sakerna står.`,
     bulletList: '• Lista',
     numberedList: '1. Lista',
+    editorBold: 'Fetstil',
+    editorItalic: 'Kursiv',
+    editorUnderline: 'Understruken',
+    editorHeading: 'Rubrik',
+    editorUndo: 'Ångra',
+    editorRedo: 'Gör om',
 
     // Login/admin/kalkulation
     loginTagline: 'Digital överlämning till kök och ledning.',
@@ -581,8 +595,9 @@ Skriv var sakerna står.`,
     oralHandoverNoText: 'Verbal handover is selected. You do not need to enter any text.',
     draftNotPublished: 'Draft – not published',
     draftSaving: 'Saving...',
-    draftSaved: '✓ Draft saved',
+    draftSaved: 'Draft saved',
     draftSaveFailed: 'Could not save draft',
+    draftOffline: 'Offline – changes are not saved',
     draftLoaded: 'Draft loaded',
     lastSavedAt: 'Last saved at',
     publishConfirmTitle: 'Are you sure?',
@@ -640,7 +655,7 @@ Cleaning:
     couldNotReadImage: 'Could not read the image',
     couldNotGetUrl: 'Could not retrieve public URL',
     preview: 'Preview',
-    editorPlaceholder: `Help the next shift 👇
+    editorPlaceholder: `Help the next person taking over 👇
 
 What is different today?
 What still needs to be done?
@@ -649,6 +664,12 @@ Include figures and quantities.
 Explain where things are located.`,
     bulletList: '• List',
     numberedList: '1. List',
+    editorBold: 'Bold',
+    editorItalic: 'Italic',
+    editorUnderline: 'Underline',
+    editorHeading: 'Heading',
+    editorUndo: 'Undo',
+    editorRedo: 'Redo',
     loginTagline: 'Digital handovers for galley and management.',
     login: 'Log in',
     continueButton: 'Continue',

@@ -29,20 +29,27 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
     )
     if (!card) return
 
+    document.getElementById('handover-print-root')?.remove()
+
+    const printRoot = document.createElement('div')
+    printRoot.id = 'handover-print-root'
+    const printableCard = card.cloneNode(true) as HTMLElement
+    printableCard.querySelectorAll('.handover-print-hidden').forEach((element) => {
+      element.remove()
+    })
+    printRoot.appendChild(printableCard)
+    document.body.appendChild(printRoot)
+
     document.documentElement.dataset.printHandover = 'true'
-    card.dataset.printActive = 'true'
     window.print()
   }
 
   useEffect(() => {
     const clearPrintTarget = () => {
-      const card = document.querySelector<HTMLElement>(
-        `[data-handover-print-card="${item.id}"]`
-      )
-      if (card?.dataset.printActive === 'true') {
-        delete card.dataset.printActive
+      if (document.documentElement.dataset.printHandover === 'true') {
         delete document.documentElement.dataset.printHandover
       }
+      document.getElementById('handover-print-root')?.remove()
     }
 
     window.addEventListener('afterprint', clearPrintTarget)

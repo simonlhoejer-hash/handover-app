@@ -3,10 +3,10 @@
 import { useRouter } from 'next/navigation'
 import HandoverHistoryItem from '@/components/handover/HandoverHistoryItem'
 import HandoverForm from '@/components/handover/HandoverForm'
-import { useTranslation } from '@/lib/LanguageContext'
+import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { useEffect, useRef, useState } from 'react'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
-import { ChevronDown, ChevronLeft, Sparkles, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronLeft, CloudOff, LoaderCircle, Sparkles, X } from 'lucide-react'
 import { displayPartiName } from '@/lib/partis'
 
 function getPlainText(value: string) {
@@ -253,12 +253,12 @@ export default function HandoverPage({
     draftHydratedRef.current = true
   }
 
-  async function saveDraft() {
+  async function saveDraft(imageValues = images) {
     if (!navigator.onLine) return
 
     const trimmedNote = getPlainText(note)
     const hasDraftContent = Boolean(
-      name.trim() || receiver.trim() || trimmedNote || images.length
+      name.trim() || receiver.trim() || trimmedNote || imageValues.length
     )
     if (!draftId && !hasDraftContent) return
 
@@ -273,7 +273,7 @@ export default function HandoverPage({
       parti: itemName,
       shift_date: date,
       note,
-      images,
+      images: imageValues,
       status: 'draft',
       draft_saved_at: now,
     }
@@ -290,6 +290,11 @@ export default function HandoverPage({
       setDraftStatus('error')
       setDraftError(t.draftSaveFailed)
     }
+  }
+
+  function updateImages(nextImages: string[]) {
+    setImages(nextImages)
+    void saveDraft(nextImages)
   }
 
   async function saveNote() {
@@ -411,6 +416,40 @@ export default function HandoverPage({
   </span>
 </button>
 
+        {open && (draftStatus !== 'idle' || !isOnline) && (
+          <div
+            role="status"
+            className={`sticky top-16 z-30 mx-auto flex w-fit max-w-full items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-md backdrop-blur-xl sm:top-3 sm:px-4 sm:text-sm ${
+              !isOnline
+                ? 'bg-amber-500/15 text-amber-800 dark:text-amber-200'
+                : draftStatus === 'error'
+                  ? 'bg-red-500/10 text-red-700 dark:text-red-300'
+                  : draftStatus === 'saving'
+                    ? 'bg-blue-500/10 text-blue-700 dark:text-blue-200'
+                    : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+            }`}
+          >
+            {!isOnline ? (
+              <CloudOff size={17} />
+            ) : draftStatus === 'error' ? (
+              <AlertTriangle size={17} />
+            ) : draftStatus === 'saving' ? (
+              <LoaderCircle size={17} className="animate-spin" />
+            ) : (
+              <CheckCircle2 size={17} />
+            )}
+            <span>
+              {!isOnline
+                ? t.draftOffline
+                : draftStatus === 'error'
+                  ? draftError || t.draftSaveFailed
+                  : draftStatus === 'saving'
+                    ? t.draftSaving
+                    : `${t.draftSaved}${draftSavedAt ? ` · ${new Date(draftSavedAt).toLocaleTimeString(localeFor(lang), { hour: '2-digit', minute: '2-digit' })}` : ''}`}
+            </span>
+          </div>
+        )}
+
         <div className="text-center">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">
             {displayedItemName}
@@ -483,12 +522,9 @@ className="
   note={note}
   setNote={setNote}
   images={images}
-  setImages={setImages}
+  onImagesChange={updateImages}
   loading={loading}
   onSave={saveNote}
-  draftStatus={draftStatus}
-  draftSavedAt={draftSavedAt}
-  draftError={draftError}
   isOnline={isOnline}
 parti={itemName}/>
           </div>
