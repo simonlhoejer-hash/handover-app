@@ -50,6 +50,8 @@ export const translations = {
     offlineCacheReady: 'Offline klar',
     offlineCacheError: 'Offline-cache mangler',
     secondsShort: 'sek.',
+    offlineStatus: 'Offline-status',
+    offlineNotReady: 'Ikke klargjort endnu',
 
     // Forside
     missing: '❌ Mangler',
@@ -326,6 +328,8 @@ Skriv hvor tingene står.`,
     offlineCacheReady: 'Offline redo',
     offlineCacheError: 'Offline-cache saknas',
     secondsShort: 'sek.',
+    offlineStatus: 'Offline-status',
+    offlineNotReady: 'Inte redo ännu',
 
     // Forside
     missing: '❌ Saknas',
@@ -591,6 +595,8 @@ Skriv var sakerna står.`,
     offlineCacheReady: 'Offline ready',
     offlineCacheError: 'Offline cache incomplete',
     secondsShort: 'sec.',
+    offlineStatus: 'Offline status',
+    offlineNotReady: 'Not ready yet',
     missing: '❌ Missing',
     pending: '🕒 Pending',
     read: '✓ Read',

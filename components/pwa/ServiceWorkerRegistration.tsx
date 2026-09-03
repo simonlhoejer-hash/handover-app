@@ -43,12 +43,24 @@ export default function ServiceWorkerRegistration() {
       void navigator.serviceWorker.ready.then(warmCurrentShip)
     }
 
+    const handleControllerChange = () => {
+      void navigator.serviceWorker.ready.then(warmCurrentShip)
+    }
+
     const handleWorkerMessage = (event: MessageEvent) => {
       if (event.data?.cacheVersion) setCacheVersion(String(event.data.cacheVersion))
       if (event.data?.type === 'OFFLINE_CACHE_START') {
         setCacheSeconds(0)
         setCacheState('caching')
       } else if (event.data?.type === 'OFFLINE_CACHE_READY') {
+        if (event.data?.cacheVersion) {
+          try {
+            localStorage.setItem('handover-offline-cache-version', String(event.data.cacheVersion))
+            window.dispatchEvent(new Event('handover-offline-cache-updated'))
+          } catch {
+            // The temporary confirmation still shows if storage is unavailable.
+          }
+        }
         setCacheState('ready')
       } else if (event.data?.type === 'OFFLINE_CACHE_ERROR') {
         setCacheState('error')
@@ -62,11 +74,13 @@ export default function ServiceWorkerRegistration() {
     }
     window.addEventListener('online', handleOnline)
     navigator.serviceWorker.addEventListener('message', handleWorkerMessage)
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
 
     return () => {
       window.removeEventListener('load', registerServiceWorker)
       window.removeEventListener('online', handleOnline)
       navigator.serviceWorker.removeEventListener('message', handleWorkerMessage)
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
     }
   }, [])
 

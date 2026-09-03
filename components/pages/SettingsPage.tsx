@@ -1,15 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useTranslation } from '@/lib/LanguageContext'
-import { ChevronDown } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Clock3 } from 'lucide-react'
 
 export default function SettingsPage() {
   const { t } = useTranslation()
   const [appOpen, setAppOpen] = useState(true)
   const [privacyOpen, setPrivacyOpen] = useState(false)
+  const [cacheVersion, setCacheVersion] = useState('')
+
+  useEffect(() => {
+    const updateCacheVersion = () => {
+      try {
+        setCacheVersion(localStorage.getItem('handover-offline-cache-version') ?? '')
+      } catch {
+        setCacheVersion('')
+      }
+    }
+
+    updateCacheVersion()
+    window.addEventListener('handover-offline-cache-updated', updateCacheVersion)
+    return () =>
+      window.removeEventListener('handover-offline-cache-updated', updateCacheVersion)
+  }, [])
 
   return (
     <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-10">
@@ -69,7 +85,7 @@ export default function SettingsPage() {
           className={`
             overflow-hidden
             transition-all duration-500 ease-in-out
-            ${appOpen ? 'max-h-60 opacity-100 px-6 pb-6' : 'max-h-0 opacity-0'}
+            ${appOpen ? 'max-h-80 opacity-100 px-6 pb-6' : 'max-h-0 opacity-0'}
           `}
         >
           <div className="space-y-5 border-t border-black/5 dark:border-white/10 pt-6">
@@ -86,6 +102,22 @@ export default function SettingsPage() {
                 {t.theme}
               </span>
               <ThemeToggle />
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-700 dark:text-white/70">
+                {t.offlineStatus}
+              </span>
+              <span className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${
+                cacheVersion
+                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+              }`}>
+                {cacheVersion ? <CheckCircle2 size={16} /> : <Clock3 size={16} />}
+                {cacheVersion
+                  ? `${t.offlineCacheReady} · cache ${cacheVersion}`
+                  : t.offlineNotReady}
+              </span>
             </div>
 
           </div>
