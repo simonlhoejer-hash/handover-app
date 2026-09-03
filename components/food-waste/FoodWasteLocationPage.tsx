@@ -337,7 +337,14 @@ export default function FoodWasteLocationPage({
   function showSavedAndReturn() {
     setSaved(true)
     window.setTimeout(() => {
-      router.push(`${basePath}/food-waste`)
+      const destination = `${basePath}/food-waste`
+      if (navigator.onLine) {
+        router.push(destination)
+      } else {
+        // A full navigation lets the service worker serve the cached page.
+        // Next's client router would otherwise request fresh RSC data online.
+        window.location.assign(destination)
+      }
     }, 750)
   }
 

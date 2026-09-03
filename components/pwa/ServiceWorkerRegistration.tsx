@@ -9,6 +9,9 @@ export default function ServiceWorkerRegistration() {
 
     const useNewWorker = () => {
       if (refreshing) return
+      // Never force a reload while offline. The current page is already usable,
+      // and an automatic reload can expose the browser's generic offline page.
+      if (!navigator.onLine) return
       refreshing = true
       window.location.reload()
     }
