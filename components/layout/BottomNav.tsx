@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
@@ -17,7 +16,6 @@ import {
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const router = useRouter()
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -48,12 +46,6 @@ export default function BottomNav() {
       label: t.overview,
     },
   ]
-
-  useEffect(() => {
-    router.prefetch(basePath)
-    router.prefetch(`${basePath}/food-waste`)
-    router.prefetch(`${basePath}/food-waste/overblik`)
-  }, [basePath, router])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -95,7 +87,7 @@ export default function BottomNav() {
           const active = tab.active
 
           return (
-            <Link
+            <a
               key={tab.href}
               href={tab.href}
               aria-label={tab.label}
@@ -124,7 +116,7 @@ export default function BottomNav() {
               `}
             >
               <Icon size={20} strokeWidth={1.8} />
-            </Link>
+            </a>
           )
         })}
 
@@ -189,7 +181,7 @@ export default function BottomNav() {
                   <ThemeToggle />
                 </div>
 
-                <Link
+                <a
                   href={`${basePath}/indstillinger`}
                   onClick={() => setOpen(false)}
                   className="
@@ -203,7 +195,7 @@ export default function BottomNav() {
                 >
                   <ShieldCheck size={18} strokeWidth={1.8} />
                   <span className="whitespace-nowrap">{t.privacy}</span>
-                </Link>
+                </a>
 
                 <button
                   type="button"

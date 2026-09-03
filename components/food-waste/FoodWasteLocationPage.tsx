@@ -1,7 +1,5 @@
 'use client'
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, CheckCircle2, ChevronLeft, Trash2 } from 'lucide-react'
 import {
@@ -85,7 +83,6 @@ export default function FoodWasteLocationPage({
   basePath = '/crown',
 }: Props) {
   const { t, lang } = useTranslation()
-  const router = useRouter()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [quantityKg, setQuantityKg] = useState('')
   const [loading, setLoading] = useState(true)
@@ -337,7 +334,7 @@ export default function FoodWasteLocationPage({
   function showSavedAndReturn() {
     setSaved(true)
     window.setTimeout(() => {
-      router.push(`${basePath}/food-waste`)
+      window.location.assign(`${basePath}/food-waste`)
     }, 750)
   }
 
@@ -402,7 +399,7 @@ export default function FoodWasteLocationPage({
   return (
     <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-6">
       <header className="relative flex items-center justify-center">
-        <Link
+        <a
           href={`${basePath}/food-waste`}
           className="
             absolute left-0
@@ -418,7 +415,7 @@ export default function FoodWasteLocationPage({
           aria-label={t.back}
         >
           <ChevronLeft className="w-5 h-5" />
-        </Link>
+        </a>
 
         <div className="text-center">
           <h1 className="text-3xl font-semibold tracking-tight">

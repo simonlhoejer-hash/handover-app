@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
@@ -221,7 +220,7 @@ export default function FoodWastePage({
                 const stationName = mealNameParts.join(' ')
 
                 return (
-                  <Link
+                  <a
                     key={location.slug}
                     href={`${basePath}/food-waste/${location.slug}`}
                     className="
@@ -286,7 +285,7 @@ export default function FoodWastePage({
                             : t.zeroKgToday}
                       </span>
                     </div>
-                  </Link>
+                  </a>
                 )
               })}
             </div>
