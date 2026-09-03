@@ -307,7 +307,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState('')
   const [guestMessage, setGuestMessage] = useState('')
-  const [guestTableError, setGuestTableError] = useState(false)
   const [guestPanelOpen, setGuestPanelOpen] = useState(false)
   const [selectedPoint, setSelectedPoint] = useState<{
     chart: string
@@ -418,10 +417,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         )
       }
 
-      if (guestsError) {
-        setGuestTableError(true)
-      } else {
-        setGuestTableError(false)
+      if (!guestsError) {
         const nextGuests = Array.from(
           new Map(guests.map((guest) => [guest.service_date, guest])).values()
         )
@@ -736,10 +732,8 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     }
 
     if (saveError || !data) {
-      setGuestTableError(true)
       setGuestMessage(t.couldNotSaveGuests)
     } else {
-      setGuestTableError(false)
       setGuestMessage(t.guestsSaved)
       setGuestPanelOpen(false)
       setGuestCounts((current) => [
@@ -1350,12 +1344,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       {error && (
         <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-300">
           {error}
-        </p>
-      )}
-
-      {guestTableError && (
-        <p className="rounded-2xl bg-amber-400/15 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-          {t.guestCountsNeedSql}
         </p>
       )}
 
