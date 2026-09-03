@@ -1,4 +1,5 @@
-const CACHE_NAME = 'handover-offline-v33'
+const CACHE_NAME = 'handover-offline-v34'
+const CACHE_PREFIX = 'handover-offline-'
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
@@ -54,8 +55,28 @@ async function cachePaths(paths) {
   )
 }
 
+async function inheritPreviousCache() {
+  const cache = await caches.open(CACHE_NAME)
+  const previousKeys = (await caches.keys()).filter(
+    (key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME
+  )
+
+  for (const key of previousKeys.reverse()) {
+    const previous = await caches.open(key)
+    const requests = await previous.keys()
+
+    for (const request of requests) {
+      if (await cache.match(request)) continue
+      const response = await previous.match(request)
+      if (response) await cache.put(request, response)
+    }
+  }
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(cachePaths(APP_SHELL))
+  event.waitUntil(
+    inheritPreviousCache().then(() => cachePaths(APP_SHELL))
+  )
   self.skipWaiting()
 })
 
@@ -80,7 +101,7 @@ self.addEventListener('activate', (event) => {
         .then((keys) =>
           Promise.all(
             keys
-              .filter((key) => key !== CACHE_NAME)
+              .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
               .map((key) => caches.delete(key))
           )
         ),
@@ -136,9 +157,13 @@ self.addEventListener('fetch', (event) => {
           return (
             await caches.match(request) ||
             await cache.match(pathKey) ||
+            await caches.match(pathKey) ||
             await cache.match(`/${ship}/food-waste`) ||
+            await caches.match(`/${ship}/food-waste`) ||
             await cache.match('/ships') ||
-            await cache.match('/')
+            await caches.match('/ships') ||
+            await cache.match('/') ||
+            await caches.match('/')
           )
         })
       })
