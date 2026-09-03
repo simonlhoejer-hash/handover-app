@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handover-offline-v34'
+const CACHE_NAME = 'handover-offline-v35'
 const CACHE_PREFIX = 'handover-offline-'
 
 function normalizedPath(pathname) {
@@ -49,6 +49,27 @@ async function cachePaths(paths) {
         finalUrl.origin === self.location.origin &&
         normalizedPath(finalUrl.pathname) === normalizedPath(path)
       ) {
+        if (response.headers.get('content-type')?.includes('text/html')) {
+          const html = await response.clone().text()
+          const assetPaths = Array.from(
+            html.matchAll(/(?:src|href)=["'](\/_next\/static\/[^"']+)["']/g),
+            (match) => match[1].replace(/&amp;/g, '&')
+          )
+
+          const assets = await Promise.all(
+            [...new Set(assetPaths)].map(async (assetPath) => {
+              const assetResponse = await fetch(assetPath, { cache: 'reload' })
+              if (!assetResponse.ok) throw new Error(`Asset failed: ${assetPath}`)
+              return [assetPath, assetResponse]
+            })
+          )
+
+          for (const [assetPath, assetResponse] of assets) {
+            await cache.put(assetPath, assetResponse)
+          }
+        }
+
+        // Replace the cached HTML only after every dependency is available.
         await cache.put(path, response)
       }
     })
