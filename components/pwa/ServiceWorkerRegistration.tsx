@@ -8,7 +8,10 @@ export default function ServiceWorkerRegistration() {
     let refreshing = false
 
     const useNewWorker = () => {
-      if (refreshing) return
+      // Never replace the currently working screen with a browser reload while
+      // offline. The new worker already controls the open app, and the normal
+      // online navigation will pick up the newest files later.
+      if (refreshing || !navigator.onLine) return
       refreshing = true
       window.location.reload()
     }
