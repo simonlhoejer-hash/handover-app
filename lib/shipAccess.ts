@@ -6,6 +6,7 @@ export const ACCESS_COOKIE_NAMES: Record<AccessShip, string> = {
 }
 
 export const LEGACY_ACCESS_COOKIE_NAMES = ['handover_pearl_access'] as const
+export const SOUSCHEF_ACCESS_COOKIE_NAME = 'handover_crown_souschef_access'
 
 function getCode(ship: AccessShip) {
   const environmentCode =
@@ -26,6 +27,13 @@ function getSigningSecret() {
   }
 
   return process.env.ACCESS_SESSION_SECRET
+}
+
+function getSouschefCode() {
+  if (!process.env.SOUSCHEF_ACCESS_CODE) {
+    throw new Error('SOUSCHEF_ACCESS_CODE mangler i miljøvariablerne.')
+  }
+  return process.env.SOUSCHEF_ACCESS_CODE.trim().toUpperCase()
 }
 
 async function signValue(value: string) {
@@ -58,6 +66,27 @@ export async function isCorrectAccessCode(ship: AccessShip, code: string) {
     difference |= candidate[index] ^ expected[index]
   }
   return difference === 0
+}
+
+export async function isCorrectSouschefCode(code: string) {
+  const candidate = new TextEncoder().encode(code.trim().toUpperCase())
+  const expected = new TextEncoder().encode(getSouschefCode())
+  if (candidate.length !== expected.length) return false
+
+  let difference = 0
+  for (let index = 0; index < candidate.length; index += 1) {
+    difference |= candidate[index] ^ expected[index]
+  }
+  return difference === 0
+}
+
+export async function createSouschefAccessToken() {
+  return signValue(`handover-access:crown:souschef:${getSouschefCode()}`)
+}
+
+export async function verifySouschefAccessToken(token: string | undefined) {
+  if (!token) return false
+  return token === (await createSouschefAccessToken())
 }
 
 export async function createAccessToken(ship: AccessShip) {

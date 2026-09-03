@@ -34,10 +34,12 @@ export default function ShipAccessForm({
 
     setLoading(false)
 
+    const result = (await response.json().catch(() => null)) as {
+      destination?: string
+      error?: string
+    } | null
+
     if (!response.ok) {
-      const result = (await response.json().catch(() => null)) as {
-        error?: string
-      } | null
       setError(result?.error || 'Koden kunne ikke kontrolleres.')
       return
     }
@@ -50,7 +52,7 @@ export default function ShipAccessForm({
 
     // Force the first protected navigation through the network so an older
     // offline shell can never mask a successful login.
-    window.location.replace(`${destination}?login=1`)
+    window.location.replace(`${result?.destination || destination}?login=1`)
   }
 
   return (

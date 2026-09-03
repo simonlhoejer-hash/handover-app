@@ -3,8 +3,11 @@ import {
   ACCESS_COOKIE_NAMES,
   AccessShip,
   createAccessToken,
+  createSouschefAccessToken,
   isCorrectAccessCode,
+  isCorrectSouschefCode,
   LEGACY_ACCESS_COOKIE_NAMES,
+  SOUSCHEF_ACCESS_COOKIE_NAME,
 } from '@/lib/shipAccess'
 
 function isAccessShip(value: unknown): value is AccessShip {
@@ -18,6 +21,15 @@ export async function POST(request: Request) {
   } | null
 
   let valid = false
+  let souschef = false
+  if (body?.ship === 'crown' && typeof body.code === 'string') {
+    try {
+      souschef = await isCorrectSouschefCode(body.code)
+    } catch {
+      souschef = false
+    }
+  }
+
   try {
     valid = Boolean(
       body &&
@@ -32,14 +44,30 @@ export async function POST(request: Request) {
     )
   }
 
-  if (!valid || !body || !isAccessShip(body.ship)) {
+  if ((!valid && !souschef) || !body || !isAccessShip(body.ship)) {
     return NextResponse.json(
       { error: 'Forkert kode. Prøv igen.' },
       { status: 401 }
     )
   }
 
-  const response = NextResponse.json({ ok: true })
+  const response = NextResponse.json({
+    ok: true,
+    destination: souschef ? '/crown/souschef' : `/${body.ship}`,
+  })
+
+  if (souschef) {
+    response.cookies.set({
+      name: SOUSCHEF_ACCESS_COOKIE_NAME,
+      value: await createSouschefAccessToken(),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 180,
+    })
+    return response
+  }
   response.cookies.set({
     name: ACCESS_COOKIE_NAMES[body.ship],
     value: await createAccessToken(body.ship),
@@ -73,6 +101,7 @@ export async function DELETE() {
   for (const cookieName of [
     ...Object.values(ACCESS_COOKIE_NAMES),
     ...LEGACY_ACCESS_COOKIE_NAMES,
+    SOUSCHEF_ACCESS_COOKIE_NAME,
   ]) {
     response.cookies.set({
       name: cookieName,
