@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, Download, Maximize2, Users, X } from 'lucide-react'
+import { ChevronDown, Download, Maximize2, Printer, Users, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Row, Worksheet } from 'exceljs'
@@ -182,6 +182,20 @@ function isBuffetLocationForView(name: string, view: BuffetView) {
   return !name.startsWith('Produktion ')
 }
 
+function getMonthComparisonRange(dateString: string) {
+  const currentDate = parseLocalDate(dateString)
+  const currentFrom = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+  const previousFrom = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+  const previousTo = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0)
+
+  return {
+    currentFrom: formatLocalDate(currentFrom),
+    currentTo: dateString,
+    previousFrom: formatLocalDate(previousFrom),
+    previousTo: formatLocalDate(previousTo),
+  }
+}
+
 function isMessLocationForView(name: string, view: MessView) {
   if (view === 'morning') return name === 'Messen morgen'
   if (view === 'lunch') return name === 'Messen frokost'
@@ -278,6 +292,8 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [toDate, setToDate] = useState(initialWeek.to)
   const automaticWeekRef = useRef(true)
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
+  const [comparisonEntries, setComparisonEntries] = useState<FoodWasteEntry[]>([])
+  const [comparisonLoaded, setComparisonLoaded] = useState(false)
   const [guestCounts, setGuestCounts] = useState<GuestCount[]>([])
   const [guestDate, setGuestDate] = useState(today)
   const [breakfastGuests, setBreakfastGuests] = useState('')
@@ -424,6 +440,56 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       isCurrent = false
     }
   }, [fromDate, t.offlineShowingCached, toDate, vessel])
+
+  useEffect(() => {
+    let isCurrent = true
+    const range = getMonthComparisonRange(today)
+    const cached = readCachedFoodWasteEntries(vessel).filter(
+      (entry) =>
+        entry.waste_date >= range.previousFrom &&
+        entry.waste_date <= range.currentTo &&
+        isEntryVisibleForVessel(entry, vessel)
+    )
+    setComparisonEntries(cached)
+    setComparisonLoaded(cached.length > 0)
+
+    secureFetch<{ data: FoodWasteEntry[] }>(
+      `/api/food-waste/entries?${queryString({
+        ship: vessel,
+        from: range.previousFrom,
+        to: range.currentTo,
+        limit: 2000,
+      })}`
+    )
+      .then((result) => {
+        if (!isCurrent) return
+        cacheFoodWasteEntries(result.data, vessel)
+        setComparisonEntries(result.data.filter((entry) => isEntryVisibleForVessel(entry, vessel)))
+        setComparisonLoaded(true)
+      })
+      .catch(() => {
+        if (isCurrent) setComparisonLoaded(true)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [today, vessel])
+
+  useEffect(() => {
+    const clearPrintTarget = () => {
+      if (document.documentElement.dataset.printFoodWaste === 'true') {
+        delete document.documentElement.dataset.printFoodWaste
+      }
+      document.getElementById('food-waste-print-root')?.remove()
+    }
+
+    window.addEventListener('afterprint', clearPrintTarget)
+    return () => {
+      window.removeEventListener('afterprint', clearPrintTarget)
+      clearPrintTarget()
+    }
+  }, [])
 
   useEffect(() => {
     const saved = guestCounts.find((guest) => guest.service_date === guestDate)
@@ -1058,18 +1124,39 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     : lang === 'sv'
       ? { all: 'Totalt', morning: 'Frukost', lunch: 'Lunch', evening: 'Middag' }
       : { all: 'Samlet', morning: 'Morgen', lunch: 'Frokost', evening: 'Aften' }
-  const currentWasteGrams = Math.round(buffetKgPerGuest * 1000)
-  const longTermGoalGrams = 100
-  const nextGoalGrams = currentWasteGrams <= longTermGoalGrams
-    ? longTermGoalGrams
-    : Math.max(longTermGoalGrams, Math.floor((currentWasteGrams - 1) / 25) * 25)
-  const gramsToNextGoal = Math.max(currentWasteGrams - nextGoalGrams, 0)
-  const goalProgress = currentWasteGrams <= longTermGoalGrams
-    ? 100
-    : Math.max(0, Math.min(100, ((nextGoalGrams + 25 - currentWasteGrams) / 25) * 100))
   const activeBuffetLabel = buffetView === 'mess'
     ? `${buffetViewLabels.mess} · ${messViewLabels[messView]}`
     : buffetViewLabels[buffetView]
+  const comparisonRange = getMonthComparisonRange(today)
+  const comparableBuffetEntries = comparisonEntries.filter((entry) => {
+    if (entry.location_name.startsWith('Produktion ')) return false
+    if (!isBuffetLocationForView(entry.location_name, buffetView)) return false
+    if (buffetView === 'mess' && !isMessLocationForView(entry.location_name, messView)) {
+      return false
+    }
+    return true
+  })
+  const currentMonthTotal = comparableBuffetEntries
+    .filter((entry) => entry.waste_date >= comparisonRange.currentFrom)
+    .reduce((total, entry) => total + getEntryAmount(entry), 0)
+  const previousMonthTotal = comparableBuffetEntries
+    .filter(
+      (entry) =>
+        entry.waste_date >= comparisonRange.previousFrom &&
+        entry.waste_date <= comparisonRange.previousTo
+    )
+    .reduce((total, entry) => total + getEntryAmount(entry), 0)
+  const currentMonthAverage = currentMonthTotal / getDateRangeDays(
+    comparisonRange.currentFrom,
+    comparisonRange.currentTo
+  )
+  const previousMonthAverage = previousMonthTotal / getDateRangeDays(
+    comparisonRange.previousFrom,
+    comparisonRange.previousTo
+  )
+  const monthDifferencePercent = previousMonthAverage > 0
+    ? ((currentMonthAverage - previousMonthAverage) / previousMonthAverage) * 100
+    : null
   const grinderViewLabels: Record<GrinderView, string> = lang === 'en'
     ? { all: 'Total', buffet: 'Buffet', production: 'Production', deck: 'Deck 1' }
     : lang === 'sv'
@@ -1148,9 +1235,40 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       )
   }
 
+  function printCharts() {
+    const charts = document.querySelectorAll<HTMLElement>('[data-food-waste-chart]')
+    if (charts.length === 0) return
+
+    document.getElementById('food-waste-print-root')?.remove()
+    const printRoot = document.createElement('div')
+    printRoot.id = 'food-waste-print-root'
+
+    const heading = document.createElement('header')
+    heading.className = 'food-waste-print-heading'
+    const title = document.createElement('h1')
+    title.textContent = t.foodWasteOverview
+    const period = document.createElement('p')
+    period.textContent = `${t.period}: ${formatDate(fromDate, lang)} – ${formatDate(toDate, lang)}`
+    heading.append(title, period)
+    printRoot.appendChild(heading)
+
+    const grid = document.createElement('div')
+    grid.className = 'food-waste-print-grid'
+    charts.forEach((chart) => {
+      const copy = chart.cloneNode(true) as HTMLElement
+      copy.querySelectorAll('.food-waste-print-hidden').forEach((element) => element.remove())
+      grid.appendChild(copy)
+    })
+    printRoot.appendChild(grid)
+    document.body.appendChild(printRoot)
+
+    document.documentElement.dataset.printFoodWaste = 'true'
+    window.print()
+  }
+
   return (
     <main className={`${vessel === 'pearl' ? 'max-w-7xl' : 'max-w-5xl'} mx-auto px-4 pt-4 pb-24 space-y-6`}>
-      {buffetGuestTotal > 0 && (
+      {comparisonLoaded && (
         <aside className={`fixed left-4 top-1/2 z-20 hidden -translate-y-1/2 min-[1800px]:left-6 min-[1800px]:w-64 ${
           vessel === 'pearl'
             ? 'w-64 min-[1800px]:block'
@@ -1158,79 +1276,59 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         }`}>
           <div className="overflow-hidden rounded-[28px] border border-amber-500/20 bg-white/95 p-4 shadow-[0_18px_45px_rgba(54,38,8,0.14)] backdrop-blur dark:border-amber-300/15 dark:bg-[#0d3b3a]/95 min-[1800px]:p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
-              {lang === 'en' ? 'This week’s goal' : lang === 'sv' ? 'Veckans mål' : 'Ugens mål'}
+              {lang === 'en' ? 'Compared with last month' : lang === 'sv' ? 'Jämfört med förra månaden' : 'Sammenlignet med sidste måned'}
             </p>
             <h2 className="mt-1 text-lg font-semibold">{activeBuffetLabel}</h2>
 
             <div className="mt-4 grid gap-3 min-[1800px]:grid-cols-2">
               <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 px-3 py-3 dark:from-amber-400/15 dark:to-orange-400/5">
                 <p className="text-xs text-gray-500 dark:text-white/55">
-                  {lang === 'en' ? 'Current level' : lang === 'sv' ? 'Nuvarande nivå' : 'Aktuelt niveau'}
+                  {lang === 'en' ? 'This month' : lang === 'sv' ? 'Denna månad' : 'Denne måned'}
                 </p>
-                <p className="mt-1 whitespace-nowrap text-4xl font-semibold tracking-tight text-amber-600 dark:text-amber-300">
-                  {formatNumber(currentWasteGrams, lang)} g
+                <p className="mt-1 whitespace-nowrap text-3xl font-semibold tracking-tight text-amber-600 dark:text-amber-300">
+                  {formatAmount(currentMonthAverage, lang)}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-white/55">
-                  {lang === 'en' ? 'per guest' : lang === 'sv' ? 'per gäst' : 'pr. gæst'}
+                  {lang === 'en' ? 'average per day' : lang === 'sv' ? 'genomsnitt per dag' : 'gennemsnit pr. dag'}
                 </p>
               </div>
               <div className="rounded-2xl border border-black/5 bg-white/70 px-3 py-3 text-left dark:border-white/10 dark:bg-white/5 min-[1800px]:text-right">
-                <p className="text-[10px] text-gray-500 dark:text-white/55">
-                  {currentWasteGrams <= longTermGoalGrams
-                    ? lang === 'en' ? 'Goal reached' : lang === 'sv' ? 'Målet nått' : 'Målet nået'
-                    : lang === 'en' ? 'Next step' : lang === 'sv' ? 'Nästa steg' : 'Næste delmål'}
+                <p className="text-xs text-gray-500 dark:text-white/55">
+                  {lang === 'en' ? 'Last month' : lang === 'sv' ? 'Förra månaden' : 'Sidste måned'}
                 </p>
-                <p className="whitespace-nowrap text-lg font-semibold text-amber-700 dark:text-amber-200">
-                  {lang === 'en' ? 'under' : lang === 'sv' ? 'under' : 'under'} {nextGoalGrams} g
+                <p className="mt-1 whitespace-nowrap text-xl font-semibold text-gray-800 dark:text-white/85">
+                  {previousMonthAverage > 0 ? formatAmount(previousMonthAverage, lang) : '—'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-white/55">
+                  {lang === 'en' ? 'average per day' : lang === 'sv' ? 'genomsnitt per dag' : 'gennemsnit pr. dag'}
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  currentWasteGrams <= longTermGoalGrams ? 'bg-emerald-500' : 'bg-amber-500'
-                }`}
-                style={{ width: `${goalProgress}%` }}
-              />
+            <div className={`mt-4 rounded-2xl px-3 py-3 ${
+              monthDifferencePercent == null
+                ? 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/65'
+                : monthDifferencePercent <= 0
+                  ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200'
+                  : 'bg-orange-50 text-orange-800 dark:bg-orange-400/15 dark:text-orange-200'
+            }`}>
+              {monthDifferencePercent == null ? (
+                <p className="text-xs font-medium leading-relaxed">
+                  {lang === 'en' ? 'We are collecting data for the first comparison.' : lang === 'sv' ? 'Vi samlar data till den första jämförelsen.' : 'Vi samler data til den første sammenligning.'}
+                </p>
+              ) : (
+                <>
+                  <p className="text-2xl font-semibold">
+                    {formatNumber(Math.abs(Math.round(monthDifferencePercent)), lang)}%
+                  </p>
+                  <p className="text-xs font-medium leading-relaxed">
+                    {monthDifferencePercent <= 0
+                      ? lang === 'en' ? 'less waste than last month' : lang === 'sv' ? 'mindre svinn än förra månaden' : 'mindre madspild end sidste måned'
+                      : lang === 'en' ? 'more waste than last month' : lang === 'sv' ? 'mer svinn än förra månaden' : 'mere madspild end sidste måned'}
+                  </p>
+                </>
+              )}
             </div>
-
-            <p className="mt-2 text-xs font-medium leading-relaxed text-gray-600 dark:text-white/75">
-              {currentWasteGrams <= longTermGoalGrams
-                ? lang === 'en'
-                  ? 'Great work – the first main goal has been reached.'
-                  : lang === 'sv'
-                    ? 'Bra jobbat – det första huvudmålet är nått.'
-                    : 'Flot arbejde – det første hovedmål er nået.'
-                : lang === 'en'
-                  ? `Only ${gramsToNextGoal} g per guest to the next step.`
-                  : lang === 'sv'
-                    ? `Bara ${gramsToNextGoal} g per gäst till nästa steg.`
-                    : `Kun ${gramsToNextGoal} g pr. gæst til næste delmål.`}
-            </p>
-
-            <div className="mt-5 border-t border-black/5 pt-4 dark:border-white/10">
-              <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-white/55">
-                <span>{lang === 'en' ? 'Goal ladder' : lang === 'sv' ? 'Måltrappa' : 'Målstige'}</span>
-                <span>{lang === 'en' ? 'Main goal' : lang === 'sv' ? 'Huvudmål' : 'Hovedmål'} &lt;100 g</span>
-              </div>
-              <div className="relative mt-3 flex items-start justify-between gap-1 before:absolute before:left-[12.5%] before:right-[12.5%] before:top-[5px] before:h-px before:bg-gray-200 dark:before:bg-white/10">
-                {[175, 150, 125, 100].map((goal) => (
-                  <div key={goal} className="relative z-10 flex flex-1 flex-col items-center gap-1.5">
-                    <span className={`h-2.5 w-2.5 rounded-full ring-4 ring-white dark:ring-[#0d3b3a] ${currentWasteGrams <= goal ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-white/20'}`} />
-                    <span className="text-[10px] text-gray-500 dark:text-white/50">{goal} g</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <p className="mt-4 border-t border-black/5 pt-3 text-[10px] leading-relaxed text-gray-400 dark:border-white/10 dark:text-white/40">
-              {lang === 'en'
-                ? 'An internal improvement target – not an assessment of an individual chef.'
-                : lang === 'sv'
-                  ? 'Ett internt förbättringsmål – inte en bedömning av en enskild kock.'
-                  : 'Et internt forbedringsmål – ikke en vurdering af den enkelte kok.'}
-            </p>
           </div>
         </aside>
       )}
@@ -1311,6 +1409,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         {chartConfigs.map((chart) => (
           <div
             key={chart.title}
+            data-food-waste-chart
             className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10"
           >
             <div className="flex items-center justify-between gap-3">
@@ -1332,7 +1431,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                       })
                     }
                   }}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/5 text-gray-600 transition hover:bg-black/10 dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15"
+                  className="food-waste-print-hidden flex h-9 w-9 items-center justify-center rounded-xl bg-black/5 text-gray-600 transition hover:bg-black/10 dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15"
                   aria-label={lang === 'sv' ? 'Förstora graf' : lang === 'en' ? 'Enlarge chart' : 'Forstør graf'}
                 >
                   <Maximize2 size={17} />
@@ -1341,7 +1440,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             </div>
 
             {chart.kind === 'buffet' && (
-              <div className="mt-4 grid grid-cols-4 gap-1 rounded-xl bg-black/5 p-1 dark:bg-black/20">
+              <div className="food-waste-print-hidden mt-4 grid grid-cols-4 gap-1 rounded-xl bg-black/5 p-1 dark:bg-black/20">
                 {(Object.keys(buffetViewLabels) as BuffetView[]).map((view) => (
                   <button
                     key={view}
@@ -1363,7 +1462,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             )}
 
             {chart.kind === 'buffet' && buffetView === 'mess' && (
-              <div className="mt-2 grid grid-cols-4 gap-1 rounded-xl border border-amber-500/15 bg-amber-50/70 p-1 dark:bg-amber-400/10">
+              <div className="food-waste-print-hidden mt-2 grid grid-cols-4 gap-1 rounded-xl border border-amber-500/15 bg-amber-50/70 p-1 dark:bg-amber-400/10">
                 {(Object.keys(messViewLabels) as MessView[]).map((view) => (
                   <button
                     key={view}
@@ -1385,7 +1484,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             )}
 
             {chart.kind === 'grinder' && (
-              <div className="mt-4 grid grid-cols-4 gap-1 rounded-xl bg-black/5 p-1 dark:bg-black/20">
+              <div className="food-waste-print-hidden mt-4 grid grid-cols-4 gap-1 rounded-xl bg-black/5 p-1 dark:bg-black/20">
                 {(Object.keys(grinderViewLabels) as GrinderView[]).map((view) => (
                   <button
                     key={view}
@@ -1567,7 +1666,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   </span>
                 </div>
               )}
-              <div className="flex h-full items-end gap-2 overflow-x-auto pb-2">
+              <div className="food-waste-print-bars flex h-full items-end gap-2 overflow-x-auto pb-2">
               {!loading && chart.points.length === 0 && (
                 <p className="self-center text-sm text-gray-500 dark:text-white/60">
                   {t.noRegistrationsInPeriod}
@@ -1619,7 +1718,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             </div>
 
             {getChartComments(chart.points, chart.kind).length > 0 && (
-              <div className="mt-4 border-t border-black/5 pt-4 dark:border-white/10">
+              <div className="food-waste-print-hidden mt-4 border-t border-black/5 pt-4 dark:border-white/10">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-white/55">
                   {lang === 'en' ? 'Comments by day' : lang === 'sv' ? 'Kommentarer per dag' : 'Kommentarer under dagene'}
                 </p>
@@ -2082,7 +2181,16 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </div>
       </aside>
 
-      <div className="flex justify-center pt-2">
+      <div className="flex flex-col justify-center gap-3 pt-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={printCharts}
+          disabled={loading || chartConfigs.every((chart) => chart.points.length === 0)}
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-black/10 bg-white px-6 font-semibold text-gray-800 shadow-sm transition active:scale-[0.98] disabled:opacity-50 dark:border-white/10 dark:bg-white/10 dark:text-white sm:w-auto"
+        >
+          <Printer size={18} />
+          {lang === 'en' ? 'Print charts' : lang === 'sv' ? 'Skriv ut grafer' : 'Print grafer'}
+        </button>
         <button
           onClick={() => void exportOverview()}
           disabled={loading || exporting}
