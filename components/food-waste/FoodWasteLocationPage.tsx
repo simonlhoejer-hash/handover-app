@@ -190,7 +190,7 @@ export default function FoodWasteLocationPage({
       if (!isCurrent) return
 
       if (loadError) {
-        setError(t.offlineShowingCached)
+        setError('')
       } else {
         setError('')
         cacheFoodWasteEntries(data, vessel)
@@ -210,7 +210,7 @@ export default function FoodWasteLocationPage({
     return () => {
       isCurrent = false
     }
-  }, [locationName, syncPendingEntries, t.offlineShowingCached, vessel])
+  }, [locationName, syncPendingEntries, vessel])
 
   const todayTotal = useMemo(() => {
     return entries.reduce((total, entry) => {
@@ -554,12 +554,6 @@ export default function FoodWasteLocationPage({
         {syncMessage && (
           <p className="mt-3 rounded-2xl bg-amber-400/15 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
             {syncMessage}
-          </p>
-        )}
-
-        {!isOnline && (
-          <p className="mt-3 rounded-2xl bg-amber-400/15 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-            {t.offlineEntriesSaved}
           </p>
         )}
 

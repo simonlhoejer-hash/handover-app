@@ -403,7 +403,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       if (!isCurrent) return
 
       if (loadError) {
-        setError(t.offlineShowingCached)
+        setError('')
       } else {
         setError('')
         const nextEntries = data
@@ -439,7 +439,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     return () => {
       isCurrent = false
     }
-  }, [fromDate, t.offlineShowingCached, toDate, vessel])
+  }, [fromDate, toDate, vessel])
 
   useEffect(() => {
     let isCurrent = true

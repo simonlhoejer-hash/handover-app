@@ -117,7 +117,7 @@ export default function FoodWastePage({
       if (!isCurrent) return
 
       if (loadError) {
-        setError(t.offlineShowingCached)
+        setError('')
       } else {
         setError('')
         const nextEntries = data
@@ -137,7 +137,7 @@ export default function FoodWastePage({
     return () => {
       isCurrent = false
     }
-  }, [t.offlineShowingCached, today, vessel])
+  }, [today, vessel])
 
   const totals = useMemo(() => {
     return entries.reduce(
