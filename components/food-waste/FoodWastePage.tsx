@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
@@ -77,11 +79,26 @@ export default function FoodWastePage({
   basePath = '/crown',
 }: Props) {
   const { t, lang } = useTranslation()
+  const router = useRouter()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const today = getToday()
+
+  useEffect(() => {
+    if (!navigator.onLine) return
+
+    for (const group of LOCATION_GROUPS) {
+      if (vessel !== 'crown' && group.title !== 'Buffet' && group.title !== 'Messen') {
+        continue
+      }
+      for (const slug of group.slugs) {
+        router.prefetch(`${basePath}/food-waste/${slug}`)
+      }
+    }
+    router.prefetch(`${basePath}/food-waste/overblik`)
+  }, [basePath, router, vessel])
 
   useEffect(() => {
     let isCurrent = true
@@ -220,7 +237,7 @@ export default function FoodWastePage({
                 const stationName = mealNameParts.join(' ')
 
                 return (
-                  <a
+                  <Link
                     key={location.slug}
                     href={`${basePath}/food-waste/${location.slug}`}
                     className="
@@ -285,7 +302,7 @@ export default function FoodWastePage({
                             : t.zeroKgToday}
                       </span>
                     </div>
-                  </a>
+                  </Link>
                 )
               })}
             </div>

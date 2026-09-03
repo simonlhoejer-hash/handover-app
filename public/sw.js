@@ -76,6 +76,24 @@ async function cachePaths(paths) {
   )
 }
 
+function stringHash(value) {
+  let hash = 5381
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) + hash) ^ value.charCodeAt(index)
+  }
+  return (hash >>> 0).toString(36)
+}
+
+function rscCacheKeys(request, url) {
+  const state = request.headers.get('next-router-state-tree') || ''
+  const prefetch = request.headers.get('next-router-prefetch') || ''
+  const path = normalizedPath(url.pathname)
+  return {
+    exact: `/__offline-rsc${path}?state=${stringHash(state)}&prefetch=${prefetch}`,
+    latest: `/__offline-rsc${path}?latest=1`,
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(cachePaths(APP_SHELL))
   self.skipWaiting()
@@ -137,6 +155,34 @@ self.addEventListener('fetch', (event) => {
   // older page cache. Offline-capable features keep their own explicit queue.
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(request))
+    return
+  }
+
+  const isRscRequest =
+    request.headers.get('rsc') === '1' || url.searchParams.has('_rsc')
+
+  if (isRscRequest) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const keys = rscCacheKeys(request, url)
+        try {
+          const response = await fetch(request)
+          if (response.ok) {
+            await Promise.all([
+              cache.put(keys.exact, response.clone()),
+              cache.put(keys.latest, response.clone()),
+            ])
+          }
+          return response
+        } catch {
+          return (
+            await cache.match(keys.exact) ||
+            await cache.match(keys.latest) ||
+            new Response('', { status: 503, statusText: 'Offline route unavailable' })
+          )
+        }
+      })
+    )
     return
   }
 
