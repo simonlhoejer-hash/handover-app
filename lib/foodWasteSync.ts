@@ -26,10 +26,8 @@ async function runSync(): Promise<FoodWasteSyncResult> {
 
   for (const vessel of VESSELS) {
     const queue = readPendingFoodWasteEntries(vessel)
-    const failed = []
 
-    for (let index = 0; index < queue.length; index += 1) {
-      const entry = queue[index]
+    for (const entry of queue) {
       let data = null
       let error: unknown = null
       try {
@@ -40,6 +38,7 @@ async function runSync(): Promise<FoodWasteSyncResult> {
           location_name: entry.location_name,
           quantity_kg: entry.quantity_kg,
           comment: entry.comment,
+          client_id: entry.client_id,
           ship: vessel,
         })
         })
@@ -48,19 +47,21 @@ async function runSync(): Promise<FoodWasteSyncResult> {
         error = caught
       }
 
-      if (error || !data) {
-        failed.push(entry)
-      } else {
+      if (!error && data) {
         synced += 1
         cacheFoodWasteEntries([data], vessel)
       }
 
-      // Persist progress after every attempt. A connection loss therefore only
-      // leaves failed and not-yet-attempted entries in the offline queue.
-      writePendingFoodWasteEntries(
-        [...failed, ...queue.slice(index + 1)],
-        vessel
-      )
+      // Remove only the entry that succeeded. Re-read storage first so a new
+      // registration added during sync can never be overwritten or lost.
+      if (!error && data) {
+        writePendingFoodWasteEntries(
+          readPendingFoodWasteEntries(vessel).filter(
+            (pending) => pending.id !== entry.id
+          ),
+          vessel
+        )
+      }
     }
   }
 
@@ -73,7 +74,17 @@ async function runSync(): Promise<FoodWasteSyncResult> {
 export function syncAllPendingFoodWaste() {
   if (activeSync) return activeSync
 
-  activeSync = runSync().finally(() => {
+  const synchronizedRun =
+    typeof navigator !== 'undefined' && navigator.locks
+      ? navigator.locks
+          .request('handover-food-waste-sync', () => runSync())
+          .then((result) => result ?? {
+            synced: 0,
+            remaining: getPendingFoodWasteCount(),
+          })
+      : runSync()
+
+  activeSync = synchronizedRun.finally(() => {
     activeSync = null
   })
 

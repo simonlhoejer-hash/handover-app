@@ -14,9 +14,11 @@ import {
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { displayFoodWasteLocation } from '@/lib/foodWasteLocations'
 import { queryString, secureFetch } from '@/lib/secureApi'
+import { syncAllPendingFoodWaste } from '@/lib/foodWasteSync'
 
 type FoodWasteEntry = {
   id: string
+  client_id?: string
   created_at: string
   waste_date: string
   location_name: string
@@ -32,6 +34,7 @@ type Props = {
 }
 
 type FoodWastePayload = {
+  client_id: string
   waste_date: string
   location_name: string
   quantity_kg: number
@@ -107,41 +110,22 @@ export default function FoodWasteLocationPage({
       return
     }
 
-    const remaining: FoodWasteEntry[] = []
-
-    for (const pendingEntry of pendingEntries) {
-      const payload: FoodWastePayload = {
-        waste_date: pendingEntry.waste_date,
-        location_name: pendingEntry.location_name,
-        quantity_kg: Number(pendingEntry.quantity_kg) || 0,
-        comment: pendingEntry.comment,
-        vessel,
+    await syncAllPendingFoodWaste()
+    const remaining = readPendingFoodWasteEntries(vessel)
+    const cachedForLocation = readCachedFoodWasteEntries(vessel).filter(
+      (entry) => entry.location_name === locationName
+    )
+    setEntries((current) => {
+      const byId = new Map<string, FoodWasteEntry>()
+      for (const entry of [
+        ...remaining.filter((entry) => entry.location_name === locationName),
+        ...cachedForLocation,
+        ...current.filter((entry) => !entry.pending && !entry.id.startsWith('local-')),
+      ]) {
+        byId.set(entry.id, entry)
       }
-
-      let data: FoodWasteEntry | null = null
-      let syncError: unknown = null
-      try {
-        const result = await secureFetch<{ data: FoodWasteEntry }>(
-          '/api/food-waste/entries',
-          { method: 'POST', body: JSON.stringify(payload) }
-        )
-        data = result.data
-      } catch (error) {
-        syncError = error
-      }
-
-      if (syncError || !data) {
-        remaining.push(pendingEntry)
-      } else if (pendingEntry.location_name === locationName) {
-        cacheFoodWasteEntries([data], vessel)
-        setEntries((current) => [
-          data,
-          ...current.filter((entry) => entry.id !== pendingEntry.id),
-        ])
-      }
-    }
-
-    writePendingFoodWasteEntries(remaining, vessel)
+      return [...byId.values()]
+    })
 
     setSyncMessage(
       remaining.length === 0
@@ -271,6 +255,7 @@ export default function FoodWasteLocationPage({
     setError('')
 
     const payload: FoodWastePayload = {
+      client_id: crypto.randomUUID(),
       waste_date: today,
       location_name: locationName,
       quantity_kg: quantity,
@@ -329,7 +314,8 @@ export default function FoodWasteLocationPage({
 
   function saveEntryLocally(payload: FoodWastePayload) {
     const localEntry: FoodWasteEntry = {
-      id: `local-${Date.now()}`,
+      id: `local-${payload.client_id}`,
+      client_id: payload.client_id,
       created_at: new Date().toISOString(),
       waste_date: payload.waste_date,
       location_name: payload.location_name,

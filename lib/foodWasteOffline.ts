@@ -1,5 +1,6 @@
 export type CachedFoodWasteEntry = {
   id: string
+  client_id?: string
   created_at: string
   waste_date: string
   location_name: string

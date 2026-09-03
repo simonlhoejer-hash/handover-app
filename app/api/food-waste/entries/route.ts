@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
   const locationName = typeof body.location_name === 'string' ? body.location_name.trim().slice(0, 200) : ''
   const quantityKg = Number(body.quantity_kg)
   const comment = typeof body.comment === 'string' ? body.comment.slice(0, 1000) : null
+  const clientId = typeof body.client_id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.client_id)
+    ? body.client_id
+    : null
   const locationIsAllowed = FOOD_WASTE_LOCATIONS.some(
     (location) =>
       location.name === locationName &&
@@ -60,17 +63,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Ugyldig registrering.' }, { status: 400 })
   }
 
-  const { data, error } = await getSupabaseAdmin()
+  const values = {
+    ...(clientId ? { id: clientId } : {}),
+    waste_date: wasteDate,
+    location_name: locationName,
+    quantity_kg: quantityKg,
+    comment,
+    vessel: ship,
+  }
+
+  let { data, error } = await getSupabaseAdmin()
     .from('food_waste_entries')
-    .insert({
-      waste_date: wasteDate,
-      location_name: locationName,
-      quantity_kg: quantityKg,
-      comment,
-      vessel: ship,
-    })
+    .insert(values)
     .select('*')
     .single()
+
+  // A retry after a timeout may arrive after the first request was already
+  // committed. The client UUID makes that retry return the original row
+  // instead of creating a duplicate measurement.
+  if (error?.code === '23505' && clientId) {
+    const existing = await getSupabaseAdmin()
+      .from('food_waste_entries')
+      .select('*')
+      .eq('id', clientId)
+      .eq('vessel', ship)
+      .single()
+    data = existing.data
+    error = existing.error
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ data })
