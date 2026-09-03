@@ -15,6 +15,7 @@ import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { displayFoodWasteLocation } from '@/lib/foodWasteLocations'
 import { queryString, secureFetch } from '@/lib/secureApi'
 import { syncAllPendingFoodWaste } from '@/lib/foodWasteSync'
+import { formatFoodWasteAmount } from '@/lib/formatFoodWasteAmount'
 
 type FoodWasteEntry = {
   id: string
@@ -70,9 +71,7 @@ function formatDate(value: string, lang: string) {
 }
 
 function formatAmount(value: number, lang: string) {
-  return `${value.toLocaleString(localeFor(lang), {
-    maximumFractionDigits: 2,
-  })} kg`
+  return formatFoodWasteAmount(value, lang)
 }
 
 function getEntryAmount(entry: FoodWasteEntry) {

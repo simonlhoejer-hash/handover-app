@@ -15,6 +15,7 @@ import {
 } from '@/lib/foodWasteOffline'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { queryString, secureFetch } from '@/lib/secureApi'
+import { formatFoodWasteAmount } from '@/lib/formatFoodWasteAmount'
 
 type FoodWasteEntry = {
   id: string
@@ -113,9 +114,7 @@ function getIsoWeek(dateString: string) {
 }
 
 function formatAmount(value: number, lang: string, decimals = 1) {
-  return `${value.toLocaleString(localeFor(lang), {
-    maximumFractionDigits: decimals,
-  })} kg`
+  return formatFoodWasteAmount(value, lang, decimals)
 }
 
 type GuestBreakdown = {
@@ -215,12 +214,6 @@ function isGrinderLocationForView(name: string, view: GrinderView) {
 }
 
 function formatPerGuestAmount(value: number, lang: string) {
-  if (value < 1) {
-    return `${(value * 1000).toLocaleString(localeFor(lang), {
-      maximumFractionDigits: 0,
-    })} g`
-  }
-
   return formatAmount(value, lang, 2)
 }
 
