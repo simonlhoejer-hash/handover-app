@@ -1,8 +1,15 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { CheckCircle2, LoaderCircle, TriangleAlert } from 'lucide-react'
+import { useTranslation } from '@/lib/LanguageContext'
 
 export default function ServiceWorkerRegistration() {
+  const { t } = useTranslation()
+  const [cacheState, setCacheState] = useState<'idle' | 'caching' | 'ready' | 'error'>('idle')
+  const [cacheSeconds, setCacheSeconds] = useState(0)
+  const [cacheVersion, setCacheVersion] = useState('')
+
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
 
@@ -36,18 +43,77 @@ export default function ServiceWorkerRegistration() {
       void navigator.serviceWorker.ready.then(warmCurrentShip)
     }
 
+    const handleWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.cacheVersion) setCacheVersion(String(event.data.cacheVersion))
+      if (event.data?.type === 'OFFLINE_CACHE_START') {
+        setCacheSeconds(0)
+        setCacheState('caching')
+      } else if (event.data?.type === 'OFFLINE_CACHE_READY') {
+        setCacheState('ready')
+      } else if (event.data?.type === 'OFFLINE_CACHE_ERROR') {
+        setCacheState('error')
+      }
+    }
+
     if (document.readyState === 'complete') {
       registerServiceWorker()
     } else {
       window.addEventListener('load', registerServiceWorker)
     }
     window.addEventListener('online', handleOnline)
+    navigator.serviceWorker.addEventListener('message', handleWorkerMessage)
 
     return () => {
       window.removeEventListener('load', registerServiceWorker)
       window.removeEventListener('online', handleOnline)
+      navigator.serviceWorker.removeEventListener('message', handleWorkerMessage)
     }
   }, [])
 
-  return null
+  useEffect(() => {
+    if (cacheState !== 'caching') return
+    const timer = window.setInterval(() => setCacheSeconds((seconds) => seconds + 1), 1000)
+    const timeout = window.setTimeout(() => setCacheState('idle'), 90_000)
+    return () => {
+      window.clearInterval(timer)
+      window.clearTimeout(timeout)
+    }
+  }, [cacheState])
+
+  useEffect(() => {
+    if (cacheState !== 'ready' && cacheState !== 'error') return
+    const timer = window.setTimeout(
+      () => setCacheState('idle'),
+      cacheState === 'ready' ? 4000 : 6000
+    )
+    return () => window.clearTimeout(timer)
+  }, [cacheState])
+
+  if (cacheState === 'idle') return null
+
+  return (
+    <div className={`fixed bottom-24 left-1/2 z-[110] flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur-xl ${
+      cacheState === 'ready'
+        ? 'bg-emerald-100/95 text-emerald-800'
+        : cacheState === 'error'
+          ? 'bg-amber-100/95 text-amber-900'
+          : 'bg-white/95 text-gray-800'
+    }`}>
+      {cacheState === 'ready' ? (
+        <CheckCircle2 size={18} />
+      ) : cacheState === 'error' ? (
+        <TriangleAlert size={18} />
+      ) : (
+        <LoaderCircle size={18} className="animate-spin" />
+      )}
+      <span className="whitespace-nowrap">
+        {cacheState === 'ready'
+          ? t.offlineCacheReady
+          : cacheState === 'error'
+            ? t.offlineCacheError
+            : `${t.offlineCachePreparing} · ${cacheSeconds} ${t.secondsShort}`}
+        {cacheVersion ? ` · cache ${cacheVersion}` : ''}
+      </span>
+    </div>
+  )
 }

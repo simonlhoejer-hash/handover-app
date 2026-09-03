@@ -1,4 +1,5 @@
-const CACHE_NAME = 'handover-offline-v33'
+const CACHE_VERSION = '34'
+const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
@@ -90,21 +91,31 @@ self.addEventListener('message', (event) => {
     .filter((route) => ship === 'crown' || !route.startsWith('/produktion-'))
     .map((route) => `/${ship}/food-waste${route}`)
 
-  event.waitUntil(cachePaths([`/${ship}`, ...routes]))
+  const requiredPaths = [`/${ship}`, ...routes]
+  event.source?.postMessage({ type: 'OFFLINE_CACHE_START', ship, cacheVersion: CACHE_VERSION })
+
+  event.waitUntil(
+    cachePaths(requiredPaths).then(async () => {
+      const cache = await caches.open(CACHE_NAME)
+      const ready = (
+        await Promise.all(requiredPaths.map((path) => cache.match(path)))
+      ).every(Boolean)
+
+      event.source?.postMessage({
+        type: ready ? 'OFFLINE_CACHE_READY' : 'OFFLINE_CACHE_ERROR',
+        ship,
+        cacheVersion: CACHE_VERSION,
+      })
+    })
+  )
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
-      caches
-        .keys()
-        .then((keys) =>
-          Promise.all(
-            keys
-              .filter((key) => key !== CACHE_NAME)
-              .map((key) => caches.delete(key))
-          )
-        ),
+      // Keep the previous cache as a fallback while a device finishes
+      // preparing the newest offline version.
+      Promise.resolve(),
       self.registration.navigationPreload
         ? self.registration.navigationPreload.enable()
         : Promise.resolve(),
