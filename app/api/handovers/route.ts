@@ -97,6 +97,38 @@ export async function POST(request: NextRequest) {
   const action = body.action
   const supabase = getSupabaseAdmin()
 
+  async function markPreviousHandoverAsRead(parti: string, currentId: string) {
+    const previousPartis = parti === 'Varm Skagerak'
+      ? ['Varm Skagerak', 'Skagerak']
+      : [parti]
+    const { data: previousUnread } = await supabase
+      .from('handover_notes')
+      .select('id,receiver_name')
+      .eq('department', ship)
+      .in('parti', previousPartis)
+      .eq('status', 'published')
+      .is('read_by', null)
+      .neq('id', currentId)
+      .order('shift_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const previousReceiver = text(previousUnread?.receiver_name, 100).trim()
+    if (!previousUnread?.id || !previousReceiver) return
+
+    await supabase
+      .from('handover_notes')
+      .update({
+        read_by: previousReceiver,
+        read_at: new Date().toISOString(),
+      })
+      .eq('id', previousUnread.id)
+      .eq('department', ship)
+      .eq('status', 'published')
+      .is('read_by', null)
+  }
+
   if (action === 'mark-read') {
     const id = text(body.id, 100)
     if (!id) {
@@ -189,6 +221,13 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 500 })
     }
+
+    // A successfully saved, non-empty draft means the next handover has begun.
+    // Only then may the previous published handover be closed as read.
+    if (authorName.trim() || receiverName.trim() || note.trim() || images.length > 0) {
+      await markPreviousHandoverAsRead(parti, result.data.id)
+    }
+
     return NextResponse.json({ data: result.data })
   }
 
@@ -225,6 +264,7 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 500 })
     }
+    await markPreviousHandoverAsRead(parti, result.data.id)
     return NextResponse.json({ data: result.data })
   }
 
