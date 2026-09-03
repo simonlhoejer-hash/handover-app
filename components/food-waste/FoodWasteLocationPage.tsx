@@ -337,7 +337,12 @@ export default function FoodWasteLocationPage({
   function showSavedAndReturn() {
     setSaved(true)
     window.setTimeout(() => {
-      router.push(`${basePath}/food-waste`)
+      const foodWastePath = `${basePath}/food-waste`
+      if (navigator.onLine) {
+        router.push(foodWastePath)
+      } else {
+        window.location.assign(foodWastePath)
+      }
     }, 750)
   }
 

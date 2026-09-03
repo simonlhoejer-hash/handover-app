@@ -38,6 +38,7 @@ const APP_SHELL = [
 
 async function cachePaths(paths) {
   const cache = await caches.open(CACHE_NAME)
+  const assetPaths = new Set()
 
   await Promise.allSettled(
     paths.map(async (path) => {
@@ -48,8 +49,28 @@ async function cachePaths(paths) {
         finalUrl.origin === self.location.origin &&
         normalizedPath(finalUrl.pathname) === normalizedPath(path)
       ) {
-        await cache.put(path, response)
+        await cache.put(path, response.clone())
+
+        if (response.headers.get('content-type')?.includes('text/html')) {
+          const html = await response.text()
+          for (const match of html.matchAll(/(?:src|href)=["']([^"']+)["']/g)) {
+            const assetUrl = new URL(match[1], self.location.origin)
+            if (
+              assetUrl.origin === self.location.origin &&
+              assetUrl.pathname.startsWith('/_next/static/')
+            ) {
+              assetPaths.add(assetUrl.href)
+            }
+          }
+        }
       }
+    })
+  )
+
+  await Promise.allSettled(
+    [...assetPaths].map(async (assetPath) => {
+      const response = await fetch(assetPath, { cache: 'reload' })
+      if (response.ok) await cache.put(assetPath, response)
     })
   )
 }

@@ -50,6 +50,7 @@ export default function BottomNav() {
   ]
 
   useEffect(() => {
+    if (!navigator.onLine) return
     router.prefetch(basePath)
     router.prefetch(`${basePath}/food-waste`)
     router.prefetch(`${basePath}/food-waste/overblik`)
