@@ -7,6 +7,8 @@ export const ACCESS_COOKIE_NAMES: Record<AccessShip, string> = {
 
 export const LEGACY_ACCESS_COOKIE_NAMES = ['handover_pearl_access'] as const
 export const SOUSCHEF_ACCESS_COOKIE_NAME = 'handover_crown_souschef_access'
+const DEFAULT_SOUSCHEF_CODE_HASH =
+  '4cf6f9637d171efb2bf6e67f01ed16da3588cdae3f6014c25ca760d071d5172d'
 
 function getCode(ship: AccessShip) {
   const environmentCode =
@@ -29,11 +31,19 @@ function getSigningSecret() {
   return process.env.ACCESS_SESSION_SECRET
 }
 
-function getSouschefCode() {
-  if (!process.env.SOUSCHEF_ACCESS_CODE) {
-    throw new Error('SOUSCHEF_ACCESS_CODE mangler i miljøvariablerne.')
-  }
-  return process.env.SOUSCHEF_ACCESS_CODE.trim().toUpperCase()
+async function hashValue(value: string) {
+  const bytes = new TextEncoder().encode(value)
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+async function getSouschefCodeHash() {
+  const environmentCode = process.env.SOUSCHEF_ACCESS_CODE?.trim().toUpperCase()
+  return environmentCode
+    ? hashValue(environmentCode)
+    : DEFAULT_SOUSCHEF_CODE_HASH
 }
 
 async function signValue(value: string) {
@@ -69,8 +79,10 @@ export async function isCorrectAccessCode(ship: AccessShip, code: string) {
 }
 
 export async function isCorrectSouschefCode(code: string) {
-  const candidate = new TextEncoder().encode(code.trim().toUpperCase())
-  const expected = new TextEncoder().encode(getSouschefCode())
+  const candidate = new TextEncoder().encode(
+    await hashValue(code.trim().toUpperCase())
+  )
+  const expected = new TextEncoder().encode(await getSouschefCodeHash())
   if (candidate.length !== expected.length) return false
 
   let difference = 0
@@ -81,7 +93,7 @@ export async function isCorrectSouschefCode(code: string) {
 }
 
 export async function createSouschefAccessToken() {
-  return signValue(`handover-access:crown:souschef:${getSouschefCode()}`)
+  return signValue(`handover-access:crown:souschef:${await getSouschefCodeHash()}`)
 }
 
 export async function verifySouschefAccessToken(token: string | undefined) {
