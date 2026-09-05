@@ -1,4 +1,4 @@
-const CACHE_VERSION = '38'
+const CACHE_VERSION = '39'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -98,6 +98,23 @@ async function seedFromPreviousCache(paths) {
 async function hasAllPaths(paths) {
   const cache = await caches.open(CACHE_NAME)
   return (await Promise.all(paths.map((path) => cache.match(path)))).every(Boolean)
+}
+
+async function matchNewestOfflineCache(key) {
+  const cacheNames = (await caches.keys())
+    .filter((name) => name.startsWith('handover-offline-v'))
+    .sort((left, right) => {
+      const leftVersion = Number(left.replace('handover-offline-v', '')) || 0
+      const rightVersion = Number(right.replace('handover-offline-v', '')) || 0
+      return rightVersion - leftVersion
+    })
+
+  for (const cacheName of cacheNames) {
+    const cached = await (await caches.open(cacheName)).match(key)
+    if (cached) return cached
+  }
+
+  return undefined
 }
 
 function stringHash(value) {
@@ -213,11 +230,19 @@ self.addEventListener('fetch', (event) => {
           }
           return response
         } catch {
-          return (
-            await cache.match(keys.exact) ||
-            await cache.match(keys.latest) ||
-            new Response('', { status: 503, statusText: 'Offline route unavailable' })
-          )
+          const fallback =
+            await matchNewestOfflineCache(keys.exact) ||
+            await matchNewestOfflineCache(keys.latest)
+
+          if (fallback) {
+            await Promise.allSettled([
+              cache.put(keys.exact, fallback.clone()),
+              cache.put(keys.latest, fallback.clone()),
+            ])
+            return fallback
+          }
+
+          return new Response('', { status: 503, statusText: 'Offline route unavailable' })
         }
       })
     )
@@ -252,8 +277,11 @@ self.addEventListener('fetch', (event) => {
           return (
             await caches.match(request) ||
             await cache.match(pathKey) ||
+            await matchNewestOfflineCache(pathKey) ||
             await cache.match(`/${ship}/food-waste`) ||
+            await matchNewestOfflineCache(`/${ship}/food-waste`) ||
             await cache.match('/ships') ||
+            await matchNewestOfflineCache('/ships') ||
             await cache.match('/')
           )
         })
