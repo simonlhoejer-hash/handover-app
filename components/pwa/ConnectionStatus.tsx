@@ -107,7 +107,9 @@ export default function ConnectionStatus() {
   const isCaching = showCacheStatus && cacheStatus.state === 'caching'
   const label = isOnline ? t.online : t.offline
   const waitingDetail = pendingCount > 0 ? `${pendingCount} ${t.waitingShort}` : ''
-  const detail = isCaching
+  const detail = !isOnline
+    ? `${pendingCount} ${t.waitingForTransfer}`
+    : isCaching
     ? `${t.offlineCachePreparing} · ${cacheStatus.seconds} ${t.secondsShort}`
     : showCacheStatus && cacheStatus.state === 'ready' && cacheStatus.version
       ? t.offlineCacheReady
@@ -129,13 +131,13 @@ export default function ConnectionStatus() {
         aria-label={`${label}. ${detail}`}
         title={`${label} · ${detail}`}
         className={`
-          flex items-center
+          group flex items-center overflow-hidden
           rounded-full
           border
-          ${isExpanded || isCaching ? 'w-60 gap-2 px-3 py-2' : 'gap-0 p-1.5'}
+          ${isExpanded || isCaching ? 'w-60 gap-2 px-3 py-2' : 'w-11 gap-0 p-1.5 hover:w-60 hover:gap-2 hover:px-3 hover:py-2 focus:w-60 focus:gap-2 focus:px-3 focus:py-2'}
+          transition-[width,gap,padding] duration-200
           shadow-lg
           backdrop-blur-xl
-          sm:w-60 sm:gap-2 sm:px-3 sm:py-2
           ${
             isOnline
               ? 'border-emerald-500/20 bg-emerald-50/95 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200'
@@ -166,7 +168,7 @@ export default function ConnectionStatus() {
           )}
         </span>
 
-        <span className={`${isExpanded || isCaching ? 'block' : 'hidden'} min-w-0 flex-1 leading-tight text-left sm:block`}>
+        <span className={`${isExpanded || isCaching ? 'block' : 'hidden group-hover:block group-focus:block'} min-w-0 flex-1 leading-tight text-left`}>
           <span className="block text-sm font-semibold">{label}</span>
           <span className="block whitespace-nowrap text-xs tabular-nums opacity-75">{detail}</span>
         </span>
