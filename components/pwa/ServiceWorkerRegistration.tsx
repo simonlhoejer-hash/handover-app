@@ -34,7 +34,11 @@ export default function ServiceWorkerRegistration() {
 
       if (!ship) return
       const worker = registration.active ?? registration.waiting
-      worker?.postMessage({ type: 'WARM_SHIP', ship })
+      if (worker) {
+        setCacheSeconds(0)
+        setCacheState('caching')
+        worker.postMessage({ type: 'WARM_SHIP', ship })
+      }
     }
 
     const registerServiceWorker = () => {

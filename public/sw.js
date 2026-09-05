@@ -1,4 +1,4 @@
-const CACHE_VERSION = '35'
+const CACHE_VERSION = '36'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 
 function normalizedPath(pathname) {

@@ -185,7 +185,7 @@ export default function SettingsPage() {
               <Download size={17} />
               {startingCache
                 ? t.offlineCachePreparing
-                : `${t.downloadOfflineCache} 35`}
+                : t.downloadOfflineCache}
             </button>
 
           </div>
