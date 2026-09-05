@@ -584,7 +584,7 @@ className="
   loading={loading}
   onSave={saveNote}
   isOnline={isOnline}
-parti={itemName}/>} 
+parti={itemName}/>}
           </div>
         </div>
 
