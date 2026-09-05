@@ -13,7 +13,7 @@ export default function ServiceWorkerRegistration() {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
 
-    const warmCurrentShip = (registration: ServiceWorkerRegistration) => {
+    const getCurrentShip = () => {
       if (!navigator.onLine) return
 
       const pathname = window.location.pathname
@@ -23,15 +23,18 @@ export default function ServiceWorkerRegistration() {
         pathname.startsWith('/adgang/') ||
         pathname.startsWith('/crown/souschef')
       ) {
-        return
+        return null
       }
 
-      const ship = pathname.startsWith('/pearl')
+      return pathname.startsWith('/pearl')
         ? 'pearl'
         : pathname.startsWith('/crown')
           ? 'crown'
           : null
+    }
 
+    const warmCurrentShip = (registration: ServiceWorkerRegistration) => {
+      const ship = getCurrentShip()
       if (!ship) return
       const worker = registration.active ?? registration.waiting
       if (worker) {
@@ -42,15 +45,27 @@ export default function ServiceWorkerRegistration() {
     }
 
     const registerServiceWorker = () => {
+      const ship = getCurrentShip()
+      if (ship) {
+        setCacheSeconds(0)
+        setCacheState('caching')
+        try {
+          setCacheVersion(localStorage.getItem('handover-offline-cache-version') || '')
+        } catch {
+          // Cache preparation is still shown if storage is unavailable.
+        }
+      }
+
       void navigator.serviceWorker
         .register('/sw.js', { updateViaCache: 'none' })
-        .then(async (registration) => {
-          await registration.update().catch(() => undefined)
+        .then((registration) => {
           warmCurrentShip(registration)
-          const readyRegistration = await navigator.serviceWorker.ready
-          warmCurrentShip(readyRegistration)
+          void registration.update().catch(() => undefined)
+          void navigator.serviceWorker.ready.then(warmCurrentShip)
         })
-        .catch(() => undefined)
+        .catch(() => {
+          if (ship) setCacheState('error')
+        })
     }
 
     const handleOnline = () => {
@@ -81,17 +96,12 @@ export default function ServiceWorkerRegistration() {
       }
     }
 
-    if (document.readyState === 'complete') {
-      registerServiceWorker()
-    } else {
-      window.addEventListener('load', registerServiceWorker)
-    }
+    registerServiceWorker()
     window.addEventListener('online', handleOnline)
     navigator.serviceWorker.addEventListener('message', handleWorkerMessage)
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
 
     return () => {
-      window.removeEventListener('load', registerServiceWorker)
       window.removeEventListener('online', handleOnline)
       navigator.serviceWorker.removeEventListener('message', handleWorkerMessage)
       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
