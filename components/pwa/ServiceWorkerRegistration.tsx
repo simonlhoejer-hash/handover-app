@@ -1,20 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { CheckCircle2, LoaderCircle, TriangleAlert } from 'lucide-react'
-import { useTranslation } from '@/lib/LanguageContext'
+import { useEffect, useRef, useState } from 'react'
+
+type CacheState = 'idle' | 'caching' | 'ready' | 'error'
 
 export default function ServiceWorkerRegistration() {
-  const { t } = useTranslation()
-  const [cacheState, setCacheState] = useState<'idle' | 'caching' | 'ready' | 'error'>('idle')
+  const [cacheState, setCacheState] = useState<CacheState>('idle')
   const [cacheSeconds, setCacheSeconds] = useState(0)
   const [cacheVersion, setCacheVersion] = useState('')
+  const warmingVersionRef = useRef('')
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
 
     const getCurrentShip = () => {
-      if (!navigator.onLine) return
+      if (!navigator.onLine) return null
 
       const pathname = window.location.pathname
       if (
@@ -33,62 +33,70 @@ export default function ServiceWorkerRegistration() {
           : null
     }
 
-    const warmCurrentShip = (registration: ServiceWorkerRegistration) => {
+    const checkCurrentShip = (registration: ServiceWorkerRegistration) => {
       const ship = getCurrentShip()
       if (!ship) return
       const worker = registration.waiting ?? registration.active
-      if (worker) {
-        setCacheSeconds(0)
-        setCacheVersion('')
-        setCacheState('caching')
-        worker.postMessage({ type: 'WARM_SHIP', ship })
-      }
+      worker?.postMessage({ type: 'GET_OFFLINE_CACHE_STATUS', ship })
     }
 
     const registerServiceWorker = () => {
-      const ship = getCurrentShip()
-      if (ship) {
-        setCacheSeconds(0)
-        setCacheVersion('')
-        setCacheState('caching')
-      }
-
       void navigator.serviceWorker
         .register('/sw.js', { updateViaCache: 'none' })
         .then((registration) => {
-          warmCurrentShip(registration)
+          checkCurrentShip(registration)
           void registration.update().catch(() => undefined)
-          void navigator.serviceWorker.ready.then(warmCurrentShip)
+          void navigator.serviceWorker.ready.then(checkCurrentShip)
         })
-        .catch(() => {
-          if (ship) setCacheState('error')
-        })
+        .catch(() => undefined)
     }
 
     const handleOnline = () => {
-      void navigator.serviceWorker.ready.then(warmCurrentShip)
+      void navigator.serviceWorker.ready.then(checkCurrentShip)
     }
 
     const handleControllerChange = () => {
-      void navigator.serviceWorker.ready.then(warmCurrentShip)
+      warmingVersionRef.current = ''
+      void navigator.serviceWorker.ready.then(checkCurrentShip)
     }
 
     const handleWorkerMessage = (event: MessageEvent) => {
-      if (event.data?.cacheVersion) setCacheVersion(String(event.data.cacheVersion))
-      if (event.data?.type === 'OFFLINE_CACHE_START') {
+      const version = String(event.data?.cacheVersion || '')
+      if (version) setCacheVersion(version)
+
+      if (event.data?.type === 'OFFLINE_CACHE_STATUS') {
+        if (event.data?.ready) {
+          warmingVersionRef.current = ''
+          try {
+            localStorage.setItem('handover-offline-cache-version', version)
+            window.dispatchEvent(new Event('handover-offline-cache-updated'))
+          } catch {
+            // The verified status is still available for this session.
+          }
+          setCacheState('ready')
+        } else if (warmingVersionRef.current !== version) {
+          warmingVersionRef.current = version
+          setCacheSeconds(0)
+          setCacheState('caching')
+          const ship = getCurrentShip()
+          if (ship) event.source?.postMessage({ type: 'WARM_SHIP', ship })
+        }
+      } else if (event.data?.type === 'OFFLINE_CACHE_START') {
         setCacheSeconds(0)
         setCacheState('caching')
       } else if (event.data?.type === 'OFFLINE_CACHE_READY') {
-        if (event.data?.cacheVersion) {
+        warmingVersionRef.current = ''
+        if (version) {
           try {
-            localStorage.setItem('handover-offline-cache-version', String(event.data.cacheVersion))
+            localStorage.setItem('handover-offline-cache-version', version)
             window.dispatchEvent(new Event('handover-offline-cache-updated'))
           } catch {
-            // The temporary confirmation still shows if storage is unavailable.
+            // The verified status is still available for this session.
           }
         }
         setCacheState('ready')
       } else if (event.data?.type === 'OFFLINE_CACHE_ERROR') {
+        warmingVersionRef.current = ''
         setCacheState('error')
       }
     }
@@ -108,7 +116,7 @@ export default function ServiceWorkerRegistration() {
   useEffect(() => {
     if (cacheState !== 'caching') return
     const timer = window.setInterval(() => setCacheSeconds((seconds) => seconds + 1), 1000)
-    const timeout = window.setTimeout(() => setCacheState('idle'), 90_000)
+    const timeout = window.setTimeout(() => setCacheState('error'), 90_000)
     return () => {
       window.clearInterval(timer)
       window.clearTimeout(timeout)
@@ -116,41 +124,10 @@ export default function ServiceWorkerRegistration() {
   }, [cacheState])
 
   useEffect(() => {
-    if (cacheState !== 'ready' && cacheState !== 'error') return
-    const timer = window.setTimeout(
-      () => setCacheState('idle'),
-      cacheState === 'ready' ? 4000 : 6000
-    )
-    return () => window.clearTimeout(timer)
-  }, [cacheState])
+    window.dispatchEvent(new CustomEvent('handover-offline-cache-status', {
+      detail: { state: cacheState, seconds: cacheSeconds, version: cacheVersion },
+    }))
+  }, [cacheState, cacheSeconds, cacheVersion])
 
-  if (cacheState === 'idle') return null
-
-  return (
-    <div className="pointer-events-none fixed inset-0 z-[110] flex items-center justify-center px-5">
-      <div className={`flex min-w-[min(22rem,calc(100vw-2.5rem))] items-center justify-center gap-3 rounded-2xl border px-6 py-5 text-base font-semibold shadow-[0_20px_60px_rgba(0,0,0,.22)] backdrop-blur-xl ${
-        cacheState === 'ready'
-          ? 'border-emerald-500/20 bg-emerald-100/95 text-emerald-800'
-          : cacheState === 'error'
-            ? 'border-amber-500/25 bg-amber-100/95 text-amber-900'
-            : 'border-black/10 bg-white/95 text-gray-800'
-      }`}>
-        {cacheState === 'ready' ? (
-          <CheckCircle2 size={23} />
-        ) : cacheState === 'error' ? (
-          <TriangleAlert size={23} />
-        ) : (
-          <LoaderCircle size={23} className="animate-spin" />
-        )}
-        <span className="whitespace-nowrap text-center">
-          {cacheState === 'ready'
-            ? t.offlineCacheReady
-            : cacheState === 'error'
-              ? t.offlineCacheError
-              : `${t.offlineCachePreparing} · ${cacheSeconds} ${t.secondsShort}`}
-          {cacheVersion ? ` · cache ${cacheVersion}` : ''}
-        </span>
-      </div>
-    </div>
-  )
+  return null
 }

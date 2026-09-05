@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Cloud, CloudOff, RefreshCw } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import {
   getPendingFoodWasteCount,
   syncAllPendingFoodWaste,
@@ -23,10 +24,16 @@ function clearLegacyLocalHandoverDrafts() {
 
 export default function ConnectionStatus() {
   const { t } = useTranslation()
+  const pathname = usePathname()
   const [isOnline, setIsOnline] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
   const [isExpanded, setIsExpanded] = useState(false)
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'retry'>('idle')
+  const [cacheStatus, setCacheStatus] = useState({
+    state: 'idle',
+    seconds: 0,
+    version: '',
+  })
   const isSyncingRef = useRef(false)
 
   const syncPending = useCallback(async () => {
@@ -70,6 +77,13 @@ export default function ConnectionStatus() {
     window.addEventListener('storage', updateStatus)
     window.addEventListener('food-waste-pending-updated', updateStatus)
 
+    function handleCacheStatus(event: Event) {
+      const detail = (event as CustomEvent).detail
+      if (detail) setCacheStatus(detail)
+    }
+
+    window.addEventListener('handover-offline-cache-status', handleCacheStatus)
+
     const timer = window.setInterval(() => {
       updateStatus()
       if (navigator.onLine) void syncPending()
@@ -80,23 +94,31 @@ export default function ConnectionStatus() {
       window.removeEventListener('offline', updateStatus)
       window.removeEventListener('storage', updateStatus)
       window.removeEventListener('food-waste-pending-updated', updateStatus)
+      window.removeEventListener('handover-offline-cache-status', handleCacheStatus)
       window.clearInterval(timer)
     }
   }, [syncPending])
 
   const totalPending = pendingCount
   const hasPending = pendingCount > 0
+  const showCacheStatus =
+    /^\/(crown|pearl)\/food-waste(?:\/[^/]+)?$/.test(pathname) &&
+    !pathname.endsWith('/overblik')
+  const isCaching = showCacheStatus && cacheStatus.state === 'caching'
   const label = isOnline ? t.online : t.offline
   const waitingDetail = pendingCount > 0 ? `${pendingCount} ${t.waitingShort}` : ''
-  const detail =
-    syncState === 'syncing'
+  const detail = isCaching
+    ? `${t.offlineCachePreparing} · ${cacheStatus.seconds} ${t.secondsShort}${cacheStatus.version ? ` · cache ${cacheStatus.version}` : ''}`
+    : showCacheStatus && cacheStatus.state === 'ready' && cacheStatus.version
+      ? `${t.offlineCacheReady} · cache ${cacheStatus.version}`
+      : syncState === 'syncing'
       ? `${t.syncing}${waitingDetail ? ` · ${waitingDetail}` : ''}`
       : syncState === 'retry' && pendingCount > 0
         ? `${waitingDetail} · ${t.retrying}`
         : hasPending
           ? waitingDetail
           : t.synced
-  const Icon = syncState === 'syncing' ? RefreshCw : isOnline ? Cloud : CloudOff
+  const Icon = isCaching || syncState === 'syncing' ? RefreshCw : isOnline ? Cloud : CloudOff
 
   return (
     <div className="fixed right-3 top-3 z-50 sm:right-4 sm:top-4">
@@ -135,7 +157,7 @@ export default function ConnectionStatus() {
           <Icon
             size={17}
             strokeWidth={2}
-            className={syncState === 'syncing' ? 'animate-spin' : undefined}
+            className={isCaching || syncState === 'syncing' ? 'animate-spin' : undefined}
           />
           {hasPending && (
             <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white sm:hidden">

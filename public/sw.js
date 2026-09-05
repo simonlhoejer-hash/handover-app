@@ -143,8 +143,6 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('message', (event) => {
-  if (event.data?.type !== 'WARM_SHIP') return
-
   const ship = event.data.ship
   if (!SHIPS.includes(ship)) return
 
@@ -153,6 +151,23 @@ self.addEventListener('message', (event) => {
     .map((route) => `/${ship}/food-waste${route}`)
 
   const requiredPaths = [`/${ship}`, ...routes]
+
+  if (event.data?.type === 'GET_OFFLINE_CACHE_STATUS') {
+    event.waitUntil(
+      hasAllPaths(requiredPaths).then((ready) => {
+        event.source?.postMessage({
+          type: 'OFFLINE_CACHE_STATUS',
+          ship,
+          ready,
+          cacheVersion: CACHE_VERSION,
+        })
+      })
+    )
+    return
+  }
+
+  if (event.data?.type !== 'WARM_SHIP') return
+
   event.source?.postMessage({ type: 'OFFLINE_CACHE_START', ship, cacheVersion: CACHE_VERSION })
 
   event.waitUntil(
