@@ -1,5 +1,6 @@
-const CACHE_VERSION = '36'
+const CACHE_VERSION = '37'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
+const CACHE_FETCH_TIMEOUT_MS = 15_000
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
@@ -43,7 +44,10 @@ async function cachePaths(paths) {
 
   await Promise.allSettled(
     paths.map(async (path) => {
-      const response = await fetch(path, { cache: 'reload' })
+      const response = await fetch(path, {
+        cache: 'reload',
+        signal: AbortSignal.timeout(CACHE_FETCH_TIMEOUT_MS),
+      })
       const finalUrl = new URL(response.url)
       if (
         response.ok &&
@@ -70,7 +74,10 @@ async function cachePaths(paths) {
 
   await Promise.allSettled(
     [...assetPaths].map(async (assetPath) => {
-      const response = await fetch(assetPath, { cache: 'reload' })
+      const response = await fetch(assetPath, {
+        cache: 'reload',
+        signal: AbortSignal.timeout(CACHE_FETCH_TIMEOUT_MS),
+      })
       if (response.ok) await cache.put(assetPath, response)
     })
   )

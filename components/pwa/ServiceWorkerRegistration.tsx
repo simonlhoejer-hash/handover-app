@@ -36,9 +36,10 @@ export default function ServiceWorkerRegistration() {
     const warmCurrentShip = (registration: ServiceWorkerRegistration) => {
       const ship = getCurrentShip()
       if (!ship) return
-      const worker = registration.active ?? registration.waiting
+      const worker = registration.waiting ?? registration.active
       if (worker) {
         setCacheSeconds(0)
+        setCacheVersion('')
         setCacheState('caching')
         worker.postMessage({ type: 'WARM_SHIP', ship })
       }
@@ -48,12 +49,8 @@ export default function ServiceWorkerRegistration() {
       const ship = getCurrentShip()
       if (ship) {
         setCacheSeconds(0)
+        setCacheVersion('')
         setCacheState('caching')
-        try {
-          setCacheVersion(localStorage.getItem('handover-offline-cache-version') || '')
-        } catch {
-          // Cache preparation is still shown if storage is unavailable.
-        }
       }
 
       void navigator.serviceWorker
