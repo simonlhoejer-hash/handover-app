@@ -1,4 +1,4 @@
-const CACHE_VERSION = '37'
+const CACHE_VERSION = '38'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -83,6 +83,23 @@ async function cachePaths(paths) {
   )
 }
 
+async function seedFromPreviousCache(paths) {
+  const cache = await caches.open(CACHE_NAME)
+
+  await Promise.allSettled(
+    paths.map(async (path) => {
+      if (await cache.match(path)) return
+      const previous = await caches.match(path)
+      if (previous) await cache.put(path, previous)
+    })
+  )
+}
+
+async function hasAllPaths(paths) {
+  const cache = await caches.open(CACHE_NAME)
+  return (await Promise.all(paths.map((path) => cache.match(path)))).every(Boolean)
+}
+
 function stringHash(value) {
   let hash = 5381
   for (let index = 0; index < value.length; index += 1) {
@@ -102,7 +119,9 @@ function rscCacheKeys(request, url) {
 }
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(cachePaths(APP_SHELL))
+  // Activate immediately. The complete working cache from the previous
+  // version is retained and promoted when the current ship is warmed.
+  event.waitUntil(Promise.resolve())
   self.skipWaiting()
 })
 
@@ -120,11 +139,23 @@ self.addEventListener('message', (event) => {
   event.source?.postMessage({ type: 'OFFLINE_CACHE_START', ship, cacheVersion: CACHE_VERSION })
 
   event.waitUntil(
-    cachePaths(requiredPaths).then(async () => {
-      const cache = await caches.open(CACHE_NAME)
-      const ready = (
-        await Promise.all(requiredPaths.map((path) => cache.match(path)))
-      ).every(Boolean)
+    seedFromPreviousCache(requiredPaths).then(async () => {
+      const seeded = await hasAllPaths(requiredPaths)
+
+      if (seeded) {
+        event.source?.postMessage({
+          type: 'OFFLINE_CACHE_READY',
+          ship,
+          cacheVersion: CACHE_VERSION,
+        })
+
+        // Refresh the promoted pages without making the crew wait for them.
+        await cachePaths(requiredPaths)
+        return
+      }
+
+      await cachePaths(requiredPaths)
+      const ready = await hasAllPaths(requiredPaths)
 
       event.source?.postMessage({
         type: ready ? 'OFFLINE_CACHE_READY' : 'OFFLINE_CACHE_ERROR',
