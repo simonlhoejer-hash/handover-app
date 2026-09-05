@@ -13,18 +13,61 @@ export default function SettingsPage() {
   const [cacheVersion, setCacheVersion] = useState('')
 
   useEffect(() => {
-    const updateCacheVersion = () => {
+    const updateCacheVersion = async () => {
       try {
-        setCacheVersion(localStorage.getItem('handover-offline-cache-version') ?? '')
-      } catch {
+        const ship = window.location.pathname.startsWith('/pearl') ? 'pearl' : 'crown'
+        const routes = [
+          '',
+          '/overblik',
+          '/skagerak-morgen',
+          '/skagerak-aften',
+          '/messen-morgen',
+          '/messen-frokost',
+          '/messen-aften',
+          '/commodore-morgen',
+          ...(ship === 'crown'
+            ? [
+                '/produktion-main-galley',
+                '/produktion-skagerak-galley',
+                '/produktion-slagteri',
+                '/produktion-proviant-daek-1',
+              ]
+            : []),
+        ]
+        const cacheNames = await caches.keys()
+        const versions = cacheNames
+          .map((name) => name.match(/^handover-offline-v(\d+)$/))
+          .filter((match): match is RegExpMatchArray => Boolean(match))
+          .sort((a, b) => Number(b[1]) - Number(a[1]))
+
+        for (const match of versions) {
+          const cache = await caches.open(match[0])
+          const requiredPaths = [`/${ship}`, ...routes.map((route) => `/${ship}/food-waste${route}`)]
+          const cachedPages = await Promise.all(
+            requiredPaths.map((path) => cache.match(path))
+          )
+          if (cachedPages.every(Boolean)) {
+            setCacheVersion(match[1])
+            localStorage.setItem('handover-offline-cache-version', match[1])
+            return
+          }
+        }
+
         setCacheVersion('')
+      } catch {
+        try {
+          setCacheVersion(localStorage.getItem('handover-offline-cache-version') ?? '')
+        } catch {
+          setCacheVersion('')
+        }
       }
     }
 
-    updateCacheVersion()
-    window.addEventListener('handover-offline-cache-updated', updateCacheVersion)
+    void updateCacheVersion()
+    const handleCacheUpdate = () => void updateCacheVersion()
+    window.addEventListener('handover-offline-cache-updated', handleCacheUpdate)
     return () =>
-      window.removeEventListener('handover-offline-cache-updated', updateCacheVersion)
+      window.removeEventListener('handover-offline-cache-updated', handleCacheUpdate)
   }, [])
 
   return (
