@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import LanguageToggle from '@/components/ui/LanguageToggle'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useTranslation } from '@/lib/LanguageContext'
-import { CheckCircle2, ChevronDown, Clock3 } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Clock3, Download } from 'lucide-react'
 
 export default function SettingsPage() {
   const { t } = useTranslation()
   const [appOpen, setAppOpen] = useState(true)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [cacheVersion, setCacheVersion] = useState('')
+  const [startingCache, setStartingCache] = useState(false)
 
   useEffect(() => {
     const updateCacheVersion = async () => {
@@ -69,6 +70,18 @@ export default function SettingsPage() {
     return () =>
       window.removeEventListener('handover-offline-cache-updated', handleCacheUpdate)
   }, [])
+
+  async function prepareOfflineCache() {
+    if (!navigator.onLine || !('serviceWorker' in navigator)) return
+    setStartingCache(true)
+    try {
+      const registration = await navigator.serviceWorker.ready
+      const ship = window.location.pathname.startsWith('/pearl') ? 'pearl' : 'crown'
+      registration.active?.postMessage({ type: 'WARM_SHIP', ship })
+    } finally {
+      window.setTimeout(() => setStartingCache(false), 3000)
+    }
+  }
 
   return (
     <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-10">
@@ -162,6 +175,18 @@ export default function SettingsPage() {
                   : t.offlineNotReady}
               </span>
             </div>
+
+            <button
+              type="button"
+              onClick={prepareOfflineCache}
+              disabled={startingCache}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#064e4c] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#073f3d] disabled:opacity-60"
+            >
+              <Download size={17} />
+              {startingCache
+                ? t.offlineCachePreparing
+                : `${t.downloadOfflineCache} 35`}
+            </button>
 
           </div>
         </div>

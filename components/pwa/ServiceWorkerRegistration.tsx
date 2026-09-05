@@ -16,9 +16,19 @@ export default function ServiceWorkerRegistration() {
     const warmCurrentShip = (registration: ServiceWorkerRegistration) => {
       if (!navigator.onLine) return
 
-      const ship = window.location.pathname.startsWith('/pearl')
+      const pathname = window.location.pathname
+      if (
+        pathname === '/crown/adgang' ||
+        pathname === '/pearl/adgang' ||
+        pathname.startsWith('/adgang/') ||
+        pathname.startsWith('/crown/souschef')
+      ) {
+        return
+      }
+
+      const ship = pathname.startsWith('/pearl')
         ? 'pearl'
-        : window.location.pathname.startsWith('/crown')
+        : pathname.startsWith('/crown')
           ? 'crown'
           : null
 

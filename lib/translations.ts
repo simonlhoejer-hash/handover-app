@@ -52,6 +52,7 @@ export const translations = {
     secondsShort: 'sek.',
     offlineStatus: 'Offline-status',
     offlineNotReady: 'Ikke klargjort endnu',
+    downloadOfflineCache: 'Hent offline-cache',
 
     // Forside
     missing: '❌ Mangler',
@@ -330,6 +331,7 @@ Skriv hvor tingene står.`,
     secondsShort: 'sek.',
     offlineStatus: 'Offline-status',
     offlineNotReady: 'Inte redo ännu',
+    downloadOfflineCache: 'Hämta offline-cache',
 
     // Forside
     missing: '❌ Saknas',
@@ -597,6 +599,7 @@ Skriv var sakerna står.`,
     secondsShort: 'sec.',
     offlineStatus: 'Offline status',
     offlineNotReady: 'Not ready yet',
+    downloadOfflineCache: 'Download offline cache',
     missing: '❌ Missing',
     pending: '🕒 Pending',
     read: '✓ Read',
