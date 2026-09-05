@@ -132,10 +132,10 @@ export default function ConnectionStatus() {
           flex items-center
           rounded-full
           border
-          ${isExpanded ? 'gap-2 px-3 py-2' : 'gap-0 p-1.5'}
+          ${isExpanded || isCaching ? 'w-60 gap-2 px-3 py-2' : 'gap-0 p-1.5'}
           shadow-lg
           backdrop-blur-xl
-          sm:gap-2 sm:px-3 sm:py-2
+          sm:w-60 sm:gap-2 sm:px-3 sm:py-2
           ${
             isOnline
               ? 'border-emerald-500/20 bg-emerald-50/95 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200'
@@ -166,9 +166,9 @@ export default function ConnectionStatus() {
           )}
         </span>
 
-        <span className={`${isExpanded ? 'block' : 'hidden'} leading-tight text-left sm:block`}>
+        <span className={`${isExpanded || isCaching ? 'block' : 'hidden'} min-w-0 flex-1 leading-tight text-left sm:block`}>
           <span className="block text-sm font-semibold">{label}</span>
-          <span className="block text-xs opacity-75">{detail}</span>
+          <span className="block whitespace-nowrap text-xs tabular-nums opacity-75">{detail}</span>
         </span>
       </button>
     </div>
