@@ -106,28 +106,30 @@ export default function ServiceWorkerRegistration() {
   if (cacheState === 'idle') return null
 
   return (
-    <div className={`fixed bottom-24 left-1/2 z-[110] flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur-xl ${
-      cacheState === 'ready'
-        ? 'bg-emerald-100/95 text-emerald-800'
-        : cacheState === 'error'
-          ? 'bg-amber-100/95 text-amber-900'
-          : 'bg-white/95 text-gray-800'
-    }`}>
-      {cacheState === 'ready' ? (
-        <CheckCircle2 size={18} />
-      ) : cacheState === 'error' ? (
-        <TriangleAlert size={18} />
-      ) : (
-        <LoaderCircle size={18} className="animate-spin" />
-      )}
-      <span className="whitespace-nowrap">
-        {cacheState === 'ready'
-          ? t.offlineCacheReady
+    <div className="pointer-events-none fixed inset-0 z-[110] flex items-center justify-center px-5">
+      <div className={`flex min-w-[min(22rem,calc(100vw-2.5rem))] items-center justify-center gap-3 rounded-2xl border px-6 py-5 text-base font-semibold shadow-[0_20px_60px_rgba(0,0,0,.22)] backdrop-blur-xl ${
+        cacheState === 'ready'
+          ? 'border-emerald-500/20 bg-emerald-100/95 text-emerald-800'
           : cacheState === 'error'
-            ? t.offlineCacheError
-            : `${t.offlineCachePreparing} · ${cacheSeconds} ${t.secondsShort}`}
-        {cacheVersion ? ` · cache ${cacheVersion}` : ''}
-      </span>
+            ? 'border-amber-500/25 bg-amber-100/95 text-amber-900'
+            : 'border-black/10 bg-white/95 text-gray-800'
+      }`}>
+        {cacheState === 'ready' ? (
+          <CheckCircle2 size={23} />
+        ) : cacheState === 'error' ? (
+          <TriangleAlert size={23} />
+        ) : (
+          <LoaderCircle size={23} className="animate-spin" />
+        )}
+        <span className="whitespace-nowrap text-center">
+          {cacheState === 'ready'
+            ? t.offlineCacheReady
+            : cacheState === 'error'
+              ? t.offlineCacheError
+              : `${t.offlineCachePreparing} · ${cacheSeconds} ${t.secondsShort}`}
+          {cacheVersion ? ` · cache ${cacheVersion}` : ''}
+        </span>
+      </div>
     </div>
   )
 }
