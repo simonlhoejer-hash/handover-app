@@ -2,13 +2,17 @@
 
 import { useRouter } from 'next/navigation'
 import HandoverHistoryItem from '@/components/handover/HandoverHistoryItem'
-import HandoverForm from '@/components/handover/HandoverForm'
+import dynamic from 'next/dynamic'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronLeft, CloudOff, LoaderCircle, Sparkles, X } from 'lucide-react'
 import { displayPartiName } from '@/lib/partis'
+
+const HandoverForm = dynamic(() => import('@/components/handover/HandoverForm'), {
+  ssr: false,
+})
 
 function getPlainText(value: string) {
   return value.replace(/<[^>]*>/g, '').trim()
@@ -565,7 +569,7 @@ className="
           `}
         >
           <div>
-<HandoverForm
+{open && <HandoverForm
   name={name}
   setName={setName}
   receiver={receiver}
@@ -580,7 +584,7 @@ className="
   loading={loading}
   onSave={saveNote}
   isOnline={isOnline}
-parti={itemName}/>
+parti={itemName}/>} 
           </div>
         </div>
 

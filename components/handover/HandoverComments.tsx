@@ -14,13 +14,15 @@ type HandoverComment = {
 export default function HandoverComments({
   handoverId,
   ship,
+  initialCount = 0,
 }: {
   handoverId: string
   ship: AccessShip
+  initialCount?: number
 }) {
   const { t, lang } = useTranslation()
   const [comments, setComments] = useState<HandoverComment[]>([])
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(initialCount)
   const [open, setOpen] = useState(false)
   const [author, setAuthor] = useState('')
   const [text, setText] = useState('')
@@ -41,9 +43,9 @@ export default function HandoverComments({
   }
 
   useEffect(() => {
-    fetchAll()
+    setCount(initialCount)
     setOpen(false)
-  }, [handoverId])
+  }, [handoverId, initialCount])
 
   const addComment = async () => {
     const authorName = author.trim()

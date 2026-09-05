@@ -78,11 +78,32 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const notes = ((data ?? []) as unknown as Array<Record<string, unknown>>).map((note) => ({
+  const notes: Array<Record<string, unknown>> = ((data ?? []) as unknown as Array<Record<string, unknown>>).map((note) => ({
     ...note,
     parti: note.parti === 'Skagerak' ? 'Varm Skagerak' : note.parti,
     images: normalizeImageUrls(note.images, ship),
   }))
+
+  if (mode !== 'status' && status === 'published' && notes.length > 0) {
+    const counts = new Map<string, number>()
+    const ids = notes.map((note) => String(note.id))
+
+    for (let index = 0; index < ids.length; index += 100) {
+      const { data: commentRows } = await supabase
+        .from('handover_comments')
+        .select('handover_id')
+        .in('handover_id', ids.slice(index, index + 100))
+
+      for (const row of commentRows ?? []) {
+        const id = String(row.handover_id)
+        counts.set(id, (counts.get(id) ?? 0) + 1)
+      }
+    }
+
+    for (const note of notes) {
+      note.comment_count = counts.get(String(note.id)) ?? 0
+    }
+  }
 
   return NextResponse.json({ data: notes })
 }
