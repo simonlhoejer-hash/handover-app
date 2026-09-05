@@ -108,9 +108,9 @@ export default function ConnectionStatus() {
   const label = isOnline ? t.online : t.offline
   const waitingDetail = pendingCount > 0 ? `${pendingCount} ${t.waitingShort}` : ''
   const detail = isCaching
-    ? `${t.offlineCachePreparing} · ${cacheStatus.seconds} ${t.secondsShort}${cacheStatus.version ? ` · cache ${cacheStatus.version}` : ''}`
+    ? `${t.offlineCachePreparing} · ${cacheStatus.seconds} ${t.secondsShort}`
     : showCacheStatus && cacheStatus.state === 'ready' && cacheStatus.version
-      ? `${t.offlineCacheReady} · cache ${cacheStatus.version}`
+      ? t.offlineCacheReady
       : syncState === 'syncing'
       ? `${t.syncing}${waitingDetail ? ` · ${waitingDetail}` : ''}`
       : syncState === 'retry' && pendingCount > 0
