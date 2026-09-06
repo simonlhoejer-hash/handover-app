@@ -1,6 +1,23 @@
-const CACHE_VERSION = '42'
+const CACHE_VERSION = '43'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
+
+function settleAll(promises) {
+  return Promise.all(promises.map((promise) => Promise.resolve(promise).catch(() => undefined)))
+}
+
+async function fetchWithTimeout(input, init) {
+  const options = init || {}
+  if (typeof AbortController !== 'function') return fetch(input, options)
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), CACHE_FETCH_TIMEOUT_MS)
+  try {
+    return await fetch(input, Object.assign({}, options, { signal: controller.signal }))
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 function normalizedPath(pathname) {
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
@@ -56,11 +73,10 @@ async function cachePaths(paths) {
   const cache = await caches.open(CACHE_NAME)
   const assetPaths = new Set()
 
-  await Promise.allSettled(
+  await settleAll(
     paths.map(async (path) => {
-      const response = await fetch(path, {
+      const response = await fetchWithTimeout(path, {
         cache: 'reload',
-        signal: AbortSignal.timeout(CACHE_FETCH_TIMEOUT_MS),
       })
       const finalUrl = new URL(response.url)
       if (
@@ -70,9 +86,12 @@ async function cachePaths(paths) {
       ) {
         await cache.put(path, response.clone())
 
-        if (response.headers.get('content-type')?.includes('text/html')) {
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('text/html')) {
           const html = await response.text()
-          for (const match of html.matchAll(/(?:src|href)=["']([^"']+)["']/g)) {
+          const assetPattern = /(?:src|href)=["']([^"']+)["']/g
+          let match
+          while ((match = assetPattern.exec(html)) !== null) {
             const assetUrl = new URL(match[1], self.location.origin)
             if (
               assetUrl.origin === self.location.origin &&
@@ -86,11 +105,10 @@ async function cachePaths(paths) {
     })
   )
 
-  await Promise.allSettled(
+  await settleAll(
     [...assetPaths].map(async (assetPath) => {
-      const response = await fetch(assetPath, {
+      const response = await fetchWithTimeout(assetPath, {
         cache: 'reload',
-        signal: AbortSignal.timeout(CACHE_FETCH_TIMEOUT_MS),
       })
       if (response.ok) await cache.put(assetPath, response)
     })
@@ -100,7 +118,7 @@ async function cachePaths(paths) {
 async function seedFromPreviousCache(paths) {
   const cache = await caches.open(CACHE_NAME)
 
-  await Promise.allSettled(
+  await settleAll(
     paths.map(async (path) => {
       if (await cache.match(path)) return
       const previous = await caches.match(path)
@@ -172,10 +190,10 @@ self.addEventListener('message', (event) => {
 
   const requiredPaths = [`/${ship}`, ...routes]
 
-  if (event.data?.type === 'GET_OFFLINE_CACHE_STATUS') {
+  if (event.data && event.data.type === 'GET_OFFLINE_CACHE_STATUS') {
     event.waitUntil(
       hasAllPaths(requiredPaths).then((ready) => {
-        event.source?.postMessage({
+        if (event.source) event.source.postMessage({
           type: 'OFFLINE_CACHE_STATUS',
           ship,
           ready,
@@ -186,16 +204,16 @@ self.addEventListener('message', (event) => {
     return
   }
 
-  if (event.data?.type !== 'WARM_SHIP') return
+  if (!event.data || event.data.type !== 'WARM_SHIP') return
 
-  event.source?.postMessage({ type: 'OFFLINE_CACHE_START', ship, cacheVersion: CACHE_VERSION })
+  if (event.source) event.source.postMessage({ type: 'OFFLINE_CACHE_START', ship, cacheVersion: CACHE_VERSION })
 
   event.waitUntil(
     seedFromPreviousCache(requiredPaths).then(async () => {
       const seeded = await hasAllPaths(requiredPaths)
 
       if (seeded) {
-        event.source?.postMessage({
+        if (event.source) event.source.postMessage({
           type: 'OFFLINE_CACHE_READY',
           ship,
           cacheVersion: CACHE_VERSION,
@@ -209,7 +227,7 @@ self.addEventListener('message', (event) => {
       await cachePaths(await getMissingPaths(requiredPaths))
       const ready = await hasAllPaths(requiredPaths)
 
-      event.source?.postMessage({
+      if (event.source) event.source.postMessage({
         type: ready ? 'OFFLINE_CACHE_READY' : 'OFFLINE_CACHE_ERROR',
         ship,
         cacheVersion: CACHE_VERSION,
@@ -270,7 +288,7 @@ self.addEventListener('fetch', (event) => {
             await matchNewestOfflineCache(keys.latest)
 
           if (fallback) {
-            await Promise.allSettled([
+            await settleAll([
               cache.put(keys.exact, fallback.clone()),
               cache.put(keys.latest, fallback.clone()),
             ])

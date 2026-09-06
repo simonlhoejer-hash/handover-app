@@ -2,6 +2,13 @@
   "name": "handover-app",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    "Chrome >= 80",
+    "ChromeAndroid >= 80",
+    "Samsung >= 13",
+    "Edge >= 79",
+    "Safari >= 13"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

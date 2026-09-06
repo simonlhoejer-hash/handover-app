@@ -46,18 +46,18 @@ export default function ServiceWorkerRegistration() {
         .then((registration) => {
           checkCurrentShip(registration)
           void registration.update().catch(() => undefined)
-          void navigator.serviceWorker.ready.then(checkCurrentShip)
+          void navigator.serviceWorker.ready.then(checkCurrentShip).catch(() => undefined)
         })
         .catch(() => undefined)
     }
 
     const handleOnline = () => {
-      void navigator.serviceWorker.ready.then(checkCurrentShip)
+      void navigator.serviceWorker.ready.then(checkCurrentShip).catch(() => undefined)
     }
 
     const handleControllerChange = () => {
       warmingVersionRef.current = ''
-      void navigator.serviceWorker.ready.then(checkCurrentShip)
+      void navigator.serviceWorker.ready.then(checkCurrentShip).catch(() => undefined)
     }
 
     const handleWorkerMessage = (event: MessageEvent) => {

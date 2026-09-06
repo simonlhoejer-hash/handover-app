@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { createClientId } from '@/lib/clientId'
 import {
   AlertTriangle,
   ArrowRight,
@@ -95,7 +96,7 @@ export default function SouschefPage() {
     if (!title.trim() || saving) return
     const now = new Date().toISOString()
     const task: ManagerTask = {
-      id: crypto.randomUUID(),
+      id: createClientId(),
       title: title.trim(),
       description: description.trim(),
       owner: owner.trim(),

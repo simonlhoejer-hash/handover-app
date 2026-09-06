@@ -29,7 +29,12 @@ const LEGACY_LOCATION_NAMES = new Map([
 ])
 
 function canUseStorage() {
-  return typeof window !== 'undefined' && Boolean(window.localStorage)
+  if (typeof window === 'undefined') return false
+  try {
+    return Boolean(window.localStorage)
+  } catch {
+    return false
+  }
 }
 
 function readStorageArray<T>(key: string): T[] {
@@ -48,10 +53,14 @@ function readStorageArray<T>(key: string): T[] {
 
 function writeStorageArray<T>(key: string, rows: T[]) {
   if (!canUseStorage()) return
-  window.localStorage.setItem(key, JSON.stringify(rows))
+  try {
+    window.localStorage.setItem(key, JSON.stringify(rows))
 
-  if (key === FOOD_WASTE_PENDING_KEY || key.startsWith(`${FOOD_WASTE_PENDING_KEY}:`)) {
-    window.dispatchEvent(new Event('food-waste-pending-updated'))
+    if (key === FOOD_WASTE_PENDING_KEY || key.startsWith(`${FOOD_WASTE_PENDING_KEY}:`)) {
+      window.dispatchEvent(new Event('food-waste-pending-updated'))
+    }
+  } catch {
+    // A blocked or full Android storage must not stop the app from rendering.
   }
 }
 

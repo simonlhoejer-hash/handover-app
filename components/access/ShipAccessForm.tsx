@@ -26,11 +26,18 @@ export default function ShipAccessForm({
     setLoading(true)
     setError('')
 
-    const response = await fetch('/api/access', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ship, code }),
-    })
+    let response: Response
+    try {
+      response = await fetch('/api/access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ship, code }),
+      })
+    } catch {
+      setLoading(false)
+      setError('Ingen forbindelse. Prøv igen, når nettet er tilbage.')
+      return
+    }
 
     setLoading(false)
 
@@ -47,7 +54,7 @@ export default function ShipAccessForm({
     if ('serviceWorker' in navigator) {
       void navigator.serviceWorker.ready.then((registration) => {
         registration.active?.postMessage({ type: 'WARM_SHIP', ship })
-      })
+      }).catch(() => undefined)
     }
 
     // Force the first protected navigation through the network so an older

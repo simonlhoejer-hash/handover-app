@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { translations } from './translations'
+import { safeStorageGet, safeStorageSet } from './safeStorage'
 
 export type Lang = 'da' | 'sv' | 'en'
 
@@ -21,12 +22,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>('da')
 
   useEffect(() => {
-    const saved = localStorage.getItem('lang')
-    if (saved === 'da' || saved === 'sv' || saved === 'en') setLangState(saved)
+    const timer = window.setTimeout(() => {
+      const saved = safeStorageGet('lang')
+      if (saved === 'da' || saved === 'sv' || saved === 'en') setLangState(saved)
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const setLang = (newLang: Lang) => {
-    localStorage.setItem('lang', newLang)
+    safeStorageSet('lang', newLang)
     setLangState(newLang)
   }
 

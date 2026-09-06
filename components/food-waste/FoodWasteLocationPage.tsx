@@ -16,6 +16,7 @@ import { displayFoodWasteLocation } from '@/lib/foodWasteLocations'
 import { queryString, secureFetch } from '@/lib/secureApi'
 import { syncAllPendingFoodWaste } from '@/lib/foodWasteSync'
 import { formatFoodWasteAmount } from '@/lib/formatFoodWasteAmount'
+import { createClientId } from '@/lib/clientId'
 
 type FoodWasteEntry = {
   id: string
@@ -254,7 +255,7 @@ export default function FoodWasteLocationPage({
     setError('')
 
     const payload: FoodWastePayload = {
-      client_id: crypto.randomUUID(),
+      client_id: createClientId(),
       waste_date: today,
       location_name: locationName,
       quantity_kg: quantity,
