@@ -1,4 +1,4 @@
-const CACHE_VERSION = '39'
+const CACHE_VERSION = '40'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -15,6 +15,12 @@ const FOOD_WASTE_ROUTES = [
   '/messen-morgen',
   '/messen-frokost',
   '/messen-aften',
+  '/messen-morgen-buffetspild',
+  '/messen-morgen-tallerkenspild',
+  '/messen-frokost-buffetspild',
+  '/messen-frokost-tallerkenspild',
+  '/messen-aften-buffetspild',
+  '/messen-aften-tallerkenspild',
   '/commodore-morgen',
   '/produktion-main-galley',
   '/produktion-skagerak-galley',
@@ -98,6 +104,12 @@ async function seedFromPreviousCache(paths) {
 async function hasAllPaths(paths) {
   const cache = await caches.open(CACHE_NAME)
   return (await Promise.all(paths.map((path) => cache.match(path)))).every(Boolean)
+}
+
+async function getMissingPaths(paths) {
+  const cache = await caches.open(CACHE_NAME)
+  const matches = await Promise.all(paths.map((path) => cache.match(path)))
+  return paths.filter((_, index) => !matches[index])
 }
 
 async function matchNewestOfflineCache(key) {
@@ -186,7 +198,7 @@ self.addEventListener('message', (event) => {
         return
       }
 
-      await cachePaths(requiredPaths)
+      await cachePaths(await getMissingPaths(requiredPaths))
       const ready = await hasAllPaths(requiredPaths)
 
       event.source?.postMessage({
@@ -290,8 +302,9 @@ self.addEventListener('fetch', (event) => {
         return network().catch(async () => {
           const ship = pathKey.startsWith('/pearl') ? 'pearl' : 'crown'
           return (
-            await caches.match(request) ||
+            await cache.match(request) ||
             await cache.match(pathKey) ||
+            await matchNewestOfflineCache(request) ||
             await matchNewestOfflineCache(pathKey) ||
             await cache.match(`/${ship}/food-waste`) ||
             await matchNewestOfflineCache(`/${ship}/food-waste`) ||

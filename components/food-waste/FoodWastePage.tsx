@@ -51,7 +51,14 @@ const LOCATION_GROUPS = [
   },
   {
     title: 'Messen',
-    slugs: ['messen-morgen', 'messen-frokost', 'messen-aften'],
+    slugs: [
+      'messen-morgen-buffetspild',
+      'messen-morgen-tallerkenspild',
+      'messen-frokost-buffetspild',
+      'messen-frokost-tallerkenspild',
+      'messen-aften-buffetspild',
+      'messen-aften-tallerkenspild',
+    ],
   },
   {
     title: 'Produktion',
@@ -195,7 +202,7 @@ export default function FoodWastePage({
           .map((group) => (
           <section
             key={group.title}
-            className="lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]"
+            className={`${group.title === 'Buffet' || group.title === 'Messen' ? 'lg:col-span-2' : ''} lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]`}
           >
             <div className="mb-4 flex items-center justify-center gap-4 lg:mb-4 lg:gap-3">
               <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/30" />
@@ -211,7 +218,48 @@ export default function FoodWastePage({
               <div className="h-px flex-1 bg-gradient-to-r from-gray-300/80 to-transparent dark:from-white/30" />
             </div>
 
-            <div
+            {group.title === 'Messen' ? (
+              <div className="grid gap-5 lg:grid-cols-3">
+                {[
+                  { title: lang === 'en' ? 'Morning' : lang === 'sv' ? 'Morgon' : 'Morgen', slugs: group.slugs.slice(0, 2) },
+                  { title: lang === 'en' ? 'Lunch' : lang === 'sv' ? 'Lunch' : 'Frokost', slugs: group.slugs.slice(2, 4) },
+                  { title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs.slice(4, 6) },
+                ].map((meal) => (
+                  <div key={meal.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
+                    <h3 className="mb-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-white/60">
+                      {meal.title}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {meal.slugs.map((slug) => {
+                        const location = FOOD_WASTE_LOCATIONS.find((candidate) => candidate.slug === slug)
+                        if (!location) return null
+                        const todayAmount = totals.byLocation[location.name] ?? 0
+                        const isPlateWaste = location.name.endsWith('tallerkenspild')
+
+                        return (
+                          <Link
+                            key={slug}
+                            href={`${basePath}/food-waste/${slug}`}
+                            className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
+                          >
+                            <div className="flex h-full min-w-0 flex-col items-center justify-center gap-2">
+                              <span className="text-[15px] font-semibold leading-tight">
+                                {isPlateWaste
+                                  ? lang === 'en' ? 'Plate waste' : lang === 'sv' ? 'Tallrikssvinn' : 'Tallerkenspild'
+                                  : lang === 'en' ? 'Buffet waste' : lang === 'sv' ? 'Buffésvinn' : 'Buffetspild'}
+                              </span>
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
+                                {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
+                              </span>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <div
               className={`
                 -mx-4 flex snap-x snap-mandatory gap-4
                 overflow-x-auto px-4 pb-3
@@ -304,7 +352,7 @@ export default function FoodWastePage({
                   </Link>
                 )
               })}
-            </div>
+            </div>}
           </section>
           ))}
       </div>

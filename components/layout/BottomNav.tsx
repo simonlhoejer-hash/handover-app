@@ -97,6 +97,11 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              onClick={(event) => {
+                if (navigator.onLine) return
+                event.preventDefault()
+                window.location.assign(tab.href)
+              }}
               aria-label={tab.label}
               className={`
                 flex items-center justify-center

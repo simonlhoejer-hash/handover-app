@@ -25,6 +25,12 @@ export default function SettingsPage() {
           '/messen-morgen',
           '/messen-frokost',
           '/messen-aften',
+          '/messen-morgen-buffetspild',
+          '/messen-morgen-tallerkenspild',
+          '/messen-frokost-buffetspild',
+          '/messen-frokost-tallerkenspild',
+          '/messen-aften-buffetspild',
+          '/messen-aften-tallerkenspild',
           '/commodore-morgen',
           ...(ship === 'crown'
             ? [
