@@ -31,6 +31,9 @@ export async function proxy(request: NextRequest) {
   }
 
   const accessUrl = new URL(`/${ship}/adgang`, request.url)
+  if (request.nextUrl.searchParams.get('login') === '1') {
+    accessUrl.searchParams.set('error', 'cookie')
+  }
   const response = NextResponse.redirect(accessUrl)
 
   if (ship === 'pearl') {

@@ -25,6 +25,8 @@ export default function ShipAccessForm({
       ? 'Forkert kode. Prøv igen.'
       : initialError === 'config'
         ? 'Serverens adgang er ikke konfigureret endnu.'
+        : initialError === 'cookie'
+          ? 'Koden er rigtig, men denne browser gemmer ikke adgangscookien. Tillad cookies for handoverpro.dk, og prøv igen.'
         : ''
   )
   const shipName = ship === 'crown' ? 'Nordic Crown' : 'Nordic Pearl'
