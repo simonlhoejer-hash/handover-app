@@ -1,4 +1,4 @@
-const CACHE_VERSION = '40'
+const CACHE_VERSION = '41'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -12,6 +12,14 @@ const FOOD_WASTE_ROUTES = [
   '/overblik',
   '/skagerak-morgen',
   '/skagerak-aften',
+  '/skagerak-morgen-varmt',
+  '/skagerak-morgen-koldt',
+  '/commodore-morgen-varmt',
+  '/commodore-morgen-koldt',
+  '/skagerak-aften-boernebuffet',
+  '/skagerak-aften-koldt',
+  '/skagerak-aften-varmt',
+  '/skagerak-aften-oerne',
   '/messen-morgen',
   '/messen-frokost',
   '/messen-aften',

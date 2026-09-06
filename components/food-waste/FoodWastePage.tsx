@@ -44,12 +44,26 @@ type Props = {
   basePath?: string
 }
 
-type WasteArea = 'buffet' | 'mess' | 'production'
+type WasteArea = 'morning-buffet' | 'evening-buffet' | 'mess' | 'production'
 
 const LOCATION_GROUPS = [
   {
-    title: 'Buffet',
-    slugs: ['skagerak-morgen', 'commodore-morgen', 'skagerak-aften'],
+    title: 'Morgenbuffet',
+    slugs: [
+      'skagerak-morgen-varmt',
+      'skagerak-morgen-koldt',
+      'commodore-morgen-varmt',
+      'commodore-morgen-koldt',
+    ],
+  },
+  {
+    title: 'Aftenbuffet',
+    slugs: [
+      'skagerak-aften-boernebuffet',
+      'skagerak-aften-koldt',
+      'skagerak-aften-varmt',
+      'skagerak-aften-oerne',
+    ],
   },
   {
     title: 'Messen',
@@ -91,15 +105,17 @@ export default function FoodWastePage({
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeArea, setActiveArea] = useState<WasteArea>('buffet')
+  const [activeArea, setActiveArea] = useState<WasteArea>('morning-buffet')
 
   const today = getToday()
 
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(`food-waste-area:${vessel}`)
-      if (saved === 'buffet' || saved === 'mess' || saved === 'production') {
+      if (saved === 'morning-buffet' || saved === 'evening-buffet' || saved === 'mess' || saved === 'production') {
         setActiveArea(saved)
+      } else if (saved === 'buffet') {
+        setActiveArea('morning-buffet')
       }
     } catch {
       // Buffet remains the safe default if local storage is unavailable.
@@ -119,7 +135,7 @@ export default function FoodWastePage({
     if (!navigator.onLine) return
 
     for (const group of LOCATION_GROUPS) {
-      if (vessel !== 'crown' && group.title !== 'Buffet' && group.title !== 'Messen') {
+      if (vessel !== 'crown' && group.title !== 'Morgenbuffet' && group.title !== 'Aftenbuffet' && group.title !== 'Messen') {
         continue
       }
       for (const slug of group.slugs) {
@@ -219,9 +235,10 @@ export default function FoodWastePage({
         </p>
       )}
 
-      <div className={`mx-auto mb-7 grid w-full max-w-xl ${vessel === 'crown' ? 'grid-cols-3' : 'grid-cols-2'} gap-1 rounded-2xl border border-black/5 bg-black/5 p-1.5 dark:border-white/10 dark:bg-black/20`}>
+      <div className={`mx-auto mb-7 grid w-full max-w-2xl ${vessel === 'crown' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1 rounded-2xl border border-black/5 bg-black/5 p-1.5 dark:border-white/10 dark:bg-black/20`}>
         {([
-          { value: 'buffet' as const, label: 'Buffet' },
+          { value: 'morning-buffet' as const, label: lang === 'en' ? 'Morning buffet' : lang === 'sv' ? 'Morgonbuffé' : 'Morgenbuffet' },
+          { value: 'evening-buffet' as const, label: lang === 'en' ? 'Evening buffet' : lang === 'sv' ? 'Kvällsbuffé' : 'Aftenbuffet' },
           { value: 'mess' as const, label: lang === 'en' ? 'Crew mess' : lang === 'sv' ? 'Mässen' : 'Messen' },
           ...(vessel === 'crown'
             ? [{ value: 'production' as const, label: lang === 'en' ? 'Production' : 'Produktion' }]
@@ -244,10 +261,12 @@ export default function FoodWastePage({
 
       <div className="space-y-9 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         {LOCATION_GROUPS
-          .filter((group) => vessel === 'crown' || group.title === 'Buffet' || group.title === 'Messen')
+          .filter((group) => vessel === 'crown' || group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' || group.title === 'Messen')
           .filter((group) =>
-            activeArea === 'buffet'
-              ? group.title === 'Buffet'
+            activeArea === 'morning-buffet'
+              ? group.title === 'Morgenbuffet'
+              : activeArea === 'evening-buffet'
+                ? group.title === 'Aftenbuffet'
               : activeArea === 'mess'
                 ? group.title === 'Messen'
                 : group.title === 'Produktion' || group.title.startsWith('D')
@@ -255,7 +274,7 @@ export default function FoodWastePage({
           .map((group) => (
           <section
             key={group.title}
-            className={`${group.title === 'Buffet' || group.title === 'Messen' ? 'lg:col-span-2' : ''} lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]`}
+            className={`${group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' || group.title === 'Messen' ? 'lg:col-span-2' : ''} lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]`}
           >
             {(group.title === 'Produktion' || group.title.startsWith('D')) && (
             <div className="mb-4 flex items-center justify-center gap-4 lg:mb-4 lg:gap-3">
@@ -321,7 +340,7 @@ export default function FoodWastePage({
                 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
                 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5
                 sm:overflow-visible sm:px-0 sm:pb-0
-                ${group.slugs.length === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}
+                ${group.slugs.length === 2 ? 'lg:grid-cols-2' : group.slugs.length === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}
                 lg:gap-4
               `}
             >
@@ -376,7 +395,7 @@ export default function FoodWastePage({
                               {displayName.replace(/^(Produktion|Production)\s+/, '')}
                             </span>
                           </>
-                        ) : group.title === 'Buffet' || group.title === 'Messen' ? (
+                        ) : group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' ? (
                           <>
                             <span className="block">{stationName}</span>
                             <span className="block">{mealName}</span>

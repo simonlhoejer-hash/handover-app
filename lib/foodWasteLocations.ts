@@ -1,6 +1,14 @@
 export const FOOD_WASTE_LOCATIONS = [
   { name: 'Skagerak morgen', slug: 'skagerak-morgen' },
   { name: 'Skagerak aften', slug: 'skagerak-aften' },
+  { name: 'Skagerak morgen varmt', slug: 'skagerak-morgen-varmt' },
+  { name: 'Skagerak morgen koldt', slug: 'skagerak-morgen-koldt' },
+  { name: 'Commodore morgen varmt', slug: 'commodore-morgen-varmt' },
+  { name: 'Commodore morgen koldt', slug: 'commodore-morgen-koldt' },
+  { name: 'Skagerak aften børnebuffet', slug: 'skagerak-aften-boernebuffet' },
+  { name: 'Skagerak aften koldt', slug: 'skagerak-aften-koldt' },
+  { name: 'Skagerak aften varmt', slug: 'skagerak-aften-varmt' },
+  { name: 'Skagerak aften øerne', slug: 'skagerak-aften-oerne' },
   { name: 'Messen morgen', slug: 'messen-morgen' },
   { name: 'Messen frokost', slug: 'messen-frokost' },
   { name: 'Messen aften', slug: 'messen-aften' },
@@ -26,6 +34,14 @@ export function displayFoodWasteLocation(name: string, lang: string) {
     const englishNames: Record<string, string> = {
       'Skagerak morgen': 'Skagerak morning',
       'Skagerak aften': 'Skagerak evening',
+      'Skagerak morgen varmt': 'Skagerak morning hot',
+      'Skagerak morgen koldt': 'Skagerak morning cold',
+      'Commodore morgen varmt': 'Commodore morning hot',
+      'Commodore morgen koldt': 'Commodore morning cold',
+      'Skagerak aften børnebuffet': 'Evening kids buffet',
+      'Skagerak aften koldt': 'Evening cold',
+      'Skagerak aften varmt': 'Evening hot',
+      'Skagerak aften øerne': 'Evening islands',
       'Messen morgen': 'Crew mess morning',
       'Messen frokost': 'Crew mess lunch',
       'Messen aften': 'Crew mess evening',
@@ -48,6 +64,14 @@ export function displayFoodWasteLocation(name: string, lang: string) {
 
   if (lang === 'sv') {
     const swedishNames: Record<string, string> = {
+      'Skagerak morgen varmt': 'Skagerak morgon varmt',
+      'Skagerak morgen koldt': 'Skagerak morgon kallt',
+      'Commodore morgen varmt': 'Commodore morgon varmt',
+      'Commodore morgen koldt': 'Commodore morgon kallt',
+      'Skagerak aften børnebuffet': 'Kväll barnbuffé',
+      'Skagerak aften koldt': 'Kväll kallt',
+      'Skagerak aften varmt': 'Kväll varmt',
+      'Skagerak aften øerne': 'Kväll öarna',
       'Messen morgen buffetspild': 'Morgon buffésvinn',
       'Messen morgen tallerkenspild': 'Morgon tallrikssvinn',
       'Messen frokost buffetspild': 'Lunch buffésvinn',
@@ -73,6 +97,14 @@ export function displayFoodWasteLocation(name: string, lang: string) {
   if (name === 'Produktion Main Galley') return 'Produktion Varm Galley'
 
   const danishNames: Record<string, string> = {
+    'Skagerak morgen varmt': 'Skagerak morgen · Varmt',
+    'Skagerak morgen koldt': 'Skagerak morgen · Koldt',
+    'Commodore morgen varmt': 'Commodore morgen · Varmt',
+    'Commodore morgen koldt': 'Commodore morgen · Koldt',
+    'Skagerak aften børnebuffet': 'Aftenbuffet · Børnebuffet',
+    'Skagerak aften koldt': 'Aftenbuffet · Koldt',
+    'Skagerak aften varmt': 'Aftenbuffet · Varmt',
+    'Skagerak aften øerne': 'Aftenbuffet · Øerne',
     'Messen morgen buffetspild': 'Messen morgen · Buffetspild',
     'Messen morgen tallerkenspild': 'Messen morgen · Tallerkenspild',
     'Messen frokost buffetspild': 'Messen frokost · Buffetspild',

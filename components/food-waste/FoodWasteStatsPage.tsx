@@ -171,15 +171,40 @@ function getGuestBreakdown(guest: GuestCount | undefined): GuestBreakdown | null
 }
 
 type BuffetView = 'all' | 'morning' | 'evening' | 'mess'
+type BuffetDetailView =
+  | 'all'
+  | 'skagerak-hot'
+  | 'skagerak-cold'
+  | 'commodore-hot'
+  | 'commodore-cold'
+  | 'kids'
+  | 'evening-cold'
+  | 'evening-hot'
+  | 'islands'
 type MessView = 'all' | 'morning' | 'lunch' | 'evening'
 type MessWasteView = 'all' | 'buffet' | 'plate'
 type GrinderView = 'all' | 'buffet' | 'production' | 'deck'
 
 function isBuffetLocationForView(name: string, view: BuffetView) {
-  if (view === 'morning') return name === 'Skagerak morgen' || name === 'Commodore morgen'
-  if (view === 'evening') return name === 'Skagerak aften'
+  if (view === 'morning') {
+    return name === 'Skagerak morgen' || name.startsWith('Skagerak morgen ') ||
+      name === 'Commodore morgen' || name.startsWith('Commodore morgen ')
+  }
+  if (view === 'evening') return name === 'Skagerak aften' || name.startsWith('Skagerak aften ')
   if (view === 'mess') return name.startsWith('Messen ')
   return !name.startsWith('Produktion ')
+}
+
+function isBuffetDetailForView(name: string, view: BuffetDetailView) {
+  if (view === 'skagerak-hot') return name === 'Skagerak morgen varmt'
+  if (view === 'skagerak-cold') return name === 'Skagerak morgen koldt'
+  if (view === 'commodore-hot') return name === 'Commodore morgen varmt'
+  if (view === 'commodore-cold') return name === 'Commodore morgen koldt'
+  if (view === 'kids') return name === 'Skagerak aften børnebuffet'
+  if (view === 'evening-cold') return name === 'Skagerak aften koldt'
+  if (view === 'evening-hot') return name === 'Skagerak aften varmt'
+  if (view === 'islands') return name === 'Skagerak aften øerne'
+  return true
 }
 
 function getMonthComparisonRange(dateString: string) {
@@ -307,6 +332,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [skagerakEveningGuests, setSkagerakEveningGuests] = useState('')
   const [messGuests, setMessGuests] = useState('160')
   const [buffetView, setBuffetView] = useState<BuffetView>('all')
+  const [buffetDetailView, setBuffetDetailView] = useState<BuffetDetailView>('all')
   const [messView, setMessView] = useState<MessView>('all')
   const [messWasteView, setMessWasteView] = useState<MessWasteView>('all')
   const [grinderView, setGrinderView] = useState<GrinderView>('all')
@@ -585,12 +611,12 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     const buffetViews: Record<BuffetView, WasteCategoryStats> = {
       all: buffet,
       morning: buildCategoryStats(
-        entries.filter((entry) => isBuffetLocationForView(entry.location_name, 'morning')),
-        buffetNames.filter((name) => isBuffetLocationForView(name, 'morning'))
+        entries.filter((entry) => isBuffetLocationForView(entry.location_name, 'morning') && isBuffetDetailForView(entry.location_name, buffetDetailView)),
+        buffetNames.filter((name) => isBuffetLocationForView(name, 'morning') && isBuffetDetailForView(name, buffetDetailView))
       ),
       evening: buildCategoryStats(
-        entries.filter((entry) => isBuffetLocationForView(entry.location_name, 'evening')),
-        buffetNames.filter((name) => isBuffetLocationForView(name, 'evening'))
+        entries.filter((entry) => isBuffetLocationForView(entry.location_name, 'evening') && isBuffetDetailForView(entry.location_name, buffetDetailView)),
+        buffetNames.filter((name) => isBuffetLocationForView(name, 'evening') && isBuffetDetailForView(name, buffetDetailView))
       ),
       mess: buildCategoryStats(
         entries.filter((entry) => isBuffetLocationForView(entry.location_name, 'mess')),
@@ -655,7 +681,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       guestsTotal,
       kgPerGuest: guestsTotal > 0 ? buffet.totalKg / guestsTotal : 0,
     }
-  }, [entries, fromDate, guestCounts, lang, messWasteView, t.week, toDate])
+  }, [buffetDetailView, entries, fromDate, guestCounts, lang, messWasteView, t.week, toDate])
 
   function getGuestsForDates(dates: string[], view: BuffetView, activeMessView = messView) {
     const selectedDates = new Set(dates)
@@ -1144,6 +1170,21 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     : lang === 'sv'
       ? { all: 'Allt svinn', buffet: 'Buffésvinn', plate: 'Tallrikssvinn' }
       : { all: 'Alt spild', buffet: 'Buffetspild', plate: 'Tallerkenspild' }
+  const buffetDetailOptions: Array<{ value: BuffetDetailView; label: string }> = buffetView === 'morning'
+    ? [
+        { value: 'all', label: lang === 'en' ? 'Total' : lang === 'sv' ? 'Totalt' : 'Samlet' },
+        { value: 'skagerak-hot', label: 'Skagerak · Varmt' },
+        { value: 'skagerak-cold', label: 'Skagerak · Koldt' },
+        { value: 'commodore-hot', label: 'Commodore · Varmt' },
+        { value: 'commodore-cold', label: 'Commodore · Koldt' },
+      ]
+    : [
+        { value: 'all', label: lang === 'en' ? 'Total' : lang === 'sv' ? 'Totalt' : 'Samlet' },
+        { value: 'kids', label: lang === 'en' ? 'Kids buffet' : lang === 'sv' ? 'Barnbuffé' : 'Børnebuffet' },
+        { value: 'evening-cold', label: lang === 'en' ? 'Cold' : lang === 'sv' ? 'Kallt' : 'Koldt' },
+        { value: 'evening-hot', label: lang === 'en' ? 'Hot' : lang === 'sv' ? 'Varmt' : 'Varmt' },
+        { value: 'islands', label: lang === 'en' ? 'Islands' : lang === 'sv' ? 'Öarna' : 'Øerne' },
+      ]
   const activeBuffetLabel = buffetView === 'mess'
     ? `${buffetViewLabels.mess} · ${messViewLabels[messView]}`
     : buffetViewLabels[buffetView]
@@ -1151,6 +1192,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const comparableBuffetEntries = comparisonEntries.filter((entry) => {
     if (entry.location_name.startsWith('Produktion ')) return false
     if (!isBuffetLocationForView(entry.location_name, buffetView)) return false
+    if ((buffetView === 'morning' || buffetView === 'evening') && !isBuffetDetailForView(entry.location_name, buffetDetailView)) return false
     if (buffetView === 'mess' && (
       !isMessLocationForView(entry.location_name, messView) ||
       !isMessWasteForView(entry.location_name, messWasteView)
@@ -1206,6 +1248,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       }
       if (
         kind === 'buffet' &&
+        (buffetView === 'morning' || buffetView === 'evening') &&
+        !isBuffetDetailForView(entry.location_name, buffetDetailView)
+      ) continue
+      if (
+        kind === 'buffet' &&
         buffetView === 'mess' &&
         (
           !isMessLocationForView(entry.location_name, messView) ||
@@ -1248,6 +1295,11 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         if (!entry.comment?.trim() || !selectedDates.has(entry.waste_date)) return false
         if (kind === 'buffet' && entry.location_name.startsWith('Produktion ')) return false
         if (kind === 'buffet' && !isBuffetLocationForView(entry.location_name, buffetView)) return false
+        if (
+          kind === 'buffet' &&
+          (buffetView === 'morning' || buffetView === 'evening') &&
+          !isBuffetDetailForView(entry.location_name, buffetDetailView)
+        ) return false
         if (
           kind === 'buffet' &&
           buffetView === 'mess' &&
@@ -1470,6 +1522,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     type="button"
                     onClick={() => {
                       setBuffetView(view)
+                      setBuffetDetailView('all')
                       setSelectedPoint(null)
                     }}
                     className={`min-w-0 rounded-lg px-2 py-2 text-xs font-semibold transition sm:text-sm ${
@@ -1479,6 +1532,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     }`}
                   >
                     {buffetViewLabels[view]}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {chart.kind === 'buffet' && (buffetView === 'morning' || buffetView === 'evening') && (
+              <div className="food-waste-print-hidden mt-2 grid grid-cols-2 gap-1 rounded-xl border border-teal-500/15 bg-teal-50/70 p-1 sm:grid-cols-5 dark:bg-teal-400/10">
+                {buffetDetailOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setBuffetDetailView(option.value)
+                      setSelectedPoint(null)
+                    }}
+                    className={`min-w-0 rounded-lg px-2 py-2 text-xs font-semibold transition ${
+                      buffetDetailView === option.value
+                        ? 'bg-teal-700 text-white shadow-sm dark:bg-teal-500'
+                        : 'text-teal-900/65 hover:text-teal-950 dark:text-teal-100/60'
+                    }`}
+                  >
+                    {option.label}
                   </button>
                 ))}
               </div>
@@ -1864,6 +1939,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                         type="button"
                         onClick={() => {
                           setBuffetView(view)
+                          setBuffetDetailView('all')
                           setSelectedPoint(null)
                         }}
                         className={`rounded-xl px-2 py-2 text-xs font-semibold transition sm:text-sm ${
@@ -1873,6 +1949,28 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                         }`}
                       >
                         {buffetViewLabels[view]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {chart.kind === 'buffet' && (buffetView === 'morning' || buffetView === 'evening') && (
+                  <div className="grid grid-cols-2 gap-1 border-b border-teal-500/15 bg-teal-50/70 p-2 sm:grid-cols-5 sm:px-7 dark:bg-teal-400/10">
+                    {buffetDetailOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setBuffetDetailView(option.value)
+                          setSelectedPoint(null)
+                        }}
+                        className={`rounded-xl px-2 py-2 text-xs font-semibold transition ${
+                          buffetDetailView === option.value
+                            ? 'bg-teal-700 text-white shadow-sm dark:bg-teal-500'
+                            : 'text-teal-900/65 dark:text-teal-100/60'
+                        }`}
+                      >
+                        {option.label}
                       </button>
                     ))}
                   </div>
