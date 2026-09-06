@@ -44,6 +44,8 @@ type Props = {
   basePath?: string
 }
 
+type WasteArea = 'buffet' | 'mess' | 'production'
+
 const LOCATION_GROUPS = [
   {
     title: 'Buffet',
@@ -89,8 +91,29 @@ export default function FoodWastePage({
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [activeArea, setActiveArea] = useState<WasteArea>('buffet')
 
   const today = getToday()
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(`food-waste-area:${vessel}`)
+      if (saved === 'buffet' || saved === 'mess' || saved === 'production') {
+        setActiveArea(saved)
+      }
+    } catch {
+      // Buffet remains the safe default if local storage is unavailable.
+    }
+  }, [vessel])
+
+  function selectArea(area: WasteArea) {
+    setActiveArea(area)
+    try {
+      window.localStorage.setItem(`food-waste-area:${vessel}`, area)
+    } catch {
+      // The selected tab still works for the current visit.
+    }
+  }
 
   useEffect(() => {
     if (!navigator.onLine) return
@@ -196,14 +219,45 @@ export default function FoodWastePage({
         </p>
       )}
 
+      <div className={`mx-auto mb-7 grid w-full max-w-xl ${vessel === 'crown' ? 'grid-cols-3' : 'grid-cols-2'} gap-1 rounded-2xl border border-black/5 bg-black/5 p-1.5 dark:border-white/10 dark:bg-black/20`}>
+        {([
+          { value: 'buffet' as const, label: 'Buffet' },
+          { value: 'mess' as const, label: lang === 'en' ? 'Crew mess' : lang === 'sv' ? 'Mässen' : 'Messen' },
+          ...(vessel === 'crown'
+            ? [{ value: 'production' as const, label: lang === 'en' ? 'Production' : 'Produktion' }]
+            : []),
+        ]).map((area) => (
+          <button
+            key={area.value}
+            type="button"
+            onClick={() => selectArea(area.value)}
+            className={`min-h-11 rounded-xl px-3 text-sm font-semibold transition active:scale-[0.98] ${
+              activeArea === area.value
+                ? 'bg-white text-[#064e4c] shadow-sm dark:bg-white/15 dark:text-white'
+                : 'text-gray-500 hover:text-gray-800 dark:text-white/55 dark:hover:text-white'
+            }`}
+          >
+            {area.label}
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-9 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         {LOCATION_GROUPS
           .filter((group) => vessel === 'crown' || group.title === 'Buffet' || group.title === 'Messen')
+          .filter((group) =>
+            activeArea === 'buffet'
+              ? group.title === 'Buffet'
+              : activeArea === 'mess'
+                ? group.title === 'Messen'
+                : group.title === 'Produktion' || group.title.startsWith('D')
+          )
           .map((group) => (
           <section
             key={group.title}
             className={`${group.title === 'Buffet' || group.title === 'Messen' ? 'lg:col-span-2' : ''} lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]`}
           >
+            {(group.title === 'Produktion' || group.title.startsWith('D')) && (
             <div className="mb-4 flex items-center justify-center gap-4 lg:mb-4 lg:gap-3">
               <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/30" />
               <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/70">
@@ -217,6 +271,7 @@ export default function FoodWastePage({
               </h2>
               <div className="h-px flex-1 bg-gradient-to-r from-gray-300/80 to-transparent dark:from-white/30" />
             </div>
+            )}
 
             {group.title === 'Messen' ? (
               <div className="grid gap-5 lg:grid-cols-3">
