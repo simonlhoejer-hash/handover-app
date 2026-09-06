@@ -137,3 +137,25 @@ export function getFoodWasteLocationPresentation(name: string, lang: string) {
     tone: isMorningBuffet ? 'morning' as const : 'evening' as const,
   }
 }
+
+export function getCopenhagenMinutes(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Copenhagen',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? 0)
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? 0)
+  return hour * 60 + minute
+}
+
+export function isFoodWasteLocationOpen(name: string, date = new Date()) {
+  const minutes = getCopenhagenMinutes(date)
+  const isMorningBuffet = /^(Skagerak|Commodore) morgen (varmt|koldt)$/.test(name)
+  const isEveningBuffet = /^Skagerak aften (børnebuffet|koldt|varmt|øerne)$/.test(name)
+
+  if (isMorningBuffet) return minutes >= 5 * 60 && minutes < 12 * 60
+  if (isEveningBuffet) return minutes >= 16 * 60 && minutes < 23 * 60 + 30
+  return true
+}

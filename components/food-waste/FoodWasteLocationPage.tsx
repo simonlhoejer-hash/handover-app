@@ -12,7 +12,7 @@ import {
   writePendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
-import { getFoodWasteLocationPresentation } from '@/lib/foodWasteLocations'
+import { getFoodWasteLocationPresentation, isFoodWasteLocationOpen } from '@/lib/foodWasteLocations'
 import { queryString, secureFetch } from '@/lib/secureApi'
 import { syncAllPendingFoodWaste } from '@/lib/foodWasteSync'
 import { formatFoodWasteAmount } from '@/lib/formatFoodWasteAmount'
@@ -80,6 +80,7 @@ function formatTime(value: string, lang: string) {
   if (Number.isNaN(date.getTime())) return '--:--'
 
   return new Intl.DateTimeFormat(localeFor(lang), {
+    timeZone: 'Europe/Copenhagen',
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)
@@ -105,6 +106,7 @@ export default function FoodWasteLocationPage({
   const [syncMessage, setSyncMessage] = useState('')
   const [wasteReason, setWasteReason] = useState('')
   const [showReasonPrompt, setShowReasonPrompt] = useState(false)
+  const [scheduleTime, setScheduleTime] = useState<Date | null>(null)
   const [isOnline, setIsOnline] = useState(
     typeof navigator === 'undefined' ? true : navigator.onLine
   )
@@ -113,6 +115,17 @@ export default function FoodWasteLocationPage({
 
   const today = getToday()
   const locationPresentation = getFoodWasteLocationPresentation(locationName, lang)
+  const isBuffetLocked = scheduleTime !== null && !isFoodWasteLocationOpen(locationName, scheduleTime)
+
+  useEffect(() => {
+    const updateTime = () => setScheduleTime(new Date())
+    const initialUpdate = window.setTimeout(updateTime, 0)
+    const interval = window.setInterval(updateTime, 30_000)
+    return () => {
+      window.clearTimeout(initialUpdate)
+      window.clearInterval(interval)
+    }
+  }, [])
 
   const syncPendingEntries = useCallback(async () => {
     const pendingEntries = readPendingFoodWasteEntries(vessel)
@@ -254,6 +267,16 @@ export default function FoodWasteLocationPage({
     projectedTodayTotal > historicalDailyAverage * 1.25
 
   async function saveEntry(value: string, comment: string | null = null) {
+    if (!isFoodWasteLocationOpen(locationName)) {
+      setError(
+        lang === 'en'
+          ? 'This buffet is closed at this time.'
+          : lang === 'sv'
+            ? 'Den här buffén är stängd just nu.'
+            : 'Denne buffet er lukket på dette tidspunkt.'
+      )
+      return
+    }
     const quantity = Number(value.replace(',', '.'))
 
     if (!quantity || quantity <= 0) {
@@ -448,6 +471,18 @@ export default function FoodWasteLocationPage({
       </header>
 
       <section className="rounded-3xl bg-white p-5 sm:p-6 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
+        {isBuffetLocked && (
+          <div className="mb-5 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-4 text-center text-amber-900 dark:border-amber-300/25 dark:bg-amber-400/10 dark:text-amber-100">
+            <p className="font-bold">
+              {lang === 'en' ? 'Buffet closed' : lang === 'sv' ? 'Buffén är stängd' : 'Buffeten er lukket'}
+            </p>
+            <p className="mt-1 text-sm">
+              {locationPresentation.tone === 'morning'
+                ? lang === 'en' ? 'Open 05:00–12:00 Danish time' : lang === 'sv' ? 'Öppen 05.00–12.00 dansk tid' : 'Åben kl. 05.00–12.00 dansk tid'
+                : lang === 'en' ? 'Open 16:00–23:30 Danish time' : lang === 'sv' ? 'Öppen 16.00–23.30 dansk tid' : 'Åben kl. 16.00–23.30 dansk tid'}
+            </p>
+          </div>
+        )}
         {locationPresentation.subtitle && (
           <div className={`mb-5 rounded-2xl border px-4 py-3 text-center font-semibold ${
             locationPresentation.tone === 'morning'
@@ -475,9 +510,10 @@ export default function FoodWasteLocationPage({
           <input
             ref={kgInputRef}
             inputMode="decimal"
-            className="w-full rounded-2xl bg-gray-100 px-4 py-5 pr-16 text-4xl font-semibold text-gray-900 border border-black/5 dark:bg-[#082f2e] dark:text-white dark:border-white/10"
+            className="w-full rounded-2xl bg-gray-100 px-4 py-5 pr-16 text-4xl font-semibold text-gray-900 border border-black/5 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#082f2e] dark:text-white dark:border-white/10"
             placeholder="0,0"
             value={quantityKg}
+            disabled={isBuffetLocked}
             onChange={(event) => setQuantityKg(event.target.value)}
             onFocus={(event) => {
               const input = event.currentTarget

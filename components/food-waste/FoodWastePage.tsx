@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS, getFoodWasteLocationPresentation } from '@/lib/foodWasteLocations'
+import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS, getCopenhagenMinutes, getFoodWasteLocationPresentation } from '@/lib/foodWasteLocations'
+import { LockKeyhole } from 'lucide-react'
 import {
   cacheFoodWasteEntries,
   readCachedFoodWasteEntries,
@@ -106,9 +107,37 @@ export default function FoodWastePage({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeArea, setActiveArea] = useState<WasteArea>('morning-buffet')
+  const [currentMinute, setCurrentMinute] = useState<number | null>(null)
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const today = getToday()
+
+  useEffect(() => {
+    const updateMinute = () => {
+      setCurrentMinute(getCopenhagenMinutes())
+    }
+    const initialUpdate = window.setTimeout(updateMinute, 0)
+    const interval = window.setInterval(updateMinute, 30_000)
+    return () => {
+      window.clearTimeout(initialUpdate)
+      window.clearInterval(interval)
+    }
+  }, [])
+
+  const isAreaLocked = (area: WasteArea) => {
+    if (currentMinute === null) return false
+    if (area === 'morning-buffet') return currentMinute < 5 * 60 || currentMinute >= 12 * 60
+    if (area === 'evening-buffet') return currentMinute < 16 * 60 || currentMinute >= 23 * 60 + 30
+    return false
+  }
+
+  const visibleArea: WasteArea = isAreaLocked(activeArea)
+    ? !isAreaLocked('morning-buffet')
+      ? 'morning-buffet'
+      : !isAreaLocked('evening-buffet')
+        ? 'evening-buffet'
+        : 'mess'
+    : activeArea
 
   useEffect(() => {
     try {
@@ -124,6 +153,7 @@ export default function FoodWastePage({
   }, [vessel])
 
   function selectArea(area: WasteArea) {
+    if (isAreaLocked(area)) return
     setActiveArea(area)
     try {
       window.localStorage.setItem(`food-waste-area:${vessel}`, area)
@@ -145,8 +175,12 @@ export default function FoodWastePage({
     const deltaY = clientY - start.y
     if (Math.abs(deltaX) < 70 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return
 
-    const currentIndex = areaOrder.indexOf(activeArea)
-    const nextIndex = deltaX < 0 ? currentIndex + 1 : currentIndex - 1
+    const currentIndex = areaOrder.indexOf(visibleArea)
+    const direction = deltaX < 0 ? 1 : -1
+    let nextIndex = currentIndex + direction
+    while (nextIndex >= 0 && nextIndex < areaOrder.length && isAreaLocked(areaOrder[nextIndex])) {
+      nextIndex += direction
+    }
     if (nextIndex >= 0 && nextIndex < areaOrder.length) selectArea(areaOrder[nextIndex])
   }
 
@@ -267,8 +301,8 @@ export default function FoodWastePage({
             key={area.value}
             type="button"
             onClick={() => selectArea(area.value)}
-            className={`min-h-14 rounded-xl px-4 text-base font-semibold transition active:scale-[0.98] ${
-              activeArea === area.value
+            className={`min-h-14 rounded-xl px-4 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${
+              visibleArea === area.value
                 ? area.value === 'evening-buffet'
                   ? 'bg-amber-50 text-amber-900 shadow-sm ring-1 ring-amber-200/70 dark:bg-amber-400/15 dark:text-amber-100 dark:ring-amber-300/20'
                   : area.value === 'morning-buffet'
@@ -276,25 +310,37 @@ export default function FoodWastePage({
                     : 'bg-white text-[#064e4c] shadow-sm dark:bg-white/15 dark:text-white'
                 : 'text-gray-500 hover:text-gray-800 dark:text-white/55 dark:hover:text-white'
             }`}
+            disabled={isAreaLocked(area.value)}
+            aria-disabled={isAreaLocked(area.value)}
           >
-            {area.label}
+            <span className="flex flex-col items-center justify-center leading-tight">
+              <span className="flex items-center justify-center gap-2">
+                {isAreaLocked(area.value) && <LockKeyhole size={15} aria-hidden="true" />}
+                {area.label}
+              </span>
+              {isAreaLocked(area.value) && (
+                <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider">
+                  {lang === 'en' ? 'Closed' : lang === 'sv' ? 'Stängd' : 'Lukket'}
+                </span>
+              )}
+            </span>
           </button>
         ))}
       </div>
 
       <div className={`mx-auto mb-5 flex max-w-4xl items-center justify-center rounded-2xl border px-4 py-3 text-center ${
-        activeArea === 'morning-buffet'
+        visibleArea === 'morning-buffet'
           ? 'border-cyan-200/70 bg-cyan-50/60 text-[#064e4c] dark:border-cyan-300/15 dark:bg-cyan-400/[0.07] dark:text-cyan-50'
-          : activeArea === 'evening-buffet'
+          : visibleArea === 'evening-buffet'
             ? 'border-amber-200/70 bg-amber-50/60 text-amber-900 dark:border-amber-300/15 dark:bg-amber-400/[0.07] dark:text-amber-50'
             : 'border-black/5 bg-white/60 text-gray-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-white'
       }`}>
         <h2 className="text-xl font-bold tracking-tight">
-          {activeArea === 'morning-buffet'
+          {visibleArea === 'morning-buffet'
             ? lang === 'en' ? 'Morning buffet' : lang === 'sv' ? 'Morgonbuffé' : 'Morgenbuffet'
-            : activeArea === 'evening-buffet'
+            : visibleArea === 'evening-buffet'
               ? lang === 'en' ? 'Evening buffet' : lang === 'sv' ? 'Kvällsbuffé' : 'Aftenbuffet'
-              : activeArea === 'mess'
+              : visibleArea === 'mess'
                 ? lang === 'en' ? 'Crew mess' : lang === 'sv' ? 'Mässen' : 'Messen'
                 : lang === 'en' ? 'Production' : 'Produktion'}
         </h2>
@@ -314,11 +360,11 @@ export default function FoodWastePage({
         {LOCATION_GROUPS
           .filter((group) => vessel === 'crown' || group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' || group.title === 'Messen')
           .filter((group) =>
-            activeArea === 'morning-buffet'
+            visibleArea === 'morning-buffet'
               ? group.title === 'Morgenbuffet'
-              : activeArea === 'evening-buffet'
+              : visibleArea === 'evening-buffet'
                 ? group.title === 'Aftenbuffet'
-              : activeArea === 'mess'
+              : visibleArea === 'mess'
                 ? group.title === 'Messen'
                 : group.title === 'Produktion' || group.title.startsWith('D')
           )
