@@ -262,9 +262,12 @@ export default function FoodWasteLocationPage({
 
   const enteredQuantity = Number(quantityKg.trim().replace(',', '.')) || 0
   const projectedTodayTotal = todayTotal + enteredQuantity
+  const isProvisionsComment = locationName === 'Produktion Proviant'
   const requiresWasteReason =
     historicalDailyAverage > 0 &&
-    projectedTodayTotal > historicalDailyAverage * 1.25
+    projectedTodayTotal > historicalDailyAverage * 1.4 &&
+    projectedTodayTotal - historicalDailyAverage >= 2
+  const requiresComment = requiresWasteReason || isProvisionsComment
 
   async function saveEntry(value: string, comment: string | null = null) {
     if (!isFoodWasteLocationOpen(locationName)) {
@@ -387,10 +390,12 @@ export default function FoodWasteLocationPage({
 
     if (saving || saved || saveStartedRef.current) return
 
-    if (requiresWasteReason) {
-      setShowReasonPrompt(true)
-      saveStartedRef.current = false
-      return
+    if (requiresComment) {
+      const promptTimer = window.setTimeout(() => {
+        setShowReasonPrompt(true)
+        saveStartedRef.current = false
+      }, 1200)
+      return () => window.clearTimeout(promptTimer)
     }
 
     setShowReasonPrompt(false)
@@ -401,7 +406,7 @@ export default function FoodWasteLocationPage({
     }, 2000)
 
     return () => window.clearTimeout(timer)
-  }, [quantityKg, requiresWasteReason, saved, saving])
+  }, [quantityKg, requiresComment, saved, saving])
 
   async function deleteEntry(id: string) {
     if (id.startsWith('local-')) {
@@ -537,29 +542,35 @@ export default function FoodWasteLocationPage({
               <AlertTriangle className="mt-0.5 shrink-0" size={20} />
               <div>
                 <p className="font-semibold">
-                  {lang === 'en'
-                    ? 'More waste than usual'
-                    : lang === 'sv'
-                      ? 'Mer svinn än vanligt'
-                      : 'Mere spild end normalt'}
+                  {isProvisionsComment
+                    ? lang === 'en' ? 'What was discarded?' : lang === 'sv' ? 'Vad kastades?' : 'Hvad er smidt ud?'
+                    : lang === 'en'
+                      ? 'More waste than usual'
+                      : lang === 'sv'
+                        ? 'Mer svinn än vanligt'
+                        : 'Mere spild end normalt'}
                 </p>
                 <p className="mt-1 text-sm opacity-80">
-                  {lang === 'en'
-                    ? `Today will be ${formatAmount(projectedTodayTotal, lang)}. Briefly explain why.`
-                    : lang === 'sv'
-                      ? `Dagens mängd blir ${formatAmount(projectedTodayTotal, lang)}. Skriv kort varför.`
-                      : `Dagens mængde bliver ${formatAmount(projectedTodayTotal, lang)}. Skriv kort hvorfor.`}
+                  {isProvisionsComment
+                    ? lang === 'en' ? 'Write briefly what the waste consists of.' : lang === 'sv' ? 'Skriv kort vad svinnet består av.' : 'Skriv kort hvad spildet består af.'
+                    : lang === 'en'
+                      ? `Today will be ${formatAmount(projectedTodayTotal, lang)}. Briefly explain why.`
+                      : lang === 'sv'
+                        ? `Dagens mängd blir ${formatAmount(projectedTodayTotal, lang)}. Skriv kort varför.`
+                        : `Dagens mængde bliver ${formatAmount(projectedTodayTotal, lang)}. Skriv kort hvorfor.`}
                 </p>
               </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
               {(
-                lang === 'en'
-                  ? ['Dish was not popular', 'Too much produced', 'Fewer guests', 'Quality issue']
-                  : lang === 'sv'
-                    ? ['Rätten var inte populär', 'För mycket producerat', 'Färre gäster', 'Kvalitetsproblem']
-                    : ['Retten var ikke populær', 'For meget produceret', 'Færre gæster', 'Kvalitetsproblem']
+                isProvisionsComment
+                  ? lang === 'en' ? ['Meat', 'Fish', 'Dairy', 'Dry goods', 'Other'] : lang === 'sv' ? ['Kött', 'Fisk', 'Mejeri', 'Torrvaror', 'Annat'] : ['Kød', 'Fisk', 'Mejeri', 'Tørvarer', 'Andet']
+                  : lang === 'en'
+                    ? ['Dish was not popular', 'Too much produced', 'Fewer guests', 'Quality issue']
+                    : lang === 'sv'
+                      ? ['Rätten var inte populär', 'För mycket producerat', 'Färre gäster', 'Kvalitetsproblem']
+                      : ['Retten var ikke populær', 'For meget produceret', 'Færre gæster', 'Kvalitetsproblem']
               ).map((reason) => (
                 <button
                   key={reason}
@@ -582,7 +593,9 @@ export default function FoodWasteLocationPage({
               maxLength={500}
               rows={2}
               className="mt-3 w-full resize-none rounded-xl border border-red-500/30 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-red-500/30 dark:bg-[#082f2e] dark:text-white"
-              placeholder={lang === 'en' ? 'Reason…' : lang === 'sv' ? 'Orsak…' : 'Årsag…'}
+              placeholder={isProvisionsComment
+                ? lang === 'en' ? 'What was discarded?…' : lang === 'sv' ? 'Vad kastades?…' : 'Hvad er smidt ud?…'
+                : lang === 'en' ? 'Reason…' : lang === 'sv' ? 'Orsak…' : 'Årsag…'}
               autoFocus
             />
 
