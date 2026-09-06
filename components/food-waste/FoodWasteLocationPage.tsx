@@ -12,7 +12,7 @@ import {
   writePendingFoodWasteEntries,
 } from '@/lib/foodWasteOffline'
 import { localeFor, useTranslation } from '@/lib/LanguageContext'
-import { displayFoodWasteLocation } from '@/lib/foodWasteLocations'
+import { getFoodWasteLocationPresentation } from '@/lib/foodWasteLocations'
 import { queryString, secureFetch } from '@/lib/secureApi'
 import { syncAllPendingFoodWaste } from '@/lib/foodWasteSync'
 import { formatFoodWasteAmount } from '@/lib/formatFoodWasteAmount'
@@ -102,6 +102,7 @@ export default function FoodWasteLocationPage({
   const saveStartedRef = useRef(false)
 
   const today = getToday()
+  const locationPresentation = getFoodWasteLocationPresentation(locationName, lang)
 
   const syncPendingEntries = useCallback(async () => {
     const pendingEntries = readPendingFoodWasteEntries(vessel)
@@ -422,15 +423,30 @@ export default function FoodWasteLocationPage({
 
         <div className="text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
-            {displayFoodWasteLocation(locationName, lang)}
+            {locationPresentation.title}
           </h1>
-          <p className="text-sm text-gray-500 mt-1 dark:text-white/60">
-            {t.foodWaste}
+          <p className={`mt-1 text-sm font-semibold ${
+            locationPresentation.tone === 'morning'
+              ? 'text-cyan-700 dark:text-cyan-200'
+              : locationPresentation.tone === 'evening'
+                ? 'text-amber-700 dark:text-amber-200'
+                : 'text-gray-500 dark:text-white/60'
+          }`}>
+            {locationPresentation.subtitle || t.foodWaste}
           </p>
         </div>
       </header>
 
       <section className="rounded-3xl bg-white p-5 sm:p-6 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
+        {locationPresentation.subtitle && (
+          <div className={`mb-5 rounded-2xl border px-4 py-3 text-center font-semibold ${
+            locationPresentation.tone === 'morning'
+              ? 'border-cyan-200 bg-cyan-50 text-cyan-900 dark:border-cyan-300/20 dark:bg-cyan-400/10 dark:text-cyan-100'
+              : 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-300/20 dark:bg-amber-400/10 dark:text-amber-100'
+          }`}>
+            {locationPresentation.subtitle} · {locationPresentation.title}
+          </div>
+        )}
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500 dark:text-white/60">

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
+import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS, getFoodWasteLocationPresentation } from '@/lib/foodWasteLocations'
 import {
   cacheFoodWasteEntries,
   readCachedFoodWasteEntries,
@@ -254,7 +254,7 @@ export default function FoodWastePage({
         </p>
       )}
 
-      <div className={`mx-auto mb-7 grid w-full max-w-2xl ${vessel === 'crown' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1 rounded-2xl border border-black/5 bg-black/5 p-1.5 dark:border-white/10 dark:bg-black/20`}>
+      <div className={`mx-auto mb-4 grid w-full max-w-4xl ${vessel === 'crown' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1.5 rounded-2xl border border-black/5 bg-black/5 p-1.5 dark:border-white/10 dark:bg-black/20`}>
         {([
           { value: 'morning-buffet' as const, label: lang === 'en' ? 'Morning buffet' : lang === 'sv' ? 'Morgonbuffé' : 'Morgenbuffet' },
           { value: 'evening-buffet' as const, label: lang === 'en' ? 'Evening buffet' : lang === 'sv' ? 'Kvällsbuffé' : 'Aftenbuffet' },
@@ -267,15 +267,37 @@ export default function FoodWastePage({
             key={area.value}
             type="button"
             onClick={() => selectArea(area.value)}
-            className={`min-h-11 rounded-xl px-3 text-sm font-semibold transition active:scale-[0.98] ${
+            className={`min-h-14 rounded-xl px-4 text-base font-semibold transition active:scale-[0.98] ${
               activeArea === area.value
-                ? 'bg-white text-[#064e4c] shadow-sm dark:bg-white/15 dark:text-white'
+                ? area.value === 'evening-buffet'
+                  ? 'bg-amber-50 text-amber-900 shadow-sm ring-1 ring-amber-200/70 dark:bg-amber-400/15 dark:text-amber-100 dark:ring-amber-300/20'
+                  : area.value === 'morning-buffet'
+                    ? 'bg-cyan-50 text-[#064e4c] shadow-sm ring-1 ring-cyan-200/70 dark:bg-cyan-400/15 dark:text-cyan-50 dark:ring-cyan-300/20'
+                    : 'bg-white text-[#064e4c] shadow-sm dark:bg-white/15 dark:text-white'
                 : 'text-gray-500 hover:text-gray-800 dark:text-white/55 dark:hover:text-white'
             }`}
           >
             {area.label}
           </button>
         ))}
+      </div>
+
+      <div className={`mx-auto mb-5 flex max-w-4xl items-center justify-center rounded-2xl border px-4 py-3 text-center ${
+        activeArea === 'morning-buffet'
+          ? 'border-cyan-200/70 bg-cyan-50/60 text-[#064e4c] dark:border-cyan-300/15 dark:bg-cyan-400/[0.07] dark:text-cyan-50'
+          : activeArea === 'evening-buffet'
+            ? 'border-amber-200/70 bg-amber-50/60 text-amber-900 dark:border-amber-300/15 dark:bg-amber-400/[0.07] dark:text-amber-50'
+            : 'border-black/5 bg-white/60 text-gray-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-white'
+      }`}>
+        <h2 className="text-xl font-bold tracking-tight">
+          {activeArea === 'morning-buffet'
+            ? lang === 'en' ? 'Morning buffet' : lang === 'sv' ? 'Morgonbuffé' : 'Morgenbuffet'
+            : activeArea === 'evening-buffet'
+              ? lang === 'en' ? 'Evening buffet' : lang === 'sv' ? 'Kvällsbuffé' : 'Aftenbuffet'
+              : activeArea === 'mess'
+                ? lang === 'en' ? 'Crew mess' : lang === 'sv' ? 'Mässen' : 'Messen'
+                : lang === 'en' ? 'Production' : 'Produktion'}
+        </h2>
       </div>
 
       <div
@@ -339,17 +361,19 @@ export default function FoodWastePage({
                         const location = FOOD_WASTE_LOCATIONS.find((candidate) => candidate.slug === slug)
                         if (!location) return null
                         const todayAmount = totals.byLocation[location.name] ?? 0
-                        const displayName = displayFoodWasteLocation(location.name, lang)
-                        const label = displayName.split('·').pop()?.trim() || displayName.split(' ').pop() || displayName
+                        const presentation = getFoodWasteLocationPresentation(location.name, lang)
 
                         return (
                           <Link
                             key={slug}
                             href={`${basePath}/food-waste/${slug}`}
-                            className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
+                            className="flex h-[126px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
                           >
-                            <div className="flex h-full min-w-0 flex-col items-center justify-center gap-2">
-                              <span className="text-lg font-semibold leading-tight">{label}</span>
+                            <div className="flex h-full min-w-0 flex-col items-center justify-center gap-1.5">
+                              <span className={`text-xs font-bold uppercase tracking-[0.08em] ${presentation.tone === 'evening' ? 'text-amber-700 dark:text-amber-200' : 'text-cyan-700 dark:text-cyan-200'}`}>
+                                {presentation.subtitle}
+                              </span>
+                              <span className="text-xl font-semibold leading-tight">{presentation.title}</span>
                               <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
                                 {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
                               </span>

@@ -115,3 +115,25 @@ export function displayFoodWasteLocation(name: string, lang: string) {
 
   return danishNames[name] ?? name
 }
+
+export function getFoodWasteLocationPresentation(name: string, lang: string) {
+  const displayName = displayFoodWasteLocation(name, lang)
+  const isMorningBuffet = /^(Skagerak|Commodore) morgen (varmt|koldt)$/.test(name)
+  const isEveningBuffet = /^Skagerak aften (børnebuffet|koldt|varmt|øerne)$/.test(name)
+
+  if (!isMorningBuffet && !isEveningBuffet) {
+    return { title: displayName, subtitle: '', tone: 'neutral' as const }
+  }
+
+  const title = displayName.split('·').pop()?.trim() || displayName
+  const station = name.startsWith('Commodore') ? 'Commodore' : 'Skagerak'
+  const meal = isMorningBuffet
+    ? lang === 'en' ? 'morning buffet' : lang === 'sv' ? 'morgonbuffé' : 'morgenbuffet'
+    : lang === 'en' ? 'evening buffet' : lang === 'sv' ? 'kvällsbuffé' : 'aftenbuffet'
+
+  return {
+    title,
+    subtitle: `${station} ${meal}`,
+    tone: isMorningBuffet ? 'morning' as const : 'evening' as const,
+  }
+}
