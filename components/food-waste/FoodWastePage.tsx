@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
 import {
   cacheFoodWasteEntries,
@@ -106,6 +106,7 @@ export default function FoodWastePage({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeArea, setActiveArea] = useState<WasteArea>('morning-buffet')
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const today = getToday()
 
@@ -129,6 +130,24 @@ export default function FoodWastePage({
     } catch {
       // The selected tab still works for the current visit.
     }
+  }
+
+  const areaOrder: WasteArea[] = vessel === 'crown'
+    ? ['morning-buffet', 'evening-buffet', 'mess', 'production']
+    : ['morning-buffet', 'evening-buffet', 'mess']
+
+  function finishAreaSwipe(clientX: number, clientY: number) {
+    const start = swipeStartRef.current
+    swipeStartRef.current = null
+    if (!start) return
+
+    const deltaX = clientX - start.x
+    const deltaY = clientY - start.y
+    if (Math.abs(deltaX) < 70 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return
+
+    const currentIndex = areaOrder.indexOf(activeArea)
+    const nextIndex = deltaX < 0 ? currentIndex + 1 : currentIndex - 1
+    if (nextIndex >= 0 && nextIndex < areaOrder.length) selectArea(areaOrder[nextIndex])
   }
 
   useEffect(() => {
@@ -259,7 +278,17 @@ export default function FoodWastePage({
         ))}
       </div>
 
-      <div className="space-y-9 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
+      <div
+        className="touch-pan-y space-y-9 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0"
+        onTouchStart={(event) => {
+          const touch = event.touches[0]
+          swipeStartRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null
+        }}
+        onTouchEnd={(event) => {
+          const touch = event.changedTouches[0]
+          if (touch) finishAreaSwipe(touch.clientX, touch.clientY)
+        }}
+      >
         {LOCATION_GROUPS
           .filter((group) => vessel === 'crown' || group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' || group.title === 'Messen')
           .filter((group) =>
@@ -292,7 +321,47 @@ export default function FoodWastePage({
             </div>
             )}
 
-            {group.title === 'Messen' ? (
+            {group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' ? (
+              <div className={`grid gap-5 ${group.title === 'Morgenbuffet' ? 'lg:grid-cols-2' : ''}`}>
+                {(group.title === 'Morgenbuffet'
+                  ? [
+                      { title: 'Skagerak', slugs: group.slugs.slice(0, 2) },
+                      { title: 'Commodore', slugs: group.slugs.slice(2, 4) },
+                    ]
+                  : [{ title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs }]
+                ).map((buffetGroup) => (
+                  <div key={buffetGroup.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
+                    <h3 className="mb-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-white/60">
+                      {buffetGroup.title}
+                    </h3>
+                    <div className={`grid grid-cols-2 gap-3 ${group.title === 'Aftenbuffet' ? 'sm:grid-cols-4' : ''}`}>
+                      {buffetGroup.slugs.map((slug) => {
+                        const location = FOOD_WASTE_LOCATIONS.find((candidate) => candidate.slug === slug)
+                        if (!location) return null
+                        const todayAmount = totals.byLocation[location.name] ?? 0
+                        const displayName = displayFoodWasteLocation(location.name, lang)
+                        const label = displayName.split('·').pop()?.trim() || displayName.split(' ').pop() || displayName
+
+                        return (
+                          <Link
+                            key={slug}
+                            href={`${basePath}/food-waste/${slug}`}
+                            className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
+                          >
+                            <div className="flex h-full min-w-0 flex-col items-center justify-center gap-2">
+                              <span className="text-[15px] font-semibold leading-tight">{label}</span>
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
+                                {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
+                              </span>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : group.title === 'Messen' ? (
               <div className="grid gap-5 lg:grid-cols-3">
                 {[
                   { title: lang === 'en' ? 'Morning' : lang === 'sv' ? 'Morgon' : 'Morgen', slugs: group.slugs.slice(0, 2) },

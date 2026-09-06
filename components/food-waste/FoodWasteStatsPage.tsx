@@ -1538,7 +1538,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             )}
 
             {chart.kind === 'buffet' && (buffetView === 'morning' || buffetView === 'evening') && (
-              <div className="food-waste-print-hidden mt-2 grid grid-cols-2 gap-1 rounded-xl border border-teal-500/15 bg-teal-50/70 p-1 sm:grid-cols-5 dark:bg-teal-400/10">
+              <div className="food-waste-print-hidden mt-2 grid grid-cols-2 gap-1 rounded-xl border border-teal-500/15 bg-teal-50/70 p-1 dark:bg-teal-400/10">
                 {buffetDetailOptions.map((option) => (
                   <button
                     key={option.value}
@@ -1547,7 +1547,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                       setBuffetDetailView(option.value)
                       setSelectedPoint(null)
                     }}
-                    className={`min-w-0 rounded-lg px-2 py-2 text-xs font-semibold transition ${
+                    className={`min-w-0 rounded-lg px-2 py-2 text-xs font-semibold transition ${option.value === 'all' ? 'col-span-2' : ''} ${
                       buffetDetailView === option.value
                         ? 'bg-teal-700 text-white shadow-sm dark:bg-teal-500'
                         : 'text-teal-900/65 hover:text-teal-950 dark:text-teal-100/60'
