@@ -331,7 +331,7 @@ export default function FoodWastePage({
                   : [{ title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs }]
                 ).map((buffetGroup) => (
                   <div key={buffetGroup.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
-                    <h3 className="mb-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-white/60">
+                    <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-white/60">
                       {buffetGroup.title}
                     </h3>
                     <div className={`grid grid-cols-2 gap-3 ${group.title === 'Aftenbuffet' ? 'sm:grid-cols-4' : ''}`}>
@@ -349,7 +349,7 @@ export default function FoodWastePage({
                             className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
                           >
                             <div className="flex h-full min-w-0 flex-col items-center justify-center gap-2">
-                              <span className="text-[15px] font-semibold leading-tight">{label}</span>
+                              <span className="text-lg font-semibold leading-tight">{label}</span>
                               <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
                                 {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
                               </span>
@@ -369,7 +369,7 @@ export default function FoodWastePage({
                   { title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs.slice(4, 6) },
                 ].map((meal) => (
                   <div key={meal.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
-                    <h3 className="mb-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-white/60">
+                    <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-white/60">
                       {meal.title}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -386,7 +386,7 @@ export default function FoodWastePage({
                             className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
                           >
                             <div className="flex h-full min-w-0 flex-col items-center justify-center gap-2">
-                              <span className="text-[15px] font-semibold leading-tight">
+                              <span className="text-lg font-semibold leading-tight">
                                 {isPlateWaste
                                   ? lang === 'en' ? 'Plate waste' : lang === 'sv' ? 'Tallrikssvinn' : 'Tallerkenspild'
                                   : lang === 'en' ? 'Buffet waste' : lang === 'sv' ? 'Buffésvinn' : 'Buffetspild'}

@@ -21,6 +21,7 @@ export default function BottomNav() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const offlineFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const basePath = pathname.startsWith('/pearl') ? '/pearl' : '/crown'
 
   const tabs = [
@@ -53,6 +54,17 @@ export default function BottomNav() {
     if (!navigator.onLine) return
     for (const tab of tabs) router.prefetch(tab.href)
   }, [basePath, router])
+
+  useEffect(() => {
+    if (offlineFallbackRef.current) {
+      clearTimeout(offlineFallbackRef.current)
+      offlineFallbackRef.current = null
+    }
+  }, [pathname])
+
+  useEffect(() => () => {
+    if (offlineFallbackRef.current) clearTimeout(offlineFallbackRef.current)
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -100,7 +112,18 @@ export default function BottomNav() {
               onClick={(event) => {
                 if (navigator.onLine) return
                 event.preventDefault()
-                window.location.assign(tab.href)
+
+                // Keep offline tab changes as fast as normal in-app navigation.
+                // If an older installation is missing the cached RSC response,
+                // fall back to the service worker's cached full page.
+                const previousPath = window.location.pathname
+                router.push(tab.href)
+                if (offlineFallbackRef.current) clearTimeout(offlineFallbackRef.current)
+                offlineFallbackRef.current = setTimeout(() => {
+                  if (window.location.pathname === previousPath) {
+                    window.location.assign(tab.href)
+                  }
+                }, 1800)
               }}
               aria-label={tab.label}
               className={`
