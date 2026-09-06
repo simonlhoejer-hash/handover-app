@@ -75,6 +75,16 @@ function formatAmount(value: number, lang: string) {
   return formatFoodWasteAmount(value, lang)
 }
 
+function formatTime(value: string, lang: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--:--'
+
+  return new Intl.DateTimeFormat(localeFor(lang), {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
 function getEntryAmount(entry: FoodWasteEntry) {
   return Number(entry.quantity_kg) || 0
 }
@@ -608,6 +618,10 @@ export default function FoodWasteLocationPage({
                 <h3 className="font-semibold">
                   {formatDate(entry.waste_date, lang)}
                 </h3>
+                <p className="mt-0.5 text-sm font-medium text-gray-500 dark:text-white/60">
+                  {lang === 'en' ? 'Measured at' : lang === 'sv' ? 'Mätt kl.' : 'Målt kl.'}{' '}
+                  {formatTime(entry.created_at, lang)}
+                </p>
                 {entry.comment && (
                   <p className="mt-1 text-sm text-gray-500 dark:text-white/60">
                     {entry.comment}
