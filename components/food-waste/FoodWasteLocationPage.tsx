@@ -469,6 +469,12 @@ export default function FoodWasteLocationPage({
             placeholder="0,0"
             value={quantityKg}
             onChange={(event) => setQuantityKg(event.target.value)}
+            onFocus={(event) => {
+              const input = event.currentTarget
+              window.setTimeout(() => {
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              }, 180)
+            }}
           />
           <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-base font-medium text-gray-500 dark:text-white/60">
             kg
