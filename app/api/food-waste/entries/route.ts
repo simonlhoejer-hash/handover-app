@@ -1,7 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash } from 'node:crypto'
 import { parseAccessShip, requestHasShipAccess } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
 import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function normalizeClientId(value: unknown, ship: 'crown' | 'pearl') {
+  if (typeof value !== 'string') return null
+  const rawId = value.trim().slice(0, 100)
+  if (UUID_PATTERN.test(rawId)) return rawId
+  if (!/^[a-z0-9-]{8,100}$/i.test(rawId)) return null
+
+  // Measurements queued by older Android versions used a non-UUID client ID.
+  // Convert it deterministically so every retry resolves to the same row.
+  const hash = createHash('sha256').update(`${ship}:${rawId}`).digest('hex').slice(0, 32)
+  const versioned = `${hash.slice(0, 12)}4${hash.slice(13)}`
+  const variant = `${versioned.slice(0, 16)}8${versioned.slice(17)}`
+  return `${variant.slice(0, 8)}-${variant.slice(8, 12)}-${variant.slice(12, 16)}-${variant.slice(16, 20)}-${variant.slice(20)}`
+}
 
 export async function GET(request: NextRequest) {
   const ship = parseAccessShip(request.nextUrl.searchParams.get('ship'))
@@ -50,9 +67,7 @@ export async function POST(request: NextRequest) {
   const locationName = typeof body.location_name === 'string' ? body.location_name.trim().slice(0, 200) : ''
   const quantityKg = Number(body.quantity_kg)
   const comment = typeof body.comment === 'string' ? body.comment.slice(0, 1000) : null
-  const clientId = typeof body.client_id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.client_id)
-    ? body.client_id
-    : null
+  const clientId = normalizeClientId(body.client_id, ship)
   const locationIsAllowed = FOOD_WASTE_LOCATIONS.some(
     (location) =>
       location.name === locationName &&

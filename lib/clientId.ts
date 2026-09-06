@@ -5,11 +5,21 @@ export function createClientId(prefix = '') {
     return `${prefix}${cryptoApi.randomUUID()}`
   }
 
+  const bytes = new Uint8Array(16)
   if (cryptoApi && typeof cryptoApi.getRandomValues === 'function') {
-    const values = new Uint32Array(4)
-    cryptoApi.getRandomValues(values)
-    return `${prefix}${Array.from(values, (value) => value.toString(16).padStart(8, '0')).join('')}`
+    cryptoApi.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
   }
 
-  return `${prefix}${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+  // Keep the fallback RFC 4122 compatible. Older Android browsers often have
+  // getRandomValues(), but not randomUUID(). The API can then use this ID for
+  // idempotency exactly as it does in modern browsers.
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
+  const uuid = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+  return `${prefix}${uuid}`
 }
