@@ -7,10 +7,10 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ ship: string }>
-  searchParams: Promise<{ code?: string | string[] }>
+  searchParams: Promise<{ code?: string | string[]; error?: string | string[] }>
 }) {
   const { ship } = await params
-  const { code } = await searchParams
+  const { code, error } = await searchParams
 
   if (ship !== 'crown' && ship !== 'pearl') notFound()
 
@@ -23,6 +23,7 @@ export default async function Page({
       ship={accessShip}
       destination={destination}
       initialCode={initialCode}
+      initialError={typeof error === 'string' ? error : ''}
     />
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { AlertCircle, ArrowRight, LockKeyhole } from 'lucide-react'
 import type { AccessShip } from '@/lib/shipAccess'
@@ -9,57 +9,29 @@ type Props = {
   ship: AccessShip
   destination: string
   initialCode?: string
+  initialError?: string
 }
 
 export default function ShipAccessForm({
   ship,
   destination,
   initialCode = '',
+  initialError = '',
 }: Props) {
   const [code, setCode] = useState(initialCode)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(
+    initialError === 'wrong'
+      ? 'Forkert kode. Prøv igen.'
+      : initialError === 'config'
+        ? 'Serverens adgang er ikke konfigureret endnu.'
+        : ''
+  )
   const shipName = ship === 'crown' ? 'Nordic Crown' : 'Nordic Pearl'
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  function submit() {
     setLoading(true)
     setError('')
-
-    let response: Response
-    try {
-      response = await fetch('/api/access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ship, code }),
-      })
-    } catch {
-      setLoading(false)
-      setError('Ingen forbindelse. Prøv igen, når nettet er tilbage.')
-      return
-    }
-
-    setLoading(false)
-
-    const result = (await response.json().catch(() => null)) as {
-      destination?: string
-      error?: string
-    } | null
-
-    if (!response.ok) {
-      setError(result?.error || 'Koden kunne ikke kontrolleres.')
-      return
-    }
-
-    if ('serviceWorker' in navigator) {
-      void navigator.serviceWorker.ready.then((registration) => {
-        registration.active?.postMessage({ type: 'WARM_SHIP', ship })
-      }).catch(() => undefined)
-    }
-
-    // Force the first protected navigation through the network so an older
-    // offline shell can never mask a successful login.
-    window.location.replace(`${result?.destination || destination}?login=1`)
   }
 
   return (
@@ -100,8 +72,11 @@ export default function ShipAccessForm({
           </p>
         </div>
 
-        <form onSubmit={submit} className="mt-8 space-y-4">
+        <form action="/api/access" method="post" onSubmit={submit} className="mt-8 space-y-4">
+          <input type="hidden" name="ship" value={ship} />
+          <input type="hidden" name="destination" value={destination} />
           <input
+            name="code"
             type="text"
             inputMode="text"
             autoComplete="off"

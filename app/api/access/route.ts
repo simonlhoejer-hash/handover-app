@@ -15,10 +15,26 @@ function isAccessShip(value: unknown): value is AccessShip {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as {
+  const isFormRequest = request.headers.get('content-type')?.includes('form') ?? false
+  const body = (isFormRequest
+    ? await request.formData().then((form) => ({
+        ship: form.get('ship'),
+        code: form.get('code'),
+        destination: form.get('destination'),
+      })).catch(() => null)
+    : await request.json().catch(() => null)) as {
     ship?: unknown
     code?: unknown
+    destination?: unknown
   } | null
+
+  const formError = (reason: 'wrong' | 'config', status: number, message: string) => {
+    if (!isFormRequest) return NextResponse.json({ error: message }, { status })
+    const ship = body?.ship === 'pearl' ? 'pearl' : 'crown'
+    const url = new URL(`/${ship}/adgang`, request.url)
+    url.searchParams.set('error', reason)
+    return NextResponse.redirect(url, 303)
+  }
 
   let valid = false
   let souschef = false
@@ -38,23 +54,17 @@ export async function POST(request: Request) {
       (await isCorrectAccessCode(body.ship, body.code))
     )
   } catch {
-    return NextResponse.json(
-      { error: 'Serverens adgang er ikke konfigureret endnu.' },
-      { status: 503 }
-    )
+    return formError('config', 503, 'Serverens adgang er ikke konfigureret endnu.')
   }
 
   if ((!valid && !souschef) || !body || !isAccessShip(body.ship)) {
-    return NextResponse.json(
-      { error: 'Forkert kode. Prøv igen.' },
-      { status: 401 }
-    )
+    return formError('wrong', 401, 'Forkert kode. Prøv igen.')
   }
 
-  const response = NextResponse.json({
-    ok: true,
-    destination: souschef ? '/crown/souschef' : `/${body.ship}`,
-  })
+  const destination = souschef ? '/crown/souschef' : `/${body.ship}`
+  const response = isFormRequest
+    ? NextResponse.redirect(new URL(`${destination}?login=1`, request.url), 303)
+    : NextResponse.json({ ok: true, destination })
 
   if (souschef) {
     response.cookies.set({
