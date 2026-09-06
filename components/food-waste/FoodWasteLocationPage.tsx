@@ -244,7 +244,7 @@ export default function FoodWasteLocationPage({
   }, [entries, today])
 
   const historicalDailyAverage = useMemo(() => {
-    if (!locationName.startsWith('Messen ')) return 0
+    if (!locationName.startsWith('Messen ') && locationName !== 'Produktion Proviant') return 0
 
     const dailyTotals = new Map<string, number>()
     for (const entry of entries) {
@@ -267,7 +267,7 @@ export default function FoodWasteLocationPage({
     historicalDailyAverage > 0 &&
     projectedTodayTotal > historicalDailyAverage * 1.4 &&
     projectedTodayTotal - historicalDailyAverage >= 2
-  const requiresComment = requiresWasteReason || isProvisionsComment
+  const requiresComment = requiresWasteReason
 
   async function saveEntry(value: string, comment: string | null = null) {
     if (!isFoodWasteLocationOpen(locationName)) {
