@@ -273,10 +273,10 @@ export default function FoodWastePage({
     <main className="mx-auto max-w-5xl px-4 pb-8 pt-4 lg:max-w-7xl lg:pb-24 lg:pt-3">
       <header className="mb-6 flex flex-col items-center text-center lg:mb-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
             {t.foodWaste}
           </h1>
-          <p className="mt-2 text-sm text-gray-500 dark:text-white/60">
+          <p className="mt-2 text-sm text-gray-500 md:text-lg dark:text-white/60">
             {t.foodWasteSubtitle}
           </p>
         </div>
@@ -301,7 +301,7 @@ export default function FoodWastePage({
             key={area.value}
             type="button"
             onClick={() => selectArea(area.value)}
-            className={`min-h-14 rounded-xl px-4 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${
+            className={`min-h-14 rounded-xl px-4 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 md:min-h-16 md:text-xl ${
               visibleArea === area.value
                 ? area.value === 'evening-buffet'
                   ? 'bg-amber-50 text-amber-900 shadow-sm ring-1 ring-amber-200/70 dark:bg-amber-400/15 dark:text-amber-100 dark:ring-amber-300/20'
@@ -319,7 +319,7 @@ export default function FoodWastePage({
                 {area.label}
               </span>
               {isAreaLocked(area.value) && (
-                <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider">
+                <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider md:text-xs">
                   {lang === 'en' ? 'Closed' : lang === 'sv' ? 'Stängd' : 'Lukket'}
                 </span>
               )}
@@ -335,7 +335,7 @@ export default function FoodWastePage({
             ? 'border-amber-200/70 bg-amber-50/60 text-amber-900 dark:border-amber-300/15 dark:bg-amber-400/[0.07] dark:text-amber-50'
             : 'border-black/5 bg-white/60 text-gray-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-white'
       }`}>
-        <h2 className="text-xl font-bold tracking-tight">
+        <h2 className="text-xl font-bold tracking-tight md:text-2xl">
           {visibleArea === 'morning-buffet'
             ? lang === 'en' ? 'Morning buffet' : lang === 'sv' ? 'Morgonbuffé' : 'Morgenbuffet'
             : visibleArea === 'evening-buffet'
@@ -376,7 +376,7 @@ export default function FoodWastePage({
             {(group.title === 'Produktion' || group.title.startsWith('D')) && (
             <div className="mb-4 flex items-center justify-center gap-4 lg:mb-4 lg:gap-3">
               <div className="h-px flex-1 bg-gradient-to-l from-gray-300/80 to-transparent dark:from-white/30" />
-              <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-white/70">
+              <h2 className="shrink-0 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 md:text-base dark:text-white/70">
                 {group.title === 'Produktion'
                   ? lang === 'en' ? 'Production' : lang === 'sv' ? 'Produktion' : 'Produktion'
                   : group.title === 'Messen'
@@ -399,7 +399,7 @@ export default function FoodWastePage({
                   : [{ title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs }]
                 ).map((buffetGroup) => (
                   <div key={buffetGroup.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
-                    <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-white/60">
+                    <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 md:text-base dark:text-white/60">
                       {buffetGroup.title}
                     </h3>
                     <div className={`grid grid-cols-2 gap-3 ${group.title === 'Aftenbuffet' ? 'sm:grid-cols-4' : ''}`}>
@@ -413,14 +413,14 @@ export default function FoodWastePage({
                           <Link
                             key={slug}
                             href={`${basePath}/food-waste/${slug}`}
-                            className="flex h-[126px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
+                            className="flex h-[126px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] md:h-[146px] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
                           >
                             <div className="flex h-full min-w-0 flex-col items-center justify-center gap-1.5">
-                              <span className={`text-xs font-bold uppercase tracking-[0.08em] ${presentation.tone === 'evening' ? 'text-amber-700 dark:text-amber-200' : 'text-cyan-700 dark:text-cyan-200'}`}>
+                              <span className={`text-xs font-bold uppercase tracking-[0.08em] md:text-sm ${presentation.tone === 'evening' ? 'text-amber-700 dark:text-amber-200' : 'text-cyan-700 dark:text-cyan-200'}`}>
                                 {presentation.subtitle}
                               </span>
-                              <span className="text-xl font-semibold leading-tight">{presentation.title}</span>
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
+                              <span className="text-xl font-semibold leading-tight md:text-2xl">{presentation.title}</span>
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium md:text-sm ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
                                 {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
                               </span>
                             </div>
@@ -439,7 +439,7 @@ export default function FoodWastePage({
                   { title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs.slice(4, 6) },
                 ].map((meal) => (
                   <div key={meal.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
-                    <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-white/60">
+                    <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 md:text-base dark:text-white/60">
                       {meal.title}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -453,15 +453,15 @@ export default function FoodWastePage({
                           <Link
                             key={slug}
                             href={`${basePath}/food-waste/${slug}`}
-                            className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
+                            className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] md:h-[132px] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
                           >
                             <div className="flex h-full min-w-0 flex-col items-center justify-center gap-2">
-                              <span className="text-lg font-semibold leading-tight">
+                              <span className="text-lg font-semibold leading-tight md:text-2xl">
                                 {isPlateWaste
                                   ? lang === 'en' ? 'Plate waste' : lang === 'sv' ? 'Tallrikssvinn' : 'Tallerkenspild'
                                   : lang === 'en' ? 'Buffet waste' : lang === 'sv' ? 'Buffésvinn' : 'Buffetspild'}
                               </span>
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium md:text-sm ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
                                 {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
                               </span>
                             </div>
@@ -521,12 +521,13 @@ export default function FoodWastePage({
                       dark:text-white
                       dark:shadow-[0_8px_24px_rgba(0,0,0,0.12)]
                       sm:min-w-0
+                      md:h-[140px]
                       lg:h-[112px]
                       lg:p-4
                     "
                   >
                     <div className="flex h-full flex-col items-center justify-center gap-2">
-                      <h3 className="flex min-h-10 flex-col items-center justify-center text-lg font-semibold leading-tight tracking-tight lg:text-[17px]">
+                      <h3 className="flex min-h-10 flex-col items-center justify-center text-lg font-semibold leading-tight tracking-tight md:min-h-14 md:text-[22px] lg:text-[22px]">
                         {group.title === 'Produktion' ? (
                           <>
                             <span className="block">Produktion</span>
@@ -546,7 +547,7 @@ export default function FoodWastePage({
                       <span
                         className={`
                           px-3 py-1
-                          text-xs font-medium
+                          text-xs font-medium md:text-sm
                           rounded-full
                           ${
                             todayAmount > 0
