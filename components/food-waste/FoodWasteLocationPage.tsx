@@ -51,6 +51,16 @@ function netWasteWeight(grossWeight: number) {
   return Math.max(0, Math.round((grossWeight - AVERAGE_BUCKET_WEIGHT_KG) * 100) / 100)
 }
 
+function normalizeWeightInput(value: string) {
+  const cleaned = value
+    .replace(/[.٫،]/g, ',')
+    .replace(/[^0-9,]/g, '')
+  const [whole = '', ...decimalParts] = cleaned.split(',')
+  return decimalParts.length > 0
+    ? `${whole},${decimalParts.join('')}`
+    : whole
+}
+
 function getToday() {
   const now = new Date()
   const year = now.getFullYear()
@@ -530,12 +540,15 @@ export default function FoodWasteLocationPage({
         <div className="mt-5 relative">
           <input
             ref={kgInputRef}
+            type="text"
             inputMode="decimal"
+            pattern="[0-9]*[.,]?[0-9]*"
+            autoComplete="off"
             className="w-full rounded-2xl bg-gray-100 px-4 py-5 pr-16 text-4xl font-semibold text-gray-900 border border-black/5 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#082f2e] dark:text-white dark:border-white/10"
             placeholder="0,0"
             value={quantityKg}
             disabled={isBuffetLocked}
-            onChange={(event) => setQuantityKg(event.target.value)}
+            onChange={(event) => setQuantityKg(normalizeWeightInput(event.target.value))}
             onFocus={(event) => {
               const input = event.currentTarget
               window.setTimeout(() => {
