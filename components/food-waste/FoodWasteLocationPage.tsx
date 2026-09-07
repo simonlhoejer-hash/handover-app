@@ -45,6 +45,11 @@ type FoodWastePayload = {
 }
 
 const SAVE_TIMEOUT_MS = 6000
+const AVERAGE_BUCKET_WEIGHT_KG = (1 + 1.6 + 1.5) / 3
+
+function netWasteWeight(grossWeight: number) {
+  return Math.max(0, Math.round((grossWeight - AVERAGE_BUCKET_WEIGHT_KG) * 100) / 100)
+}
 
 function getToday() {
   const now = new Date()
@@ -260,7 +265,8 @@ export default function FoodWasteLocationPage({
     return totals.reduce((sum, total) => sum + total, 0) / totals.length
   }, [entries, locationName, today])
 
-  const enteredQuantity = Number(quantityKg.trim().replace(',', '.')) || 0
+  const enteredGrossQuantity = Number(quantityKg.trim().replace(',', '.')) || 0
+  const enteredQuantity = netWasteWeight(enteredGrossQuantity)
   const projectedTodayTotal = todayTotal + enteredQuantity
   const isProvisionsComment = locationName === 'Produktion Proviant'
   const requiresWasteReason =
@@ -280,10 +286,19 @@ export default function FoodWasteLocationPage({
       )
       return
     }
-    const quantity = Number(value.replace(',', '.'))
+    const grossQuantity = Number(value.replace(',', '.'))
+    const quantity = netWasteWeight(grossQuantity)
 
-    if (!quantity || quantity <= 0) {
-      setError(t.writeKg)
+    if (!Number.isFinite(grossQuantity) || quantity <= 0) {
+      setError(
+        grossQuantity > 0
+          ? lang === 'en'
+            ? 'The total weight must be greater than the bucket weight of 1.37 kg.'
+            : lang === 'sv'
+              ? 'Totalvikten måste vara högre än hinkens vikt på 1,37 kg.'
+              : 'Den samlede vægt skal være højere end spandens vægt på 1,37 kg.'
+          : t.writeKg
+      )
       saveStartedRef.current = false
       return
     }
@@ -380,7 +395,8 @@ export default function FoodWasteLocationPage({
 
   useEffect(() => {
     const value = quantityKg.trim()
-    const quantity = Number(value.replace(',', '.'))
+    const grossQuantity = Number(value.replace(',', '.'))
+    const quantity = netWasteWeight(grossQuantity)
 
     if (!value || !Number.isFinite(quantity) || quantity <= 0) {
       saveStartedRef.current = false
@@ -530,6 +546,21 @@ export default function FoodWasteLocationPage({
           <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-base font-medium text-gray-500 dark:text-white/60">
             kg
           </span>
+        </div>
+
+        <div className="mt-3 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-center text-sm font-medium text-emerald-800 dark:text-emerald-200">
+          {lang === 'en'
+            ? 'Enter the weight with the bucket — 1.37 kg is deducted automatically.'
+            : lang === 'sv'
+              ? 'Skriv vikten med hinken — 1,37 kg dras av automatiskt.'
+              : 'Skriv vægten med spanden — 1,37 kg trækkes automatisk fra.'}
+          {enteredGrossQuantity > AVERAGE_BUCKET_WEIGHT_KG && (
+            <span className="mt-1 block font-semibold">
+              {lang === 'en' ? 'Saved as' : lang === 'sv' ? 'Sparas som' : 'Gemmes som'}{' '}
+              {formatAmount(enteredQuantity, lang)}
+              {lang === 'en' ? ' food waste' : lang === 'sv' ? ' matsvinn' : ' madspild'}
+            </span>
+          )}
         </div>
 
         <p className="mt-3 text-center text-sm text-gray-500 dark:text-white/60">
