@@ -1,4 +1,4 @@
-const CACHE_VERSION = '53'
+const CACHE_VERSION = '54'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 

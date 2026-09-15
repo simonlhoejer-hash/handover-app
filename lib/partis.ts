@@ -16,6 +16,7 @@ export const PARTIS: Record<string, string[]> = {
   ],
   pearl: [
     'SYD',
+    'SYD SPLIT',
     'KULL',
     'Konditor',
     'Besætning',
@@ -31,6 +32,7 @@ export const PARTIS: Record<string, string[]> = {
     'POTTEN',
     'STOR SKYLLERI',
     'KULL SKYLLERI',
+    'PERIODE SKYLLERI',
     'SKAGERAK',
     'NATSKYLLER',
   ],
@@ -70,6 +72,7 @@ export const PEARL_PARTI_GROUPS = [
     title: 'Partier',
     items: [
       'SYD',
+      'SYD SPLIT',
       'KULL',
       'Konditor',
       'Besætning',
@@ -86,12 +89,20 @@ export const PEARL_PARTI_GROUPS = [
   },
   {
     title: 'Skyllerier',
-    items: ['POTTEN', 'STOR SKYLLERI', 'KULL SKYLLERI', 'SKAGERAK', 'NATSKYLLER'],
+    items: [
+      'POTTEN',
+      'STOR SKYLLERI',
+      'KULL SKYLLERI',
+      'PERIODE SKYLLERI',
+      'SKAGERAK',
+      'NATSKYLLER',
+    ],
   },
 ] as const
 
 const PEARL_PARTI_LABELS: Record<string, string> = {
   SYD: 'Syd',
+  'SYD SPLIT': 'Syd split',
   KULL: 'Kull',
   'KOLD A LA CARDE': 'Kold à la carte',
   BAGER: 'Bager',
@@ -102,6 +113,7 @@ const PEARL_PARTI_LABELS: Record<string, string> = {
   POTTEN: 'Potten',
   'STOR SKYLLERI': 'Stor skylleri',
   'KULL SKYLLERI': 'Kull skylleri',
+  'PERIODE SKYLLERI': 'Periode skylleri',
   SKAGERAK: 'Skagerak',
   NATSKYLLER: 'Natskyller',
 }
