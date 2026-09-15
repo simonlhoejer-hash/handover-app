@@ -7,7 +7,11 @@ import {
   ArrowRight,
   CheckCircle2,
   ChefHat,
+  ClipboardList,
   Clock3,
+  FolderKanban,
+  LayoutDashboard,
+  ListTodo,
   LogOut,
   Plus,
   Trash2,
@@ -17,6 +21,7 @@ import type { AccessShip } from '@/lib/shipAccess'
 
 type TaskStatus = 'new' | 'doing' | 'waiting' | 'done'
 type TaskPriority = 'normal' | 'important' | 'critical'
+type DashboardTab = 'overview' | 'tasks' | 'folders' | 'handovers'
 
 type ManagerTask = {
   id: string
@@ -55,6 +60,7 @@ export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) 
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [showDone, setShowDone] = useState(false)
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
 
   useEffect(() => {
     void fetch(`/api/souschef?ship=${ship}`, { cache: 'no-store' })
@@ -138,7 +144,7 @@ export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) 
   }
 
   return (
-    <main className="min-h-screen bg-[var(--nordic-bg)] px-4 py-7 text-gray-900 dark:bg-[#082d2d] dark:text-white sm:px-6">
+    <main className="min-h-screen bg-[var(--nordic-bg)] px-4 py-7 pb-28 text-gray-900 dark:bg-[#082d2d] dark:text-white sm:px-6">
       <div className="mx-auto max-w-5xl">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -155,14 +161,23 @@ export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) 
           </button>
         </header>
 
+        {activeTab === 'overview' && <>
         <section className="mt-7 grid gap-3 sm:grid-cols-3">
           <Summary label="Åbne punkter" value={openTasks.length} icon={<Clock3 size={19} />} />
           <Summary label="Kritiske" value={openTasks.filter((task) => task.priority === 'critical').length} icon={<AlertTriangle size={19} />} danger />
           <Summary label="Afsluttet" value={doneTasks.length} icon={<CheckCircle2 size={19} />} />
         </section>
 
-        <SouschefAdmin ship={ship} />
+        <section className="mt-7 rounded-3xl border border-black/5 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#0d3b3a]">
+          <h2 className="text-xl font-semibold">Souschef-dashboard</h2>
+          <p className="mt-2 text-sm leading-relaxed text-gray-500 dark:text-white/60">Brug bundlinjen til opgaver, mapper og overleveringer. Kun det valgte område vises, så siden er nem at overskue.</p>
+        </section>
+        </>}
 
+        {activeTab === 'folders' && <SouschefAdmin ship={ship} view="folders" />}
+        {activeTab === 'handovers' && <SouschefAdmin ship={ship} view="handovers" />}
+
+        {activeTab === 'tasks' && <>
         <section className="mt-7 rounded-3xl border border-black/5 bg-white p-5 shadow-[0_18px_45px_rgba(6,78,76,.08)] dark:border-white/10 dark:bg-[#0d3b3a] sm:p-7">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -205,9 +220,23 @@ export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) 
             {showDone && <div className="mt-3 space-y-3">{doneTasks.map((task) => <TaskCard key={task.id} task={task} onUpdate={updateTask} onDelete={deleteTask} />)}</div>}
           </section>
         )}
+        </>}
       </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(6,78,76,.10)] backdrop-blur-xl dark:border-white/10 dark:bg-[#073f3d]/95" aria-label="Souschef-navigation">
+        <div className="mx-auto grid max-w-xl grid-cols-4 gap-1">
+          <DashboardNavButton active={activeTab === 'overview'} label="Overblik" icon={<LayoutDashboard size={20} />} onClick={() => setActiveTab('overview')} />
+          <DashboardNavButton active={activeTab === 'tasks'} label="Opgaver" icon={<ListTodo size={20} />} onClick={() => setActiveTab('tasks')} />
+          <DashboardNavButton active={activeTab === 'folders'} label="Mapper" icon={<FolderKanban size={20} />} onClick={() => setActiveTab('folders')} />
+          <DashboardNavButton active={activeTab === 'handovers'} label="Overleveringer" icon={<ClipboardList size={20} />} onClick={() => setActiveTab('handovers')} />
+        </div>
+      </nav>
     </main>
   )
+}
+
+function DashboardNavButton({ active, label, icon, onClick }: { active: boolean; label: string; icon: React.ReactNode; onClick: () => void }) {
+  return <button type="button" onClick={onClick} aria-current={active ? 'page' : undefined} className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-semibold transition sm:text-xs ${active ? 'bg-[#064e4c] text-white' : 'text-gray-500 hover:bg-black/5 dark:text-white/60 dark:hover:bg-white/10'}`}>{icon}<span className="truncate">{label}</span></button>
 }
 
 function Summary({ label, value, icon, danger = false }: { label: string; value: number; icon: React.ReactNode; danger?: boolean }) {

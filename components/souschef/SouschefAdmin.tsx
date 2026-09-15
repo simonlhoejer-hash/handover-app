@@ -14,7 +14,7 @@ type Handover = {
   status: 'draft' | 'published'
 }
 
-export default function SouschefAdmin({ ship }: { ship: AccessShip }) {
+export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 'folders' | 'handovers' }) {
   const [folders, setFolders] = useState<Folder[]>([])
   const [handovers, setHandovers] = useState<Handover[]>([])
   const [name, setName] = useState('')
@@ -109,7 +109,7 @@ export default function SouschefAdmin({ ship }: { ship: AccessShip }) {
     <section className="mt-7 space-y-6 rounded-3xl border border-black/5 bg-white p-5 shadow-[0_18px_45px_rgba(6,78,76,.08)] dark:border-white/10 dark:bg-[#0d3b3a] sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold">Administrér overlevering</h2>
+          <h2 className="text-xl font-semibold">{view === 'folders' ? 'Administrér mapper' : 'Administrér overleveringer'}</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-white/60">Ændringer gælder kun {ship === 'crown' ? 'Crown' : 'Pearl'}.</p>
         </div>
         <button type="button" onClick={() => void load()} className="rounded-xl p-3 hover:bg-black/5 dark:hover:bg-white/10" aria-label="Opdatér"><RefreshCw size={18} /></button>
@@ -117,7 +117,7 @@ export default function SouschefAdmin({ ship }: { ship: AccessShip }) {
 
       {message && <p className="rounded-xl bg-[#347f7a]/10 px-4 py-3 text-sm font-semibold text-[#216762] dark:text-[#a8d5d1]">{message}</p>}
 
-      <div>
+      {view === 'folders' && <div>
         <h3 className="font-semibold">Ny mappe</h3>
         <form onSubmit={addFolder} className="mt-3 grid gap-3 sm:grid-cols-[1fr_190px_auto]">
           <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Mappens navn" maxLength={80} required className="rounded-xl border border-black/10 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/5" />
@@ -135,9 +135,9 @@ export default function SouschefAdmin({ ship }: { ship: AccessShip }) {
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
-      <div className="border-t border-black/5 pt-6 dark:border-white/10">
+      {view === 'handovers' && <div>
         <h3 className="font-semibold">Overleveringer</h3>
         <p className="mt-1 text-sm text-gray-500 dark:text-white/60">Sletning er permanent og fjerner også kommentarer og billeder.</p>
         <div className="mt-4 max-h-[32rem] space-y-2 overflow-y-auto">
@@ -151,7 +151,7 @@ export default function SouschefAdmin({ ship }: { ship: AccessShip }) {
             </div>
           ))}
         </div>
-      </div>
+      </div>}
     </section>
   )
 }
