@@ -19,7 +19,8 @@ begin
     select 1 from public.handover_notes
     where id = p_handover_id
       and department = p_handover_department
-      and parti not like '__%'
+      and parti <> '__handover_folders__'
+      and parti <> 'Souschef opfÃ¸lgning'
   ) then
     raise exception 'Handover not found';
   end if;
