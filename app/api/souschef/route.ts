@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
 import {
-  SOUSCHEF_ACCESS_COOKIE_NAME,
-  verifySouschefAccessToken,
+  type AccessShip,
 } from '@/lib/shipAccess'
+import { parseAccessShip, requestHasSouschefAccess } from '@/lib/apiAccess'
 
 const PARTI = 'Souschef opfølgning'
 
@@ -20,15 +20,6 @@ type ManagerTask = {
   priority: TaskPriority
   createdAt: string
   updatedAt: string
-}
-
-async function hasAccess(request: NextRequest) {
-  const token = request.cookies.get(SOUSCHEF_ACCESS_COOKIE_NAME)?.value
-  try {
-    return await verifySouschefAccessToken(token)
-  } catch {
-    return false
-  }
 }
 
 function cleanText(value: unknown, max: number) {
@@ -62,22 +53,23 @@ function cleanTasks(value: unknown): ManagerTask[] {
   })
 }
 
-async function readRow() {
+async function readRow(ship: AccessShip) {
   return getSupabaseAdmin()
     .from('handover_notes')
     .select('id,note,updated_at')
-    .eq('department', 'crown')
+    .eq('department', ship)
     .eq('parti', PARTI)
     .eq('status', 'draft')
     .maybeSingle()
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await hasAccess(request))) {
+  const ship = parseAccessShip(request.nextUrl.searchParams.get('ship'))
+  if (!ship || !(await requestHasSouschefAccess(request, ship))) {
     return NextResponse.json({ error: 'Ingen adgang.' }, { status: 401 })
   }
 
-  const { data, error } = await readRow()
+  const { data, error } = await readRow(ship)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   let tasks: ManagerTask[] = []
@@ -90,20 +82,19 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await hasAccess(request))) {
+  const body = await request.json().catch(() => null) as { ship?: unknown; tasks?: unknown } | null
+  const ship = parseAccessShip(typeof body?.ship === 'string' ? body.ship : null)
+  if (!ship || !(await requestHasSouschefAccess(request, ship))) {
     return NextResponse.json({ error: 'Ingen adgang.' }, { status: 401 })
   }
-
-  const body = await request.json().catch(() => null) as { tasks?: unknown } | null
-  if (!body) return NextResponse.json({ error: 'Ugyldige data.' }, { status: 400 })
-  const tasks = cleanTasks(body.tasks)
-  const existing = await readRow()
+  const tasks = cleanTasks(body?.tasks)
+  const existing = await readRow(ship)
   if (existing.error) {
     return NextResponse.json({ error: existing.error.message }, { status: 500 })
   }
 
   const payload = {
-    department: 'crown',
+    department: ship,
     parti: PARTI,
     author_name: 'Souschef',
     receiver_name: 'Næste souschef',

@@ -81,8 +81,9 @@ Opret `.env.local` lokalt. Filen må ikke lægges på GitHub.
 NEXT_PUBLIC_SUPABASE_URL=
 SUPABASE_SECRET_KEY=
 CROWN_ACCESS_CODE=
-SOUSCHEF_ACCESS_CODE=
+CROWN_SOUSCHEF_ACCESS_CODE=
 PEARL_ACCESS_CODE=
+PEARL_SOUSCHEF_ACCESS_CODE=
 ACCESS_SESSION_SECRET=
 ```
 
@@ -98,6 +99,7 @@ De aktuelle SQL-definitioner ligger i [`lib/supabase`](lib/supabase):
 4. `handover-performance.sql` – indeks til hurtigere statusopslag
 5. `handover-retention.sql` – automatisk sletning efter 12 måneder
 6. `secure-server-access.sql` – fjerner offentlig database- og storageadgang efter den sikre serverudgave er deployet
+7. `souschef-admin-delete.sql` – giver serveren adgang til at slette en valgt overlevering efter admin-kontrol
 
 Kør aldrig `secure-server-access.sql`, før den nye app er udgivet med `SUPABASE_SECRET_KEY`; ellers mister den nuværende app midlertidigt forbindelsen til data.
 

@@ -12,6 +12,8 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react'
+import SouschefAdmin from '@/components/souschef/SouschefAdmin'
+import type { AccessShip } from '@/lib/shipAccess'
 
 type TaskStatus = 'new' | 'doing' | 'waiting' | 'done'
 type TaskPriority = 'normal' | 'important' | 'critical'
@@ -42,7 +44,7 @@ const statusStyles: Record<TaskStatus, string> = {
   done: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-200',
 }
 
-export default function SouschefPage() {
+export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) {
   const [tasks, setTasks] = useState<ManagerTask[]>([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -55,7 +57,7 @@ export default function SouschefPage() {
   const [showDone, setShowDone] = useState(false)
 
   useEffect(() => {
-    void fetch('/api/souschef', { cache: 'no-store' })
+    void fetch(`/api/souschef?ship=${ship}`, { cache: 'no-store' })
       .then(async (response) => {
         const result = await response.json()
         if (!response.ok) throw new Error(result.error)
@@ -63,7 +65,7 @@ export default function SouschefPage() {
       })
       .catch(() => setMessage('Punkterne kunne ikke hentes.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [ship])
 
   const openTasks = useMemo(() => tasks.filter((task) => task.status !== 'done'), [tasks])
   const doneTasks = useMemo(() => tasks.filter((task) => task.status === 'done'), [tasks])
@@ -76,7 +78,7 @@ export default function SouschefPage() {
       const response = await fetch('/api/souschef', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tasks: nextTasks }),
+        body: JSON.stringify({ ship, tasks: nextTasks }),
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error)
@@ -144,7 +146,7 @@ export default function SouschefPage() {
               <ChefHat size={24} />
             </span>
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.18em] text-[#347f7a] dark:text-[#8dc4bf]">Nordic Crown</p>
+              <p className="text-xs font-bold uppercase tracking-[.18em] text-[#347f7a] dark:text-[#8dc4bf]">{ship === 'crown' ? 'Nordic Crown' : 'Nordic Pearl'}</p>
               <h1 className="text-3xl font-semibold tracking-tight">Souschef-overlevering</h1>
             </div>
           </div>
@@ -158,6 +160,8 @@ export default function SouschefPage() {
           <Summary label="Kritiske" value={openTasks.filter((task) => task.priority === 'critical').length} icon={<AlertTriangle size={19} />} danger />
           <Summary label="Afsluttet" value={doneTasks.length} icon={<CheckCircle2 size={19} />} />
         </section>
+
+        <SouschefAdmin ship={ship} />
 
         <section className="mt-7 rounded-3xl border border-black/5 bg-white p-5 shadow-[0_18px_45px_rgba(6,78,76,.08)] dark:border-white/10 dark:bg-[#0d3b3a] sm:p-7">
           <div className="flex items-center justify-between gap-4">

@@ -4,7 +4,7 @@ import {
   requestHasShipAccess,
 } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
-import { PARTIS } from '@/lib/partis'
+import { validHandoverFolderNames } from '@/lib/handoverFolderConfig'
 
 function todayInCopenhagen() {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     .eq('department', ship)
 
   if (parti) {
-    const validPartis = ship === 'pearl' ? PARTIS.pearl : PARTIS.galley
+    const validPartis = await validHandoverFolderNames(ship)
     if (!validPartis.includes(parti)) {
       return NextResponse.json({ error: 'Ukendt parti.' }, { status: 400 })
     }
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
   const note = sanitizeHandoverHtml(text(body.note))
   const images = stringArray(body.images).map(imageStorageValue)
   const draftId = text(body.id, 100)
-  const validPartis = ship === 'pearl' ? PARTIS.pearl : PARTIS.galley
+  const validPartis = await validHandoverFolderNames(ship)
 
   if (!parti || !validPartis.includes(parti) || !shiftDate) {
     return NextResponse.json({ error: 'Ugyldige data.' }, { status: 400 })

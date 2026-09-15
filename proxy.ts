@@ -5,15 +5,17 @@ import {
   AccessShip,
   LEGACY_ACCESS_COOKIE_NAMES,
   verifyAccessToken,
-  SOUSCHEF_ACCESS_COOKIE_NAME,
+  SOUSCHEF_ACCESS_COOKIE_NAMES,
   verifySouschefAccessToken,
 } from '@/lib/shipAccess'
 
 export async function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith('/crown/souschef')) {
-    const managerToken = request.cookies.get(SOUSCHEF_ACCESS_COOKIE_NAME)?.value
-    if (await verifySouschefAccessToken(managerToken)) return NextResponse.next()
-    return NextResponse.redirect(new URL('/crown/adgang', request.url))
+  const souschefMatch = request.nextUrl.pathname.match(/^\/(crown|pearl)\/souschef/)
+  if (souschefMatch) {
+    const souschefShip = souschefMatch[1] as AccessShip
+    const managerToken = request.cookies.get(SOUSCHEF_ACCESS_COOKIE_NAMES[souschefShip])?.value
+    if (await verifySouschefAccessToken(managerToken, souschefShip)) return NextResponse.next()
+    return NextResponse.redirect(new URL(`/${souschefShip}/adgang`, request.url))
   }
 
   const ship: AccessShip = request.nextUrl.pathname.startsWith('/pearl')

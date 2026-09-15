@@ -6,7 +6,10 @@ export const ACCESS_COOKIE_NAMES: Record<AccessShip, string> = {
 }
 
 export const LEGACY_ACCESS_COOKIE_NAMES = ['handover_pearl_access'] as const
-export const SOUSCHEF_ACCESS_COOKIE_NAME = 'handover_crown_souschef_access'
+export const SOUSCHEF_ACCESS_COOKIE_NAMES: Record<AccessShip, string> = {
+  crown: 'handover_crown_souschef_access',
+  pearl: 'handover_pearl_souschef_access',
+}
 const DEFAULT_SOUSCHEF_CODE_HASH =
   '4cf6f9637d171efb2bf6e67f01ed16da3588cdae3f6014c25ca760d071d5172d'
 
@@ -39,8 +42,15 @@ async function hashValue(value: string) {
     .join('')
 }
 
-async function getSouschefCodeHash() {
-  const environmentCode = process.env.SOUSCHEF_ACCESS_CODE?.trim().toUpperCase()
+async function getSouschefCodeHash(ship: AccessShip) {
+  const environmentCode = (
+    ship === 'crown'
+      ? process.env.CROWN_SOUSCHEF_ACCESS_CODE ?? process.env.SOUSCHEF_ACCESS_CODE
+      : process.env.PEARL_SOUSCHEF_ACCESS_CODE
+  )?.trim().toUpperCase()
+  if (ship === 'pearl' && !environmentCode) {
+    throw new Error('PEARL_SOUSCHEF_ACCESS_CODE mangler i miljÃ¸variablerne.')
+  }
   return environmentCode
     ? hashValue(environmentCode)
     : DEFAULT_SOUSCHEF_CODE_HASH
@@ -78,11 +88,11 @@ export async function isCorrectAccessCode(ship: AccessShip, code: string) {
   return difference === 0
 }
 
-export async function isCorrectSouschefCode(code: string) {
+export async function isCorrectSouschefCode(ship: AccessShip, code: string) {
   const candidate = new TextEncoder().encode(
     await hashValue(code.trim().toUpperCase())
   )
-  const expected = new TextEncoder().encode(await getSouschefCodeHash())
+  const expected = new TextEncoder().encode(await getSouschefCodeHash(ship))
   if (candidate.length !== expected.length) return false
 
   let difference = 0
@@ -92,13 +102,13 @@ export async function isCorrectSouschefCode(code: string) {
   return difference === 0
 }
 
-export async function createSouschefAccessToken() {
-  return signValue(`handover-access:crown:souschef:${await getSouschefCodeHash()}`)
+export async function createSouschefAccessToken(ship: AccessShip = 'crown') {
+  return signValue(`handover-access:${ship}:souschef:${await getSouschefCodeHash(ship)}`)
 }
 
-export async function verifySouschefAccessToken(token: string | undefined) {
+export async function verifySouschefAccessToken(token: string | undefined, ship: AccessShip = 'crown') {
   if (!token) return false
-  return token === (await createSouschefAccessToken())
+  return token === (await createSouschefAccessToken(ship))
 }
 
 export async function createAccessToken(ship: AccessShip) {

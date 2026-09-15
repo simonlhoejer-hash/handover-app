@@ -21,7 +21,8 @@ export default function ServiceWorkerRegistration() {
         pathname === '/crown/adgang' ||
         pathname === '/pearl/adgang' ||
         pathname.startsWith('/adgang/') ||
-        pathname.startsWith('/crown/souschef')
+        pathname.startsWith('/crown/souschef') ||
+        pathname.startsWith('/pearl/souschef')
       ) {
         return null
       }

@@ -63,6 +63,7 @@ export default function ClientLayout({
     pathname === '/crown/adgang' ||
     pathname === '/pearl/adgang' ||
     pathname === '/crown/souschef' ||
+    pathname === '/pearl/souschef' ||
     pathname.startsWith('/adgang/')
 
   if (isStandalonePage) {

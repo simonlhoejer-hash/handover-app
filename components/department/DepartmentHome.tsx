@@ -13,6 +13,8 @@ type Props = {
   groups?: Array<{ title: string; items: string[] }>
 }
 
+type FolderRow = { name: string; group: 'partier' | 'skyllerier' }
+
 type StatusMap = Record<
   string,
   {
@@ -53,6 +55,21 @@ export default function DepartmentHome({
   const { t, lang } = useTranslation()
   const [status, setStatus] = useState<StatusMap>({})
   const [loading, setLoading] = useState(true)
+  const [folderGroups, setFolderGroups] = useState(groups)
+  const effectiveItems = folderGroups?.flatMap((group) => group.items) ?? items
+
+  useEffect(() => {
+    if (department !== 'crown' && department !== 'pearl') return
+    const ship = department
+    void secureFetch<{ data: FolderRow[] }>(
+      `/api/handover-folders?${queryString({ ship })}`
+    ).then(({ data }) => {
+      setFolderGroups([
+        { title: 'Partier', items: data.filter((folder) => folder.group === 'partier').map((folder) => folder.name) },
+        { title: 'Skyllerier', items: data.filter((folder) => folder.group === 'skyllerier').map((folder) => folder.name) },
+      ])
+    }).catch(() => undefined)
+  }, [department])
 
   useEffect(() => {
     let isCurrent = true
@@ -99,7 +116,7 @@ export default function DepartmentHome({
         }
       }
 
-      for (const item of items) {
+      for (const item of effectiveItems) {
         const latest = latestByParti.get(item)
 
         let isExpired = false
@@ -140,7 +157,7 @@ export default function DepartmentHome({
     return () => {
       isCurrent = false
     }
-  }, [department, items])
+  }, [department, effectiveItems.join('\u0000')])
 
   return (
     <main className="pt-8 sm:pt-12 pb-8 max-w-5xl mx-auto">
@@ -156,7 +173,7 @@ export default function DepartmentHome({
       </header>
 
       <div className="space-y-10">
-        {(groups ?? [{ title: '', items }]).map((group) => (
+        {(folderGroups ?? [{ title: '', items }]).map((group) => (
           <section key={group.title || 'all'}>
             {group.title && (
               <div className="mb-5 flex items-center gap-4">
