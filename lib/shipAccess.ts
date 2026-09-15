@@ -48,9 +48,6 @@ async function getSouschefCodeHash(ship: AccessShip) {
       ? process.env.CROWN_SOUSCHEF_ACCESS_CODE ?? process.env.SOUSCHEF_ACCESS_CODE
       : process.env.PEARL_SOUSCHEF_ACCESS_CODE
   )?.trim().toUpperCase()
-  if (ship === 'pearl' && !environmentCode) {
-    throw new Error('PEARL_SOUSCHEF_ACCESS_CODE mangler i miljÃ¸variablerne.')
-  }
   return environmentCode
     ? hashValue(environmentCode)
     : DEFAULT_SOUSCHEF_CODE_HASH
