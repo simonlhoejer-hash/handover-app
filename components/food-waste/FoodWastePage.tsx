@@ -454,10 +454,10 @@ export default function FoodWastePage({
                           <Link
                             key={slug}
                             href={`${basePath}/food-waste/${slug}`}
-                            className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white p-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] md:h-[132px] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
+                            className="flex h-[104px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white px-2 py-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] md:h-[132px] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
                           >
-                            <div className="flex h-full min-w-0 flex-col items-center justify-center gap-2">
-                              <span className="text-lg font-semibold leading-tight md:text-2xl">
+                            <div className="flex h-full w-full min-w-0 flex-col items-center justify-center gap-2 overflow-hidden">
+                              <span className="max-w-full text-base font-semibold leading-tight tracking-tight md:text-lg 2xl:text-xl">
                                 {isPlateWaste
                                   ? lang === 'en' ? 'Plate waste' : lang === 'sv' ? 'Tallrikssvinn' : 'Tallerkenspild'
                                   : lang === 'en' ? 'Buffet waste' : lang === 'sv' ? 'Buffésvinn' : 'Buffetspild'}
