@@ -114,6 +114,7 @@ export default function FoodWasteLocationPage({
   const router = useRouter()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
   const [quantityKg, setQuantityKg] = useState('')
+  const [wasteDate, setWasteDate] = useState(getToday)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -129,8 +130,10 @@ export default function FoodWasteLocationPage({
   const saveStartedRef = useRef(false)
 
   const today = getToday()
+  const selectedDate = vessel === 'pearl' ? wasteDate : today
+  const usesBucketWeight = vessel === 'crown'
   const locationPresentation = getFoodWasteLocationPresentation(locationName, lang)
-  const isBuffetLocked = scheduleTime !== null && !isFoodWasteLocationOpen(locationName, scheduleTime)
+  const isBuffetLocked = vessel === 'crown' && scheduleTime !== null && !isFoodWasteLocationOpen(locationName, scheduleTime)
 
   useEffect(() => {
     const updateTime = () => setScheduleTime(new Date())
@@ -251,19 +254,19 @@ export default function FoodWasteLocationPage({
     }
   }, [locationName, syncPendingEntries, vessel])
 
-  const todayTotal = useMemo(() => {
+  const selectedDateTotal = useMemo(() => {
     return entries.reduce((total, entry) => {
-      if (entry.waste_date !== today) return total
+      if (entry.waste_date !== selectedDate) return total
       return total + getEntryAmount(entry)
     }, 0)
-  }, [entries, today])
+  }, [entries, selectedDate])
 
   const historicalDailyAverage = useMemo(() => {
     if (!locationName.startsWith('Messen ') && locationName !== 'Produktion Proviant') return 0
 
     const dailyTotals = new Map<string, number>()
     for (const entry of entries) {
-      if (entry.waste_date === today || entry.pending) continue
+      if (entry.waste_date === selectedDate || entry.pending) continue
       dailyTotals.set(
         entry.waste_date,
         (dailyTotals.get(entry.waste_date) ?? 0) + getEntryAmount(entry)
@@ -273,11 +276,13 @@ export default function FoodWasteLocationPage({
     const totals = Array.from(dailyTotals.values())
     if (totals.length < 3) return 0
     return totals.reduce((sum, total) => sum + total, 0) / totals.length
-  }, [entries, locationName, today])
+  }, [entries, locationName, selectedDate])
 
   const enteredGrossQuantity = Number(quantityKg.trim().replace(',', '.')) || 0
-  const enteredQuantity = netWasteWeight(enteredGrossQuantity)
-  const projectedTodayTotal = todayTotal + enteredQuantity
+  const enteredQuantity = usesBucketWeight
+    ? netWasteWeight(enteredGrossQuantity)
+    : enteredGrossQuantity
+  const projectedTodayTotal = selectedDateTotal + enteredQuantity
   const isProvisionsComment = locationName === 'Produktion Proviant'
   const requiresWasteReason =
     historicalDailyAverage > 0 &&
@@ -286,7 +291,13 @@ export default function FoodWasteLocationPage({
   const requiresComment = requiresWasteReason
 
   async function saveEntry(value: string, comment: string | null = null) {
-    if (!isFoodWasteLocationOpen(locationName)) {
+    if (!selectedDate) {
+      setError(lang === 'en' ? 'Choose a date.' : lang === 'sv' ? 'Välj ett datum.' : 'Vælg en dato.')
+      saveStartedRef.current = false
+      return
+    }
+
+    if (vessel === 'crown' && !isFoodWasteLocationOpen(locationName)) {
       setError(
         lang === 'en'
           ? 'This buffet is closed at this time.'
@@ -297,11 +308,11 @@ export default function FoodWasteLocationPage({
       return
     }
     const grossQuantity = Number(value.replace(',', '.'))
-    const quantity = netWasteWeight(grossQuantity)
+    const quantity = usesBucketWeight ? netWasteWeight(grossQuantity) : grossQuantity
 
     if (!Number.isFinite(grossQuantity) || quantity <= 0) {
       setError(
-        grossQuantity > 0
+        usesBucketWeight && grossQuantity > 0
           ? lang === 'en'
             ? 'The total weight must be greater than the bucket weight of 1.37 kg.'
             : lang === 'sv'
@@ -318,7 +329,7 @@ export default function FoodWasteLocationPage({
 
     const payload: FoodWastePayload = {
       client_id: createClientId(),
-      waste_date: today,
+      waste_date: selectedDate,
       location_name: locationName,
       quantity_kg: quantity,
       comment,
@@ -406,9 +417,9 @@ export default function FoodWasteLocationPage({
   useEffect(() => {
     const value = quantityKg.trim()
     const grossQuantity = Number(value.replace(',', '.'))
-    const quantity = netWasteWeight(grossQuantity)
+    const quantity = usesBucketWeight ? netWasteWeight(grossQuantity) : grossQuantity
 
-    if (!value || !Number.isFinite(quantity) || quantity <= 0) {
+    if (!selectedDate || !value || !Number.isFinite(quantity) || quantity <= 0) {
       saveStartedRef.current = false
       setShowReasonPrompt(false)
       return
@@ -432,7 +443,7 @@ export default function FoodWasteLocationPage({
     }, 2000)
 
     return () => window.clearTimeout(timer)
-  }, [quantityKg, requiresComment, saved, saving])
+  }, [quantityKg, requiresComment, saved, saving, selectedDate, usesBucketWeight])
 
   async function deleteEntry(id: string) {
     if (id.startsWith('local-')) {
@@ -523,17 +534,40 @@ export default function FoodWasteLocationPage({
             {locationPresentation.subtitle} · {locationPresentation.title}
           </div>
         )}
+        {vessel === 'pearl' && (
+          <label className="mb-5 block">
+            <span className="mb-2 block text-sm font-semibold text-gray-700 dark:text-white/75">
+              {lang === 'en' ? 'Registration date' : lang === 'sv' ? 'Registreringsdatum' : 'Dato for registrering'}
+            </span>
+            <input
+              type="date"
+              value={wasteDate}
+              onChange={(event) => setWasteDate(event.target.value)}
+              className="w-full rounded-2xl border border-black/5 bg-gray-100 px-4 py-3 text-base font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-nordic/20 dark:border-white/10 dark:bg-[#082f2e] dark:text-white"
+            />
+            <span className="mt-2 block text-sm text-gray-500 dark:text-white/60">
+              {lang === 'en'
+                ? 'Choose the date this waste belongs to.'
+                : lang === 'sv'
+                  ? 'Välj datumet som svinnet tillhör.'
+                  : 'Vælg den dato, som spildet hører til.'}
+            </span>
+          </label>
+        )}
+
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500 dark:text-white/60">
-              {t.today}
+              {vessel === 'pearl'
+                ? lang === 'en' ? 'Total for selected date' : lang === 'sv' ? 'Totalt för valt datum' : 'I alt på valgt dato'
+                : t.today}
             </p>
             <div className="mt-1 text-2xl font-semibold">
-              {formatAmount(todayTotal, lang)}
+              {formatAmount(selectedDateTotal, lang)}
             </div>
           </div>
           <span className="rounded-full bg-nordic-soft px-3 py-1 text-sm font-medium text-nordic">
-            {formatDate(today, lang)}
+            {formatDate(selectedDate, lang)}
           </span>
         </div>
 
@@ -547,7 +581,7 @@ export default function FoodWasteLocationPage({
             className="w-full rounded-2xl bg-gray-100 px-4 py-5 pr-16 text-4xl font-semibold text-gray-900 border border-black/5 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#082f2e] dark:text-white dark:border-white/10"
             placeholder="0,0"
             value={quantityKg}
-            disabled={isBuffetLocked}
+            disabled={isBuffetLocked || !selectedDate}
             onChange={(event) => setQuantityKg(normalizeWeightInput(event.target.value))}
             onFocus={(event) => {
               const input = event.currentTarget
@@ -562,12 +596,18 @@ export default function FoodWasteLocationPage({
         </div>
 
         <div className="mt-3 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-center text-sm font-medium text-emerald-800 dark:text-emerald-200">
-          {lang === 'en'
-            ? 'Enter the weight with the bucket — 1.37 kg is deducted automatically.'
-            : lang === 'sv'
-              ? 'Skriv vikten med hinken — 1,37 kg dras av automatiskt.'
-              : 'Skriv vægten med spanden — 1,37 kg trækkes automatisk fra.'}
-          {enteredGrossQuantity > AVERAGE_BUCKET_WEIGHT_KG && (
+          {usesBucketWeight
+            ? lang === 'en'
+              ? 'Enter the weight with the bucket — 1.37 kg is deducted automatically.'
+              : lang === 'sv'
+                ? 'Skriv vikten med hinken — 1,37 kg dras av automatiskt.'
+                : 'Skriv vægten med spanden — 1,37 kg trækkes automatisk fra.'
+            : lang === 'en'
+              ? 'Enter the food waste weight directly — no bucket weight is deducted.'
+              : lang === 'sv'
+                ? 'Ange matsvinnets vikt direkt — ingen hinkvikt dras av.'
+                : 'Indtast vægten af madspildet direkte – der trækkes ingen spandvægt fra.'}
+          {usesBucketWeight && enteredGrossQuantity > AVERAGE_BUCKET_WEIGHT_KG && (
             <span className="mt-1 block font-semibold">
               {lang === 'en' ? 'Saved as' : lang === 'sv' ? 'Sparas som' : 'Gemmes som'}{' '}
               {formatAmount(enteredQuantity, lang)}
