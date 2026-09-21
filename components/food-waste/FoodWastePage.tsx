@@ -125,6 +125,7 @@ export default function FoodWastePage({
   }, [])
 
   const isAreaLocked = (area: WasteArea) => {
+    if (vessel === 'pearl') return false
     if (currentMinute === null) return false
     if (area === 'morning-buffet') return currentMinute < 5 * 60 || currentMinute >= 12 * 60
     if (area === 'evening-buffet') return currentMinute < 16 * 60 || currentMinute >= 23 * 60 + 30
