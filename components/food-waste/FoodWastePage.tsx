@@ -420,7 +420,7 @@ export default function FoodWastePage({
                               <span className={`text-xs font-bold uppercase tracking-[0.08em] md:text-sm ${presentation.tone === 'evening' ? 'text-amber-700 dark:text-amber-200' : 'text-cyan-700 dark:text-cyan-200'}`}>
                                 {presentation.subtitle}
                               </span>
-                              <span className="text-xl font-semibold leading-tight md:text-2xl">{presentation.title}</span>
+                              <span className="max-w-full text-base font-semibold leading-tight tracking-tight md:text-lg 2xl:text-xl">{presentation.title}</span>
                               <span className={`rounded-full px-2.5 py-1 text-xs font-medium md:text-sm ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
                                 {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
                               </span>
