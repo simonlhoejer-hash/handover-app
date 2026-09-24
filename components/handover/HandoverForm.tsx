@@ -80,10 +80,18 @@ export default function HandoverForm({
   const { t } = useTranslation()
   return (
 <section className={cardClass}>
+      <p className="mb-4 rounded-2xl border border-teal-700/15 bg-teal-700/10 px-4 py-3 text-sm font-medium text-teal-900 dark:border-white/10 dark:bg-white/10 dark:text-white/80">
+        {t.professionalHandoverHint}
+      </p>
+
       <input
         className={inputClass}
         placeholder={t.senderName}
         value={name}
+        maxLength={80}
+        autoCapitalize="words"
+        autoComplete="name"
+        spellCheck={false}
         onChange={(e) => setName(e.target.value)}
       />
 
@@ -91,6 +99,10 @@ export default function HandoverForm({
         className={inputClass}
         placeholder={t.receiverName}
         value={receiver}
+        maxLength={80}
+        autoCapitalize="words"
+        autoComplete="name"
+        spellCheck={false}
         onChange={(e) => setReceiver(e.target.value)}
       />
 

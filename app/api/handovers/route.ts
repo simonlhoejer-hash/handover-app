@@ -5,6 +5,7 @@ import {
 } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
 import { validHandoverFolderNames } from '@/lib/handoverFolderConfig'
+import { getHandoverNameIssue } from '@/lib/handoverQuality'
 
 function todayInCopenhagen() {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -255,6 +256,14 @@ export async function POST(request: NextRequest) {
   if (action === 'publish') {
     if (!authorName.trim() || !receiverName.trim() || !note.trim()) {
       return NextResponse.json({ error: 'Obligatoriske felter mangler.' }, { status: 400 })
+    }
+
+    const nameIssue = getHandoverNameIssue({ authorName, receiverName })
+    if (nameIssue) {
+      return NextResponse.json(
+        { error: 'Brug rigtige navne på afsender og modtager.' },
+        { status: 400 }
+      )
     }
 
     const payload = {

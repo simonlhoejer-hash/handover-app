@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronLeft, CloudOff, LoaderCircle, Sparkles, X } from 'lucide-react'
 import { displayPartiName } from '@/lib/partis'
+import { getHandoverNameIssue } from '@/lib/handoverQuality'
 
 const HandoverForm = dynamic(() => import('@/components/handover/HandoverForm'), {
   ssr: false,
@@ -336,6 +337,15 @@ export default function HandoverPage({
     if (date < today) {
       setDate(today)
       alert(t.handoverDateCannotBePast)
+      return
+    }
+
+    const nameIssue = getHandoverNameIssue({
+      authorName: name,
+      receiverName: receiver,
+    })
+    if (nameIssue) {
+      alert(t.professionalNamesRequired)
       return
     }
 
