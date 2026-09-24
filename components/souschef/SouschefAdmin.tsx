@@ -1,8 +1,9 @@
 'use client'
 
 import { FormEvent, useCallback, useEffect, useState } from 'react'
-import { FolderPlus, RefreshCw, Trash2 } from 'lucide-react'
+import { FolderPlus, Pencil, RefreshCw, Save, Trash2, X } from 'lucide-react'
 import type { AccessShip } from '@/lib/shipAccess'
+import HandoverEditor from '@/components/handover/HandoverEditor'
 
 type Folder = { name: string; group: 'partier' | 'skyllerier' }
 type Handover = {
@@ -12,6 +13,7 @@ type Handover = {
   receiver_name?: string
   shift_date: string
   status: 'draft' | 'published'
+  note: string
 }
 
 export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 'folders' | 'handovers' }) {
@@ -21,6 +23,7 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
   const [group, setGroup] = useState<Folder['group']>('partier')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [editing, setEditing] = useState<Handover | null>(null)
 
   const load = useCallback(async () => {
     const [folderResponse, handoverResponse] = await Promise.all([
@@ -105,6 +108,35 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
     }
   }
 
+  async function saveHandoverEdit(event: FormEvent) {
+    event.preventDefault()
+    if (!editing || !editing.author_name?.trim() || !editing.receiver_name?.trim() || busy) return
+    setBusy(true)
+    setMessage('')
+    try {
+      const response = await fetch('/api/souschef/handovers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ship,
+          id: editing.id,
+          author_name: editing.author_name,
+          receiver_name: editing.receiver_name,
+          note: editing.note,
+        }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error)
+      setHandovers((current) => current.map((item) => item.id === editing.id ? result.data : item))
+      setEditing(null)
+      setMessage('Overleveringen er rettet.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Overleveringen kunne ikke rettes.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <section className="mt-7 space-y-6 rounded-3xl border border-black/5 bg-white p-5 shadow-[0_18px_45px_rgba(6,78,76,.08)] dark:border-white/10 dark:bg-[#0d3b3a] sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -139,7 +171,28 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
 
       {view === 'handovers' && <div>
         <h3 className="font-semibold">Overleveringer</h3>
-        <p className="mt-1 text-sm text-gray-500 dark:text-white/60">Sletning er permanent og fjerner også kommentarer og billeder.</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-white/60">Ret useriøst indhold, eller slet overleveringen permanent.</p>
+        {editing && (
+          <form onSubmit={saveHandoverEdit} className="mt-4 rounded-2xl border-2 border-[#347f7a]/30 bg-[#347f7a]/5 p-4 dark:bg-black/10">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h4 className="font-semibold">Ret overlevering</h4>
+                <p className="text-xs text-gray-500 dark:text-white/50">{editing.parti} · {new Date(`${editing.shift_date}T12:00:00`).toLocaleDateString('da-DK')}</p>
+              </div>
+              <button type="button" onClick={() => setEditing(null)} className="rounded-lg p-2 hover:bg-black/5 dark:hover:bg-white/10" aria-label="Luk redigering"><X size={18} /></button>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-semibold">Fra
+                <input value={editing.author_name ?? ''} onChange={(event) => setEditing({ ...editing, author_name: event.target.value })} maxLength={100} required className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 font-normal dark:border-white/10 dark:bg-[#082f2e]" />
+              </label>
+              <label className="text-sm font-semibold">Til
+                <input value={editing.receiver_name ?? ''} onChange={(event) => setEditing({ ...editing, receiver_name: event.target.value })} maxLength={100} required className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 font-normal dark:border-white/10 dark:bg-[#082f2e]" />
+              </label>
+            </div>
+            <div className="mt-3"><HandoverEditor value={editing.note ?? ''} onChange={(note) => setEditing({ ...editing, note })} /></div>
+            <button disabled={busy || !editing.author_name?.trim() || !editing.receiver_name?.trim()} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#064e4c] px-5 py-3 font-semibold text-white disabled:opacity-50"><Save size={18} /> {busy ? 'Gemmer…' : 'Gem rettelser'}</button>
+          </form>
+        )}
         <div className="mt-4 max-h-[32rem] space-y-2 overflow-y-auto">
           {handovers.length === 0 ? <p className="py-6 text-center text-sm text-gray-500">Ingen overleveringer</p> : handovers.map((handover) => (
             <div key={handover.id} className="flex items-center justify-between gap-3 rounded-xl border border-black/5 px-4 py-3 dark:border-white/10">
@@ -147,7 +200,10 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
                 <div className="truncate font-semibold">{handover.parti}</div>
                 <div className="text-xs text-gray-500 dark:text-white/50">{new Date(`${handover.shift_date}T12:00:00`).toLocaleDateString('da-DK')} · {handover.author_name || 'Ukendt'} · {handover.status === 'draft' ? 'Kladde' : 'Udgivet'}</div>
               </div>
-              <button type="button" disabled={busy} onClick={() => void deleteHandover(handover)} className="shrink-0 rounded-lg p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-600" aria-label="Slet overlevering"><Trash2 size={17} /></button>
+              <div className="flex shrink-0 items-center gap-1">
+                <button type="button" disabled={busy} onClick={() => setEditing({ ...handover })} className="rounded-lg p-2 text-gray-400 hover:bg-[#347f7a]/10 hover:text-[#216762]" aria-label="Ret overlevering"><Pencil size={17} /></button>
+                <button type="button" disabled={busy} onClick={() => void deleteHandover(handover)} className="rounded-lg p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-600" aria-label="Slet overlevering"><Trash2 size={17} /></button>
+              </div>
             </div>
           ))}
         </div>
