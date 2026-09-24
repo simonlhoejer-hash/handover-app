@@ -7,6 +7,8 @@ import HeaderTitle from '@/components/layout/HeaderTitle'
 import ConnectionStatus from '@/components/pwa/ConnectionStatus'
 import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration'
 
+const TABLET_HANDOVER_IDLE_TIMEOUT_MS = 10 * 60 * 1000
+
 export default function ClientLayout({
   children,
 }: {
@@ -17,6 +19,48 @@ export default function ClientLayout({
   const isFoodWasteMeasurement =
     /^\/(crown|pearl)\/food-waste\/[^/]+$/.test(pathname) &&
     !pathname.endsWith('/overblik')
+
+  useEffect(() => {
+    const returnToWasteRoute = pathname.match(
+      /^\/(crown|pearl)(?:\/parti\/[^/]+|\/food-waste\/overblik)?$/
+    )
+    if (!returnToWasteRoute) return
+
+    const hasTouch = navigator.maxTouchPoints > 1 || window.matchMedia('(pointer: coarse)').matches
+    const tabletWidth = window.innerWidth >= 600 && window.innerWidth <= 1366
+    if (!hasTouch || !tabletWidth) return
+
+    const ship = returnToWasteRoute[1]
+    let idleTimer = window.setTimeout(() => {
+      window.location.replace(`/${ship}/food-waste`)
+    }, TABLET_HANDOVER_IDLE_TIMEOUT_MS)
+
+    const restartIdleTimer = () => {
+      window.clearTimeout(idleTimer)
+      idleTimer = window.setTimeout(() => {
+        window.location.replace(`/${ship}/food-waste`)
+      }, TABLET_HANDOVER_IDLE_TIMEOUT_MS)
+    }
+
+    const activityEvents: Array<keyof WindowEventMap> = [
+      'pointerdown',
+      'touchstart',
+      'keydown',
+      'input',
+      'scroll',
+    ]
+
+    for (const eventName of activityEvents) {
+      window.addEventListener(eventName, restartIdleTimer, { passive: true })
+    }
+
+    return () => {
+      window.clearTimeout(idleTimer)
+      for (const eventName of activityEvents) {
+        window.removeEventListener(eventName, restartIdleTimer)
+      }
+    }
+  }, [pathname])
 
   useEffect(() => {
     if (!isFoodWasteMeasurement) return
