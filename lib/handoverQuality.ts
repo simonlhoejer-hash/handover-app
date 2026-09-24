@@ -18,6 +18,16 @@ const NON_NAME_WORDS = new Set([
 
 const NAME_CONNECTORS = new Set(['og', 'and', 'och'])
 
+const BLOCKED_NAME_VALUES = new Set([
+  'algis benjamin og andre',
+  'facket',
+  'johnniii',
+  'pia og en eller anden dude',
+  'pineapple',
+  'tobe one kenobe',
+  'tonga for morgen mad',
+])
+
 function normalizedPlainText(value: string) {
   return value
     .replace(/<br\s*\/?>|<\/p>|<\/li>/gi, ' ')
@@ -29,9 +39,9 @@ function normalizedPlainText(value: string) {
 
 function isUnprofessionalName(value: string) {
   const normalized = normalizedPlainText(value)
+  const normalizedLowerCase = normalized.toLocaleLowerCase('da-DK')
   const letters = normalized.match(/\p{L}/gu)?.length ?? 0
-  const words = normalized
-    .toLocaleLowerCase('da-DK')
+  const words = normalizedLowerCase
     .split(/\s+|&/)
     .map((word) => word.replace(/^[.'’-]+|[.'’-]+$/g, ''))
     .filter(Boolean)
@@ -39,6 +49,7 @@ function isUnprofessionalName(value: string) {
   return (
     letters < 2 ||
     normalized.length > 80 ||
+    BLOCKED_NAME_VALUES.has(normalizedLowerCase) ||
     /\d/.test(normalized) ||
     /[^\p{L}\p{M}\s.'’&-]/u.test(normalized) ||
     words.some((word) => !NAME_CONNECTORS.has(word) && NON_NAME_WORDS.has(word)) ||
