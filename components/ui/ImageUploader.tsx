@@ -12,8 +12,12 @@ type Props = {
 }
 
 const MAX_SIZE_MB = 5
-const MAX_WIDTH = 4000
-const MAX_HEIGHT = 4000
+const MAX_DIMENSION = 2400
+const MAX_BYTES = MAX_SIZE_MB * 1024 * 1024
+
+function canvasBlob(canvas: HTMLCanvasElement, quality: number) {
+  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality))
+}
 
 export default function ImageUploader({
   parti,
@@ -28,54 +32,57 @@ export default function ImageUploader({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [cancelled, setCancelled] = useState(false)
 
-  async function validateImage(file: File) {
-    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+  async function prepareImage(file: File) {
+    if (!file.type.startsWith('image/')) {
       alert(t.onlyPngJpg)
-      return false
+      return null
     }
 
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      alert(`${t.imageMaxSize} ${MAX_SIZE_MB}MB`)
-      return false
+    try {
+      const bitmap = await createImageBitmap(file)
+      if (file.size <= MAX_BYTES && bitmap.width <= MAX_DIMENSION && bitmap.height <= MAX_DIMENSION && ['image/png', 'image/jpeg'].includes(file.type)) {
+        bitmap.close()
+        return file
+      }
+
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+      const context = canvas.getContext('2d')
+      if (!context) throw new Error('Canvas unavailable')
+      context.fillStyle = '#ffffff'
+      context.fillRect(0, 0, canvas.width, canvas.height)
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+      bitmap.close()
+
+      let quality = 0.86
+      let blob = await canvasBlob(canvas, quality)
+      while (blob && blob.size > MAX_BYTES && quality > 0.5) {
+        quality -= 0.08
+        blob = await canvasBlob(canvas, quality)
+      }
+      if (!blob || blob.size > MAX_BYTES) throw new Error('Image remains too large')
+      return new File([blob], `${file.name.replace(/\.[^.]+$/, '') || 'billede'}.jpg`, { type: 'image/jpeg' })
+    } catch {
+      alert(t.couldNotReadImage)
+      return null
     }
-
-    const img = new Image()
-    const objectUrl = URL.createObjectURL(file)
-
-    return new Promise<boolean>((resolve) => {
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl)
-
-        if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
-          alert(`${t.imageMaxSize} ${MAX_WIDTH}x${MAX_HEIGHT}px`)
-          resolve(false)
-        } else {
-          resolve(true)
-        }
-      }
-
-      img.onerror = () => {
-        alert(t.couldNotReadImage)
-        resolve(false)
-      }
-
-      img.src = objectUrl
-    })
   }
 
   async function uploadImage(file: File) {
-    const isValid = await validateImage(file)
-    if (!isValid) {
+    setUploading(true)
+    const preparedFile = await prepareImage(file)
+    if (!preparedFile) {
+      setUploading(false)
       setPreviewUrl(null)
       return
     }
 
-    setUploading(true)
-
     const form = new FormData()
     form.set('ship', ship)
     form.set('parti', parti)
-    form.set('file', file)
+    form.set('file', preparedFile)
 
     let uploadUrl = ''
     try {
@@ -141,7 +148,7 @@ export default function ImageUploader({
           {compact ? 'Tilføj billede' : t.chooseFile}
           <input
             type="file"
-            accept="image/png,image/jpeg"
+            accept="image/*"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0]
