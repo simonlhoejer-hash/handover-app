@@ -69,15 +69,15 @@ export default function StructuredSectionEditor({ label, value, onChange, toolba
       <div className={`flex flex-wrap gap-1 overflow-hidden px-2 transition-all duration-200 ${toolbarOpen ? 'max-h-14 border-t border-black/[0.06] py-2 opacity-100 pointer-events-auto dark:border-white/10' : 'max-h-0 border-t border-transparent py-0 opacity-0 pointer-events-none'}`}>
         <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={toolClass(editor.isActive('bold'))} aria-label={`Fed tekst i ${label}`}>
           <Bold className="h-4 w-4" />
-          Fed
+          <span className="hidden sm:inline">Fed</span>
         </button>
         <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={toolClass(editor.isActive('underline'))} aria-label={`Understreg tekst i ${label}`}>
           <UnderlineIcon className="h-4 w-4" />
-          Understreg
+          <span className="hidden sm:inline">Understreg</span>
         </button>
         <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={toolClass(editor.isActive('bulletList'))} aria-label={`Punktliste i ${label}`}>
           <List className="h-4 w-4" />
-          Punkter
+          <span className="hidden sm:inline">Punkter</span>
         </button>
         {toolbarExtra}
       </div>

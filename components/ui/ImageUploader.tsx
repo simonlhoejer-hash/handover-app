@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { secureFetch, type AccessShip } from '@/lib/secureApi'
 import { useTranslation } from '@/lib/LanguageContext'
+import { ImagePlus } from 'lucide-react'
 
 type Props = {
   parti: string
@@ -145,7 +146,7 @@ export default function ImageUploader({
             hover:opacity-90
           `}
         >
-          {compact ? 'Tilføj billede' : t.chooseFile}
+          {compact ? <><ImagePlus className="mr-0 h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Tilføj billede</span></> : t.chooseFile}
           <input
             type="file"
             accept="image/*"
