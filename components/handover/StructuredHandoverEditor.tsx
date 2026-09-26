@@ -79,8 +79,10 @@ export default function StructuredHandoverEditor({ value, onChange }: Props) {
   const { lang } = useTranslation()
   const [values, setValues] = useState<Values>(() => emptyValues())
   const textareaRefs = useRef<Partial<Record<SectionKey, HTMLTextAreaElement | null>>>({})
+  const lastSerializedValue = useRef('')
 
   useEffect(() => {
+    if (value === lastSerializedValue.current) return
     setValues(parse(value))
   }, [value])
 
@@ -92,8 +94,10 @@ export default function StructuredHandoverEditor({ value, onChange }: Props) {
 
   function update(key: SectionKey, nextValue: string) {
     const next = { ...values, [key]: nextValue }
+    const serialized = serialize(next)
     setValues(next)
-    onChange(serialize(next))
+    lastSerializedValue.current = serialized
+    onChange(serialized)
   }
 
   function insertBullet(key: SectionKey) {
