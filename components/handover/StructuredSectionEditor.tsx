@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -11,9 +12,10 @@ type Props = {
   label: string
   value: string
   onChange: (value: string) => void
+  toolbarExtra?: ReactNode
 }
 
-export default function StructuredSectionEditor({ label, value, onChange }: Props) {
+export default function StructuredSectionEditor({ label, value, onChange, toolbarExtra }: Props) {
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
 
@@ -67,6 +69,7 @@ export default function StructuredSectionEditor({ label, value, onChange }: Prop
           <List className="h-4 w-4" />
           Punkter
         </button>
+        {toolbarExtra}
       </div>
     </div>
   )

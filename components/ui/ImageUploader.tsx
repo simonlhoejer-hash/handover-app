@@ -114,7 +114,12 @@ export default function ImageUploader({
 
         {/* Upload button */}
         <label
-          className="
+          className={compact ? `
+            inline-flex min-h-9 cursor-pointer items-center rounded-lg px-3
+            text-xs font-semibold text-gray-600 transition
+            hover:bg-black/5 active:scale-95
+            dark:text-white/70 dark:hover:bg-white/10
+          ` : `
             px-5 py-2.5
             rounded-2xl
             text-sm font-semibold
@@ -131,9 +136,9 @@ export default function ImageUploader({
             dark:shadow-lg
 
             hover:opacity-90
-          "
+          `}
         >
-          {t.chooseFile}
+          {compact ? 'Tilføj billede' : t.chooseFile}
           <input
             type="file"
             accept="image/png,image/jpeg"
@@ -160,7 +165,7 @@ export default function ImageUploader({
         )}
 
         {/* Preview */}
-        {previewUrl && (
+        {previewUrl && !compact && (
           <div className="relative w-24 h-24">
 
             <img

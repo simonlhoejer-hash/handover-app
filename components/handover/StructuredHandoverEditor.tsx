@@ -157,14 +157,12 @@ export default function StructuredHandoverEditor({ value, onChange, images, onIm
               label={label}
               value={values[key]}
               onChange={(nextValue) => update(key, nextValue)}
-            />
-            <div className="mt-3 border-t border-black/[0.06] pt-3 dark:border-white/10">
-              {isOnline ? (
+              toolbarExtra={isOnline ? (
                 <ImageUploader compact parti={parti} onUploadComplete={(url) => updateSectionImages(key, [...sectionImages[key], url])} />
-              ) : (
-                <p className="text-xs text-amber-700 dark:text-amber-200">Billeder kræver internet</p>
-              )}
-              {sectionImages[key].length > 0 && (
+              ) : null}
+            />
+            {sectionImages[key].length > 0 && (
+              <div className="mt-3">
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   {sectionImages[key].map((url) => (
                     <div key={url} className="relative">
@@ -175,8 +173,8 @@ export default function StructuredHandoverEditor({ value, onChange, images, onIm
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
