@@ -594,7 +594,7 @@ className="
   loading={loading}
   onSave={saveNote}
   isOnline={isOnline}
-  structured={department === 'pearl'}
+  structured
 parti={itemName}/>}
           </div>
         </div>

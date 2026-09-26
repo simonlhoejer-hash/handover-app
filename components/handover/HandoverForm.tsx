@@ -83,10 +83,6 @@ export default function HandoverForm({
   const { t } = useTranslation()
   return (
 <section className={cardClass}>
-      <p className="mb-4 rounded-2xl border border-teal-700/15 bg-teal-700/10 px-4 py-3 text-sm font-medium text-teal-900 dark:border-white/10 dark:bg-white/10 dark:text-white/80">
-        {t.professionalHandoverHint}
-      </p>
-
       <input
         className={inputClass}
         placeholder={t.senderName}

@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AlertTriangle,
   ClipboardCheck,
   CookingPot,
   Lightbulb,
+  List,
   MenuSquare,
   SprayCan,
 } from 'lucide-react'
@@ -39,12 +40,12 @@ function serialize(values: Values) {
   if (filled.length === 0) return ''
 
   return `<div data-handover-format="structured">${filled.map(({ key, label }) => (
-    `<section data-handover-section="${key}"><h2>${label}</h2>${values[key]
+    `<section data-handover-section="${key}"><h2>${label}</h2><ul>${values[key]
       .trim()
       .split(/\r?\n/)
       .filter((line) => line.trim())
-      .map((line) => `<p>${escapeHtml(line.trim())}</p>`)
-      .join('')}</section>`
+      .map((line) => `<li>${escapeHtml(line.trim().replace(/^[•*-]\s*/, ''))}</li>`)
+      .join('')}</ul></section>`
   )).join('')}</div>`
 }
 
@@ -77,6 +78,7 @@ type Props = {
 export default function StructuredHandoverEditor({ value, onChange }: Props) {
   const { lang } = useTranslation()
   const [values, setValues] = useState<Values>(() => emptyValues())
+  const textareaRefs = useRef<Partial<Record<SectionKey, HTMLTextAreaElement | null>>>({})
 
   useEffect(() => {
     setValues(parse(value))
@@ -94,6 +96,25 @@ export default function StructuredHandoverEditor({ value, onChange }: Props) {
     onChange(serialize(next))
   }
 
+  function insertBullet(key: SectionKey) {
+    const textarea = textareaRefs.current[key]
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const current = values[key]
+    const lineStart = current.lastIndexOf('\n', Math.max(0, start - 1)) + 1
+    const prefix = current.slice(lineStart, start).trim().length > 0 ? '\n• ' : '• '
+    const next = `${current.slice(0, start)}${prefix}${current.slice(end)}`
+    update(key, next)
+
+    window.requestAnimationFrame(() => {
+      textarea.focus()
+      const cursor = start + prefix.length
+      textarea.setSelectionRange(cursor, cursor)
+    })
+  }
+
   return (
     <fieldset className="mb-5">
       <legend className="sr-only">Overleveringens punkter</legend>
@@ -102,9 +123,9 @@ export default function StructuredHandoverEditor({ value, onChange }: Props) {
         <p>{intro}</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3">
         {sections.map(({ key, label, icon: Icon }) => (
-          <label
+          <div
             key={key}
             className={`group rounded-2xl border p-4 transition focus-within:border-teal-700/30 focus-within:bg-teal-700/[0.035] focus-within:shadow-[0_8px_24px_rgba(15,118,110,0.08)] dark:focus-within:border-white/20 dark:focus-within:bg-white/[0.07] ${
               values[key].trim()
@@ -118,15 +139,30 @@ export default function StructuredHandoverEditor({ value, onChange }: Props) {
               </span>
               {label}
             </span>
-            <textarea
-              value={values[key]}
-              onChange={(event) => update(key, event.target.value)}
-              rows={3}
-              maxLength={3000}
-              placeholder="Skriv kort og konkret…"
-              className="w-full resize-y bg-transparent text-[16px] leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-white/30"
-            />
-          </label>
+            <span className="block rounded-xl border border-black/[0.06] bg-white/60 focus-within:border-teal-700/25 dark:border-white/10 dark:bg-black/10">
+              <textarea
+                ref={(element) => { textareaRefs.current[key] = element }}
+                value={values[key]}
+                onChange={(event) => update(key, event.target.value)}
+                rows={4}
+                maxLength={3000}
+                placeholder="Skriv kort og konkret…"
+                aria-label={label}
+                className="block min-h-28 w-full resize-y bg-transparent px-3 pt-3 text-[16px] leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-white/30"
+              />
+              <span className="flex border-t border-black/[0.06] px-2 py-2 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => insertBullet(key)}
+                  className="inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold text-gray-600 transition hover:bg-black/5 active:scale-95 dark:text-white/70 dark:hover:bg-white/10"
+                  aria-label={`Tilføj punkt i ${label}`}
+                >
+                  <List className="h-4 w-4" />
+                  Punkt
+                </button>
+              </span>
+            </span>
+          </div>
         ))}
       </div>
     </fieldset>
