@@ -575,7 +575,7 @@ className="
             duration-500
             ease-in-out
             will-change-[max-height,opacity]
-            ${open ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0'}
+            ${open ? 'max-h-[5000px] opacity-100 mt-4' : 'max-h-0 opacity-0'}
           `}
         >
           <div>
@@ -594,6 +594,7 @@ className="
   loading={loading}
   onSave={saveNote}
   isOnline={isOnline}
+  structured={department === 'pearl'}
 parti={itemName}/>}
           </div>
         </div>

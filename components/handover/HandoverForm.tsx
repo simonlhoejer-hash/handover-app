@@ -1,6 +1,7 @@
 'use client'
 
 import HandoverEditor from './HandoverEditor'
+import StructuredHandoverEditor from './StructuredHandoverEditor'
 import ImageUploader from '../ui/ImageUploader'
 import { X } from 'lucide-react'
 import { useTranslation } from '@/lib/LanguageContext'
@@ -21,6 +22,7 @@ type Props = {
   onSave: () => void
   parti: string
   isOnline?: boolean
+  structured?: boolean
 }
 
 const cardClass = `
@@ -76,6 +78,7 @@ export default function HandoverForm({
   onSave,
   parti,
   isOnline = true,
+  structured = false,
 }: Props) {
   const { t } = useTranslation()
   return (
@@ -115,7 +118,11 @@ export default function HandoverForm({
   style={{ WebkitAppearance: 'none' }}
 />
 
-      <HandoverEditor value={note} onChange={setNote} />
+      {structured ? (
+        <StructuredHandoverEditor value={note} onChange={setNote} />
+      ) : (
+        <HandoverEditor value={note} onChange={setNote} />
+      )}
 
       <div className="mb-4">
         <label className="block font-medium mb-1">
