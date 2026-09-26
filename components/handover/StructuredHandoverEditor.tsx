@@ -88,7 +88,7 @@ export default function StructuredHandoverEditor({ value, onChange }: Props) {
     ? 'Fill in the relevant sections. Leave the rest blank.'
     : lang === 'sv'
       ? 'Fyll i de relevanta fälten. Lämna resten tomt.'
-      : 'Udfyld det, der er relevant for vagten. Resten kan stå tomt.'
+      : 'Udfyld det, der er relevant for modtørnen. Resten kan stå tomt.'
 
   function update(key: SectionKey, nextValue: string) {
     const next = { ...values, [key]: nextValue }
