@@ -155,10 +155,14 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
             prose-p:leading-relaxed
           "
           dangerouslySetInnerHTML={{ __html: item.note }}
+          onClick={(event) => {
+            const target = event.target as HTMLElement
+            if (target instanceof HTMLImageElement && target.dataset.handoverSectionImage) setSelectedImage(target.src)
+          }}
         />
       )}
 
-      {item.images?.length > 0 && (
+      {item.images?.length > 0 && !String(item.note ?? '').includes('data-handover-section-images') && (
         <div className="grid grid-cols-3 gap-3 mt-4">
           {item.images.map((url: string) => (
             <img

@@ -114,12 +114,12 @@ export default function HandoverForm({
 />
 
       {structured ? (
-        <StructuredHandoverEditor value={note} onChange={setNote} />
+        <StructuredHandoverEditor value={note} onChange={setNote} images={images} onImagesChange={onImagesChange} parti={parti} isOnline={isOnline} />
       ) : (
         <HandoverEditor value={note} onChange={setNote} />
       )}
 
-      <div className="mb-4">
+      {!structured && <div className="mb-4">
         <label className="block font-medium mb-1">
           {t.images}
         </label>
@@ -156,7 +156,7 @@ export default function HandoverForm({
             ))}
           </div>
         )}
-      </div>
+      </div>}
 
       <button
         onClick={onSave}

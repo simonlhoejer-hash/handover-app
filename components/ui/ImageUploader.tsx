@@ -8,6 +8,7 @@ import { useTranslation } from '@/lib/LanguageContext'
 type Props = {
   parti: string
   onUploadComplete: (url: string) => void
+  compact?: boolean
 }
 
 const MAX_SIZE_MB = 5
@@ -17,6 +18,7 @@ const MAX_HEIGHT = 4000
 export default function ImageUploader({
   parti,
   onUploadComplete,
+  compact = false,
 }: Props) {
   const { t } = useTranslation()
   const pathname = usePathname()
@@ -106,7 +108,7 @@ export default function ImageUploader({
   }
 
   return (
-    <div className="space-y-4">
+    <div className={compact ? '' : 'space-y-4'}>
 
       <div className="flex items-center gap-4 flex-wrap">
 
@@ -223,9 +225,7 @@ export default function ImageUploader({
 
       </div>
 
-      <p className="text-xs text-gray-500 dark:text-white/50">
-        {t.imageHelp}
-      </p>
+      {!compact && <p className="text-xs text-gray-500 dark:text-white/50">{t.imageHelp}</p>}
 
     </div>
   )

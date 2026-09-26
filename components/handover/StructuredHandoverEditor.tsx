@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '@/lib/LanguageContext'
 import StructuredSectionEditor from './StructuredSectionEditor'
+import ImageUploader from '../ui/ImageUploader'
+import { X } from 'lucide-react'
 
 const sections = [
   { key: 'mise-en-place', label: 'Mise en place', icon: CookingPot },
@@ -30,12 +32,19 @@ function hasText(value: string) {
   return new DOMParser().parseFromString(value, 'text/html').body.textContent?.trim()
 }
 
-function serialize(values: Values) {
-  const filled = sections.filter(({ key }) => hasText(values[key]))
+type SectionImages = Record<SectionKey, string[]>
+const emptySectionImages = () => Object.fromEntries(sections.map(({ key }) => [key, [] as string[]])) as SectionImages
+
+function escapeAttribute(value: string) {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+}
+
+function serialize(values: Values, sectionImages: SectionImages) {
+  const filled = sections.filter(({ key }) => hasText(values[key]) || sectionImages[key].length)
   if (filled.length === 0) return ''
 
   return `<div data-handover-format="structured">${filled.map(({ key, label }) => (
-    `<section data-handover-section="${key}"><h2>${label}</h2>${values[key]}</section>`
+    `<section data-handover-section="${key}"><h2>${label}</h2>${values[key]}${sectionImages[key].length ? `<div class="grid grid-cols-3 gap-3 mt-4" data-handover-section-images="${key}">${sectionImages[key].map((url) => `<img src="${escapeAttribute(url)}" alt="" data-handover-section-image="true" class="h-24 w-full rounded-2xl object-cover" />`).join('')}</div>` : ''}</section>`
   )).join('')}</div>`
 }
 
@@ -55,7 +64,20 @@ function parse(value: string): Values {
     if (!section) return
     const content = section.cloneNode(true) as HTMLElement
     content.querySelector('h2')?.remove()
+    content.querySelector('[data-handover-section-images]')?.remove()
     next[key] = content.innerHTML
+  })
+  return next
+}
+
+function parseSectionImages(value: string): SectionImages {
+  const next = emptySectionImages()
+  if (!value) return next
+  const document = new DOMParser().parseFromString(value, 'text/html')
+  sections.forEach(({ key }) => {
+    next[key] = Array.from(document.querySelectorAll(`[data-handover-section-images="${key}"] img`))
+      .map((image) => image.getAttribute('src') ?? '')
+      .filter(Boolean)
   })
   return next
 }
@@ -63,16 +85,25 @@ function parse(value: string): Values {
 type Props = {
   value: string
   onChange: (value: string) => void
+  images: string[]
+  onImagesChange: (images: string[]) => void
+  parti: string
+  isOnline: boolean
 }
 
-export default function StructuredHandoverEditor({ value, onChange }: Props) {
+export default function StructuredHandoverEditor({ value, onChange, images, onImagesChange, parti, isOnline }: Props) {
   const { lang } = useTranslation()
   const [values, setValues] = useState<Values>(() => emptyValues())
+  const [sectionImages, setSectionImages] = useState<SectionImages>(() => emptySectionImages())
   const lastSerializedValue = useRef('')
 
   useEffect(() => {
     if (value === lastSerializedValue.current) return
     setValues(parse(value))
+    const parsedImages = parseSectionImages(value)
+    const assigned = new Set(Object.values(parsedImages).flat())
+    parsedImages.miscellaneous.push(...images.filter((url) => !assigned.has(url)))
+    setSectionImages(parsedImages)
   }, [value])
 
   const intro = lang === 'en'
@@ -83,10 +114,19 @@ export default function StructuredHandoverEditor({ value, onChange }: Props) {
 
   function update(key: SectionKey, nextValue: string) {
     const next = { ...values, [key]: nextValue }
-    const serialized = serialize(next)
+    const serialized = serialize(next, sectionImages)
     setValues(next)
     lastSerializedValue.current = serialized
     onChange(serialized)
+  }
+
+  function updateSectionImages(key: SectionKey, nextImages: string[]) {
+    const next = { ...sectionImages, [key]: nextImages }
+    const serialized = serialize(values, next)
+    setSectionImages(next)
+    lastSerializedValue.current = serialized
+    onChange(serialized)
+    onImagesChange(Object.values(next).flat())
   }
 
   return (
@@ -118,6 +158,25 @@ export default function StructuredHandoverEditor({ value, onChange }: Props) {
               value={values[key]}
               onChange={(nextValue) => update(key, nextValue)}
             />
+            <div className="mt-3 border-t border-black/[0.06] pt-3 dark:border-white/10">
+              {isOnline ? (
+                <ImageUploader compact parti={parti} onUploadComplete={(url) => updateSectionImages(key, [...sectionImages[key], url])} />
+              ) : (
+                <p className="text-xs text-amber-700 dark:text-amber-200">Billeder kræver internet</p>
+              )}
+              {sectionImages[key].length > 0 && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {sectionImages[key].map((url) => (
+                    <div key={url} className="relative">
+                      <img src={url} alt="" className="h-24 w-full rounded-xl object-cover" />
+                      <button type="button" onClick={() => updateSectionImages(key, sectionImages[key].filter((image) => image !== url))} aria-label={`Fjern billede fra ${label}`} className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white shadow-md">
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
