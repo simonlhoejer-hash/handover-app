@@ -1644,7 +1644,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               </div>
             )}
 
-            {chart.showGuestData && (
+            {chart.kind === 'buffet' && buffetView === 'mess' && (
               <div className="mt-4 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-400/10">
@@ -2112,7 +2112,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                           </span>
                         </div>
 
-                        {chart.showGuestData && (
+                        {chart.kind === 'buffet' && buffetView === 'mess' && (
                           <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-amber-500/15 bg-amber-50 p-3 text-center dark:bg-amber-400/10">
                             <div>
                               <p className="text-[10px] text-gray-500 dark:text-white/55">{t.buffetWaste}</p>
