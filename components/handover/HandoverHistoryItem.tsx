@@ -22,6 +22,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
   const [loading, setLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const isOral = isOralHandoverNote(item.note ?? '')
+  const isStructured = String(item.note ?? '').includes('data-handover-format="structured"')
   const receiverName = String(item.receiver_name ?? '').trim()
 
   function printHandover() {
@@ -146,14 +147,15 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
         </div>
       ) : (
         <div
-          className="
+          className={`
             prose
             dark:prose-invert
             max-w-none
             text-gray-800
             dark:text-white/90
             prose-p:leading-relaxed
-          "
+            ${isStructured ? 'prose-headings:mb-2 prose-headings:mt-0 prose-h2:text-xl sm:prose-h2:text-2xl prose-p:my-1.5 prose-ul:my-2 prose-li:my-0.5 [&_li>p]:my-0 [&_section+section]:mt-7 [&_[data-handover-section-images]]:my-3 [&_[data-handover-section-images]_img]:my-0' : ''}
+          `}
           dangerouslySetInnerHTML={{ __html: item.note }}
           onClick={(event) => {
             const target = event.target as HTMLElement
