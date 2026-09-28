@@ -6,6 +6,7 @@ import BottomNav from '@/components/layout/BottomNav'
 import HeaderTitle from '@/components/layout/HeaderTitle'
 import ConnectionStatus from '@/components/pwa/ConnectionStatus'
 import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration'
+import KeepScreenAwake from '@/components/pwa/KeepScreenAwake'
 
 const TABLET_HANDOVER_IDLE_TIMEOUT_MS = 10 * 60 * 1000
 
@@ -114,6 +115,7 @@ export default function ClientLayout({
     return (
       <>
         <ServiceWorkerRegistration />
+        <KeepScreenAwake />
         {children}
       </>
     )
@@ -122,6 +124,7 @@ export default function ClientLayout({
   return (
     <>
       <ServiceWorkerRegistration />
+      <KeepScreenAwake />
       <ConnectionStatus />
 
       <div className="min-h-screen flex flex-col">
