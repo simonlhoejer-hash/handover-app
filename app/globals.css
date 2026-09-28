@@ -341,5 +341,24 @@ input[type="date"] {
     text-shadow: none !important;
     opacity: 1 !important;
   }
+
+  html[data-print-handover="true"] #handover-print-root [data-handover-section-images],
+  html[data-print-handover="true"] #handover-print-root [data-handover-images] {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12mm !important;
+    margin: 6mm 0 !important;
+  }
+
+  html[data-print-handover="true"] #handover-print-root [data-handover-section-image],
+  html[data-print-handover="true"] #handover-print-root [data-handover-image] {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 105mm !important;
+    object-fit: contain !important;
+    break-inside: avoid;
+    border-radius: 3mm !important;
+  }
 }
 

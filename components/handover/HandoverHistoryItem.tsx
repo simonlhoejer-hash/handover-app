@@ -165,13 +165,14 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
       )}
 
       {item.images?.length > 0 && !String(item.note ?? '').includes('data-handover-section-images') && (
-        <div className="grid grid-cols-3 gap-3 mt-4">
+        <div className="grid grid-cols-3 gap-3 mt-4" data-handover-images>
           {item.images.map((url: string) => (
             <img
               key={url}
               src={url}
               loading="lazy"
               decoding="async"
+              data-handover-image="true"
               onClick={() => setSelectedImage(url)}
               className="
                 h-24 w-full object-cover
