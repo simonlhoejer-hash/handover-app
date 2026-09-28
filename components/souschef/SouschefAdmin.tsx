@@ -25,6 +25,13 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
   const [message, setMessage] = useState('')
   const [editing, setEditing] = useState<Handover | null>(null)
 
+  function refreshOfflineFolders() {
+    if (!('serviceWorker' in navigator)) return
+    void navigator.serviceWorker.ready.then((registration) => {
+      registration.active?.postMessage({ type: 'WARM_SHIP', ship })
+    }).catch(() => undefined)
+  }
+
   const load = useCallback(async () => {
     const [folderResponse, handoverResponse] = await Promise.all([
       fetch(`/api/handover-folders?ship=${ship}`, { cache: 'no-store' }),
@@ -58,6 +65,7 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
       setFolders(result.data)
       setName('')
       setMessage('Mappen er oprettet.')
+      refreshOfflineFolders()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Mappen kunne ikke oprettes.')
     } finally {
@@ -79,6 +87,7 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
       if (!response.ok) throw new Error(result.error)
       setFolders(result.data)
       setMessage('Mappen er slettet.')
+      refreshOfflineFolders()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Mappen kunne ikke slettes.')
     } finally {

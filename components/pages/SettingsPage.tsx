@@ -52,6 +52,19 @@ export default function SettingsPage() {
         const handoverPartis = ship === 'pearl'
           ? ['SYD', 'SYD SPLIT', 'KULL', 'Konditor', 'Besætning', 'Varm Skagerak', 'Stilling 1', 'Slagter', 'KOLD A LA CARDE', 'BAGER', 'KONDIT SPLIT', 'KOLD SKAGERAK', 'MESSEN', 'KÆLDERMAND', 'POTTEN', 'STOR SKYLLERI', 'KULL SKYLLERI', 'PERIODE SKYLLERI', 'SKAGERAK', 'NATSKYLLER']
           : ['SYD', 'KULL varmt', 'KULL koldt', 'Konditor', 'Besætning', 'Opsætter', 'Varm Skagerak', 'Stilling 2', 'Stilling 1', 'Slagter', 'Kældermand', 'Dagskyller', 'Natskyller']
+        try {
+          const response = await fetch(`/api/handover-folders?ship=${ship}`, { cache: 'no-store' })
+          const result = await response.json()
+          if (response.ok && Array.isArray(result.data)) {
+            for (const folder of result.data) {
+              if (typeof folder.name === 'string' && folder.name.trim() && !handoverPartis.includes(folder.name.trim())) {
+                handoverPartis.push(folder.name.trim())
+              }
+            }
+          }
+        } catch {
+          // Offline status can still be read from the last complete cache.
+        }
         const cacheNames = await caches.keys()
         const versions = cacheNames
           .map((name) => name.match(/^handover-offline-v(\d+)$/))

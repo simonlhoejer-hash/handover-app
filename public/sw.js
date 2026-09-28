@@ -1,4 +1,4 @@
-const CACHE_VERSION = '57'
+const CACHE_VERSION = '58'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -69,6 +69,48 @@ const HANDOVER_PARTIS = {
 
 function handoverRoutes(ship) {
   return HANDOVER_PARTIS[ship].map((parti) => `/${ship}/parti/${encodeURIComponent(parti)}`)
+}
+
+function handoverManifestKey(ship) {
+  return `/__offline-handover-routes/${ship}`
+}
+
+async function currentHandoverRoutes(ship, refresh) {
+  const cache = await caches.open(CACHE_NAME)
+  const manifestKey = handoverManifestKey(ship)
+  let dynamicRoutes = []
+
+  if (refresh) {
+    try {
+      const response = await fetchWithTimeout(`/api/handover-folders?ship=${ship}`, { cache: 'no-store' })
+      if (response.ok) {
+        const result = await response.json()
+        dynamicRoutes = (Array.isArray(result.data) ? result.data : [])
+          .map((folder) => typeof folder.name === 'string' ? folder.name.trim() : '')
+          .filter(Boolean)
+          .map((name) => `/${ship}/parti/${encodeURIComponent(name)}`)
+        await cache.put(manifestKey, new Response(JSON.stringify(dynamicRoutes), {
+          headers: { 'content-type': 'application/json' },
+        }))
+      }
+    } catch {
+      // Fall back to the last successfully stored folder manifest.
+    }
+  }
+
+  if (dynamicRoutes.length === 0) {
+    const stored = await cache.match(manifestKey) || await matchNewestOfflineCache(manifestKey)
+    if (stored) dynamicRoutes = await stored.json().catch(() => [])
+  }
+
+  return [...new Set([...handoverRoutes(ship), ...dynamicRoutes])]
+}
+
+async function requiredPathsForShip(ship, refreshFolders) {
+  const routes = FOOD_WASTE_ROUTES
+    .filter((route) => ship === 'crown' || !route.startsWith('/produktion-'))
+    .map((route) => `/${ship}/food-waste${route}`)
+  return [`/${ship}`, ...routes, ...await currentHandoverRoutes(ship, refreshFolders)]
 }
 
 const APP_SHELL = [
@@ -204,16 +246,9 @@ self.addEventListener('message', (event) => {
   const ship = event.data.ship
   if (!SHIPS.includes(ship)) return
 
-  const routes = FOOD_WASTE_ROUTES
-    .filter((route) => ship === 'crown' || !route.startsWith('/produktion-'))
-    .map((route) => `/${ship}/food-waste${route}`)
-
-  const requiredPaths = [`/${ship}`, ...routes]
-  requiredPaths.push(...handoverRoutes(ship))
-
   if (event.data && event.data.type === 'GET_OFFLINE_CACHE_STATUS') {
     event.waitUntil(
-      hasAllPaths(requiredPaths).then((ready) => {
+      requiredPathsForShip(ship, false).then((requiredPaths) => hasAllPaths(requiredPaths)).then((ready) => {
         if (event.source) event.source.postMessage({
           type: 'OFFLINE_CACHE_STATUS',
           ship,
@@ -230,7 +265,8 @@ self.addEventListener('message', (event) => {
   if (event.source) event.source.postMessage({ type: 'OFFLINE_CACHE_START', ship, cacheVersion: CACHE_VERSION })
 
   event.waitUntil(
-    seedFromPreviousCache(requiredPaths).then(async () => {
+    requiredPathsForShip(ship, true).then(async (requiredPaths) => {
+      await seedFromPreviousCache(requiredPaths)
       const seeded = await hasAllPaths(requiredPaths)
 
       if (seeded) {
