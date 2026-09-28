@@ -70,11 +70,14 @@ const LOCATION_GROUPS = [
   {
     title: 'Messen',
     slugs: [
-      'messen-morgen-buffetspild',
+      'messen-morgen-koldt',
+      'messen-morgen-varmt',
       'messen-morgen-tallerkenspild',
-      'messen-frokost-buffetspild',
+      'messen-frokost-koldt',
+      'messen-frokost-varmt',
       'messen-frokost-tallerkenspild',
-      'messen-aften-buffetspild',
+      'messen-aften-koldt',
+      'messen-aften-varmt',
       'messen-aften-tallerkenspild',
     ],
   },
@@ -451,20 +454,24 @@ export default function FoodWastePage({
             ) : group.title === 'Messen' ? (
               <div className="grid gap-5 lg:grid-cols-3">
                 {[
-                  { title: lang === 'en' ? 'Morning' : lang === 'sv' ? 'Morgon' : 'Morgen', slugs: group.slugs.slice(0, 2) },
-                  { title: lang === 'en' ? 'Lunch' : lang === 'sv' ? 'Lunch' : 'Frokost', slugs: group.slugs.slice(2, 4) },
-                  { title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs.slice(4, 6) },
+                  { title: lang === 'en' ? 'Morning' : lang === 'sv' ? 'Morgon' : 'Morgen', slugs: group.slugs.slice(0, 3) },
+                  { title: lang === 'en' ? 'Lunch' : lang === 'sv' ? 'Lunch' : 'Frokost', slugs: group.slugs.slice(3, 6) },
+                  { title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs.slice(6, 9) },
                 ].map((meal) => (
                   <div key={meal.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
                     <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 md:text-base dark:text-white/60">
                       {meal.title}
                     </h3>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       {meal.slugs.map((slug) => {
                         const location = activeStations.find((candidate) => candidate.slug === slug)
                         if (!location) return null
                         const todayAmount = totals.byLocation[location.name] ?? 0
-                        const isPlateWaste = location.name.endsWith('tallerkenspild')
+                        const wasteType = location.name.endsWith('tallerkenspild')
+                          ? lang === 'en' ? 'Plate waste' : lang === 'sv' ? 'Tallrikssvinn' : 'Tallerkenspild'
+                          : location.name.endsWith('varmt')
+                            ? lang === 'en' ? 'Hot waste' : lang === 'sv' ? 'Varmt svinn' : 'Varmt spild'
+                            : lang === 'en' ? 'Cold waste' : lang === 'sv' ? 'Kallt svinn' : 'Koldt spild'
 
                         return (
                           <Link
@@ -474,9 +481,7 @@ export default function FoodWastePage({
                           >
                             <div className="flex h-full w-full min-w-0 flex-col items-center justify-center gap-2 overflow-hidden">
                               <span className="max-w-full text-base font-semibold leading-tight tracking-tight md:text-lg 2xl:text-xl">
-                                {isPlateWaste
-                                  ? lang === 'en' ? 'Plate waste' : lang === 'sv' ? 'Tallrikssvinn' : 'Tallerkenspild'
-                                  : lang === 'en' ? 'Buffet waste' : lang === 'sv' ? 'Buffésvinn' : 'Buffetspild'}
+                                {wasteType}
                               </span>
                               <span className={`rounded-full px-2.5 py-1 text-xs font-medium md:text-sm ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
                                 {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}

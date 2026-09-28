@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseAccessShip, requestHasShipAccess, requestHasSouschefAccess } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
-import { defaultFoodWasteStations, type FoodWasteStation } from '@/lib/foodWasteStationConfig'
+import { defaultFoodWasteStations, withCurrentMessStations, type FoodWasteStation } from '@/lib/foodWasteStationConfig'
 
 const areas = new Set(['morning-buffet', 'evening-buffet', 'mess', 'production'])
 
@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
   if (!ship || !(await requestHasShipAccess(request, ship))) return NextResponse.json({ error: 'Ingen adgang.' }, { status: 401 })
   const { data, error } = await getSupabaseAdmin().from('food_waste_station_config').select('stations').eq('vessel', ship).maybeSingle()
   if (error && error.code !== '42P01') return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ data: Array.isArray(data?.stations) && data.stations.length ? data.stations : defaultFoodWasteStations(ship) })
+  const stations = Array.isArray(data?.stations) && data.stations.length ? data.stations as FoodWasteStation[] : defaultFoodWasteStations(ship)
+  return NextResponse.json({ data: withCurrentMessStations(stations, ship) })
 }
 
 export async function POST(request: NextRequest) {

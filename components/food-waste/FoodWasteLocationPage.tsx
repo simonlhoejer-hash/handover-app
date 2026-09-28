@@ -284,11 +284,12 @@ export default function FoodWasteLocationPage({
     : enteredGrossQuantity
   const projectedTodayTotal = selectedDateTotal + enteredQuantity
   const isProvisionsComment = locationName === 'Produktion Proviant'
+  const isMessLocation = locationName.startsWith('Messen ')
   const requiresWasteReason =
     historicalDailyAverage > 0 &&
     projectedTodayTotal > historicalDailyAverage * 1.4 &&
     projectedTodayTotal - historicalDailyAverage >= 2
-  const requiresComment = requiresWasteReason
+  const requiresComment = requiresWasteReason && !isMessLocation
 
   async function saveEntry(value: string, comment: string | null = null) {
     if (!selectedDate) {
@@ -310,9 +311,15 @@ export default function FoodWasteLocationPage({
     const grossQuantity = Number(value.replace(',', '.'))
     const quantity = usesBucketWeight ? netWasteWeight(grossQuantity) : grossQuantity
 
-    if (!Number.isFinite(grossQuantity) || quantity <= 0) {
+    if (!Number.isFinite(grossQuantity) || quantity <= 0 || quantity >= 100) {
       setError(
-        usesBucketWeight && grossQuantity > 0
+        quantity >= 100
+          ? lang === 'en'
+            ? 'Maximum 99.99 kg per registration. Check the decimal point or comma.'
+            : lang === 'sv'
+              ? 'Högst 99,99 kg per registrering. Kontrollera decimaltecknet.'
+              : 'Maks. 99,99 kg pr. registrering. Kontrollér komma eller punktum.'
+          : usesBucketWeight && grossQuantity > 0
           ? lang === 'en'
             ? 'The total weight must be greater than the bucket weight of 1.37 kg.'
             : lang === 'sv'

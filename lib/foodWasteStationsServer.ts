@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from './supabaseServer'
-import { defaultFoodWasteStations, type FoodWasteStation } from './foodWasteStationConfig'
+import { defaultFoodWasteStations, withCurrentMessStations, type FoodWasteStation } from './foodWasteStationConfig'
 
 export async function getConfiguredFoodWasteStations(ship: 'crown' | 'pearl'): Promise<FoodWasteStation[]> {
   const { data, error } = await getSupabaseAdmin()
@@ -8,5 +8,5 @@ export async function getConfiguredFoodWasteStations(ship: 'crown' | 'pearl'): P
     .eq('vessel', ship)
     .maybeSingle()
   if (error || !Array.isArray(data?.stations) || data.stations.length === 0) return defaultFoodWasteStations(ship)
-  return data.stations as FoodWasteStation[]
+  return withCurrentMessStations(data.stations as FoodWasteStation[], ship)
 }

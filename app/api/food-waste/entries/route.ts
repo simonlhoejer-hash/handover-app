@@ -66,7 +66,9 @@ export async function POST(request: NextRequest) {
   const wasteDate = typeof body.waste_date === 'string' ? body.waste_date.slice(0, 10) : ''
   const locationName = typeof body.location_name === 'string' ? body.location_name.trim().slice(0, 200) : ''
   const quantityKg = Number(body.quantity_kg)
-  const comment = typeof body.comment === 'string' ? body.comment.slice(0, 1000) : null
+  const comment = locationName.startsWith('Messen ')
+    ? null
+    : typeof body.comment === 'string' ? body.comment.slice(0, 1000) : null
   const clientId = normalizeClientId(body.client_id, ship)
   const configuredStations = await getConfiguredFoodWasteStations(ship)
   const locationIsAllowed = configuredStations.some(
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest) {
       (ship === 'crown' || !location.name.startsWith('Produktion '))
   )
 
-  if (!wasteDate || !locationIsAllowed || !Number.isFinite(quantityKg) || quantityKg <= 0 || quantityKg > 10000) {
+  if (!wasteDate || !locationIsAllowed || !Number.isFinite(quantityKg) || quantityKg <= 0 || quantityKg >= 100) {
     return NextResponse.json({ error: 'Ugyldig registrering.' }, { status: 400 })
   }
 

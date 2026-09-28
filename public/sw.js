@@ -1,4 +1,4 @@
-const CACHE_VERSION = '58'
+const CACHE_VERSION = '59'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -40,11 +40,14 @@ const FOOD_WASTE_ROUTES = [
   '/messen-morgen',
   '/messen-frokost',
   '/messen-aften',
-  '/messen-morgen-buffetspild',
+  '/messen-morgen-koldt',
+  '/messen-morgen-varmt',
   '/messen-morgen-tallerkenspild',
-  '/messen-frokost-buffetspild',
+  '/messen-frokost-koldt',
+  '/messen-frokost-varmt',
   '/messen-frokost-tallerkenspild',
-  '/messen-aften-buffetspild',
+  '/messen-aften-koldt',
+  '/messen-aften-varmt',
   '/messen-aften-tallerkenspild',
   '/commodore-morgen',
   '/produktion-main-galley',
