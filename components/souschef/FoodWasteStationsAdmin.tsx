@@ -1,9 +1,10 @@
 'use client'
 
 import { FormEvent, useEffect, useState } from 'react'
-import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, Plus, RotateCcw } from 'lucide-react'
 import type { AccessShip } from '@/lib/shipAccess'
 import { stationSlug, type FoodWasteStation, type WasteArea } from '@/lib/foodWasteStationConfig'
+import { readCachedFoodWasteEntries } from '@/lib/foodWasteOffline'
 
 const labels: Record<WasteArea, string> = { 'morning-buffet': 'Morgenbuffet', 'evening-buffet': 'Aftenbuffet', mess: 'Messen', production: 'Produktion' }
 
@@ -36,9 +37,34 @@ export default function FoodWasteStationsAdmin({ ship }: { ship: AccessShip }) {
   function change(index: number, changes: Partial<FoodWasteStation>) { const next = stations.map((station, i) => i === index ? { ...station, ...changes } : station); setStations(next) }
   function move(index: number, direction: -1 | 1) { const target = index + direction; if (target < 0 || target >= stations.length) return; const next = [...stations]; [next[index], next[target]] = [next[target], next[index]]; void save(next) }
 
+  async function recoverMessEntries() {
+    const cached = readCachedFoodWasteEntries(ship).filter((entry) => entry.location_name.startsWith('Messen '))
+    if (cached.length === 0) {
+      setMessage('Denne enhed har ingen Messen-målinger i sin offlinecache.')
+      return
+    }
+
+    setBusy(true); setMessage(`Gendanner ${cached.length} Messen-målinger…`)
+    const response = await fetch('/api/food-waste/recover-mess', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ship, entries: cached }),
+    })
+    const result = await response.json()
+    setMessage(response.ok
+      ? `${result.data?.restored ?? 0} Messen-målinger fra denne enhed er lagt tilbage. Knappen kan trygt bruges på andre enheder uden dubletter.`
+      : result.error ?? 'Målingerne kunne ikke gendannes.')
+    setBusy(false)
+  }
+
   return <section className="mt-7 rounded-3xl border border-black/5 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#0d3b3a] sm:p-7">
     <h2 className="text-xl font-semibold">Administrér spildstationer</h2>
     <p className="mt-1 text-sm text-gray-500 dark:text-white/60">Ændringer gælder kun {ship === 'crown' ? 'Crown' : 'Pearl'}. Deaktivér stationer med historik i stedet for at slette dem.</p>
+    <div className="mt-5 rounded-2xl border border-amber-500/25 bg-amber-50 p-4 dark:bg-amber-400/10">
+      <h3 className="font-semibold text-amber-900 dark:text-amber-100">Gendan Messen-målinger</h3>
+      <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">Finder de tidligere målinger, som denne enhed stadig har gemt offline. Oprindelige datoer og vægte bevares, og samme måling oprettes ikke to gange.</p>
+      <button type="button" onClick={() => void recoverMessEntries()} disabled={busy} className="mt-3 flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-3 font-semibold text-white disabled:opacity-50"><RotateCcw size={18}/> Gendan fra denne enhed</button>
+    </div>
     <form onSubmit={add} className="mt-5 grid gap-3 sm:grid-cols-[1fr_190px_auto]">
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ny stations navn" maxLength={120} className="rounded-xl border border-black/10 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/5" />
       <select value={area} onChange={(e) => setArea(e.target.value as WasteArea)} className="rounded-xl border border-black/10 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-[#0d3b3a]">{Object.entries(labels).filter(([key]) => ship === 'crown' || key !== 'production').map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
