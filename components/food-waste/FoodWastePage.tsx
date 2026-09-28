@@ -387,7 +387,7 @@ export default function FoodWastePage({
           .map((group) => (
           <section
             key={group.title}
-            className={`${group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' || group.title === 'Messen' ? 'lg:col-span-2' : ''} lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]`}
+            className={`${group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' || group.title === 'Messen' || group.title === 'Produktion' ? 'lg:col-span-2' : ''} lg:min-w-0 lg:rounded-3xl lg:border lg:border-black/5 lg:bg-white/65 lg:p-5 lg:shadow-sm lg:backdrop-blur-sm dark:lg:border-white/[0.12] dark:lg:bg-white/[0.045] dark:lg:shadow-[0_18px_45px_rgba(0,0,0,0.16)]`}
           >
             {(group.title === 'Produktion' || group.title.startsWith('D')) && (
             <div className="mb-4 flex items-center justify-center gap-4 lg:mb-4 lg:gap-3">
@@ -544,7 +544,7 @@ export default function FoodWastePage({
                     "
                   >
                     <div className="flex h-full flex-col items-center justify-center gap-2">
-                      <h3 className="flex min-h-10 flex-col items-center justify-center text-lg font-semibold leading-tight tracking-tight md:min-h-14 md:text-[22px] lg:text-[22px]">
+                      <h3 className="flex min-h-10 w-full min-w-0 flex-col items-center justify-center break-words text-lg font-semibold leading-tight tracking-tight md:min-h-14 md:text-[22px] lg:text-[22px]">
                         {group.title === 'Produktion' ? (
                           <>
                             <span className="block">Produktion</span>
