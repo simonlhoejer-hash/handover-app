@@ -458,17 +458,20 @@ export default function FoodWastePage({
                   { title: lang === 'en' ? 'Lunch' : lang === 'sv' ? 'Lunch' : 'Frokost', slugs: group.slugs.slice(3, 6) },
                   { title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs.slice(6, 9) },
                 ].map((meal) => (
-                  <div key={meal.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
-                    <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 md:text-base dark:text-white/60">
+                  <div key={meal.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-4 dark:border-white/10 dark:bg-black/10">
+                    <h3 className="mb-4 text-center text-sm font-bold uppercase tracking-[0.18em] text-gray-500 md:text-base dark:text-white/60">
                       {meal.title}
                     </h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid gap-2.5">
                       {meal.slugs.map((slug) => {
                         const location = activeStations.find((candidate) => candidate.slug === slug)
                         if (!location) return null
                         const todayAmount = totals.byLocation[location.name] ?? 0
+                        const wasteKind = location.name.endsWith('tallerkenspild')
+                          ? 'plate'
+                          : location.name.endsWith('varmt') ? 'hot' : 'cold'
                         const wasteType = location.name.endsWith('tallerkenspild')
-                          ? lang === 'en' ? 'Plate waste' : lang === 'sv' ? 'Tallrikssvinn' : 'Tallerkenspild'
+                          ? lang === 'en' ? 'Plate waste' : lang === 'sv' ? 'Tallrikssvinn' : 'Tallerken'
                           : location.name.endsWith('varmt')
                             ? lang === 'en' ? 'Hot waste' : lang === 'sv' ? 'Varmt svinn' : 'Varmt spild'
                             : lang === 'en' ? 'Cold waste' : lang === 'sv' ? 'Kallt svinn' : 'Koldt spild'
@@ -477,16 +480,15 @@ export default function FoodWastePage({
                           <Link
                             key={slug}
                             href={`${basePath}/food-waste/${slug}`}
-                            className="flex h-[126px] min-w-0 items-center justify-center rounded-xl border border-gray-200/70 bg-white px-2 py-3 text-center text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] md:h-[146px] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
+                            className="group flex min-h-[68px] min-w-0 items-center justify-between gap-3 rounded-xl border border-gray-200/70 bg-white px-3.5 py-3 text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-[#347f7a]/40 hover:shadow-md active:scale-[0.98] dark:border-white/[0.12] dark:bg-white/[0.055] dark:text-white"
                           >
-                            <div className="flex h-full w-full min-w-0 flex-col items-center justify-center gap-2 overflow-hidden">
-                              <span className="max-w-full text-base font-semibold leading-tight tracking-tight md:text-lg 2xl:text-xl">
-                                {wasteType}
-                              </span>
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium md:text-sm ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
-                                {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
-                              </span>
+                            <div className="flex min-w-0 items-center gap-3">
+                              <span className={`h-9 w-1.5 shrink-0 rounded-full ${wasteKind === 'hot' ? 'bg-amber-500' : wasteKind === 'cold' ? 'bg-cyan-500' : 'bg-violet-500'}`} />
+                              <span className="truncate text-base font-semibold tracking-tight md:text-lg">{wasteType}</span>
                             </div>
+                            <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold md:text-sm ${todayAmount > 0 ? 'bg-emerald-400/20 text-emerald-600' : 'bg-gray-500/10 text-gray-500 dark:text-white/60'}`}>
+                              {loading ? t.loadingShort : todayAmount > 0 ? formatAmount(todayAmount, lang) : t.zeroKgToday}
+                            </span>
                           </Link>
                         )
                       })}
