@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'node:crypto'
 import { parseAccessShip, requestHasShipAccess } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
-import { FOOD_WASTE_LOCATIONS } from '@/lib/foodWasteLocations'
+import { getConfiguredFoodWasteStations } from '@/lib/foodWasteStationsServer'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -68,9 +68,10 @@ export async function POST(request: NextRequest) {
   const quantityKg = Number(body.quantity_kg)
   const comment = typeof body.comment === 'string' ? body.comment.slice(0, 1000) : null
   const clientId = normalizeClientId(body.client_id, ship)
-  const locationIsAllowed = FOOD_WASTE_LOCATIONS.some(
+  const configuredStations = await getConfiguredFoodWasteStations(ship)
+  const locationIsAllowed = configuredStations.some(
     (location) =>
-      location.name === locationName &&
+      location.name === locationName && location.active &&
       (ship === 'crown' || !location.name.startsWith('Produktion '))
   )
 

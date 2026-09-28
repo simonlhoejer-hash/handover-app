@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { displayFoodWasteLocation, FOOD_WASTE_LOCATIONS, getCopenhagenMinutes, getFoodWasteLocationPresentation } from '@/lib/foodWasteLocations'
+import { displayFoodWasteLocation, getCopenhagenMinutes, getFoodWasteLocationPresentation } from '@/lib/foodWasteLocations'
 import { LockKeyhole } from 'lucide-react'
 import {
   cacheFoodWasteEntries,
@@ -13,6 +13,7 @@ import {
 import { useTranslation } from '@/lib/LanguageContext'
 import { queryString, secureFetch } from '@/lib/secureApi'
 import { formatFoodWasteAmount } from '@/lib/formatFoodWasteAmount'
+import { defaultFoodWasteStations, type FoodWasteStation } from '@/lib/foodWasteStationConfig'
 
 type FoodWasteEntry = {
   id: string
@@ -108,9 +109,23 @@ export default function FoodWastePage({
   const [error, setError] = useState('')
   const [activeArea, setActiveArea] = useState<WasteArea>('morning-buffet')
   const [currentMinute, setCurrentMinute] = useState<number | null>(null)
+  const [stations, setStations] = useState<FoodWasteStation[]>(() => defaultFoodWasteStations(vessel))
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const today = getToday()
+  const activeStations = stations.filter((station) => station.active)
+  const locationGroups = [
+    { title: 'Morgenbuffet', slugs: activeStations.filter((station) => station.area === 'morning-buffet').map((station) => station.slug) },
+    { title: 'Aftenbuffet', slugs: activeStations.filter((station) => station.area === 'evening-buffet').map((station) => station.slug) },
+    { title: 'Messen', slugs: activeStations.filter((station) => station.area === 'mess').map((station) => station.slug) },
+    { title: 'Produktion', slugs: activeStations.filter((station) => station.area === 'production').map((station) => station.slug) },
+  ].filter((group) => group.slugs.length > 0)
+
+  useEffect(() => {
+    void secureFetch<{ data: FoodWasteStation[] }>(`/api/food-waste/locations?${queryString({ ship: vessel })}`)
+      .then((result) => setStations(result.data ?? defaultFoodWasteStations(vessel)))
+      .catch(() => {})
+  }, [vessel])
 
   useEffect(() => {
     const updateMinute = () => {
@@ -188,7 +203,7 @@ export default function FoodWastePage({
   useEffect(() => {
     if (!navigator.onLine) return
 
-    for (const group of LOCATION_GROUPS) {
+    for (const group of locationGroups) {
       if (vessel !== 'crown' && group.title !== 'Morgenbuffet' && group.title !== 'Aftenbuffet' && group.title !== 'Messen') {
         continue
       }
@@ -197,7 +212,7 @@ export default function FoodWastePage({
       }
     }
     router.prefetch(`${basePath}/food-waste/overblik`)
-  }, [basePath, router, vessel])
+  }, [basePath, router, vessel, stations])
 
   useEffect(() => {
     let isCurrent = true
@@ -358,7 +373,7 @@ export default function FoodWastePage({
           if (touch) finishAreaSwipe(touch.clientX, touch.clientY)
         }}
       >
-        {LOCATION_GROUPS
+        {locationGroups
           .filter((group) => vessel === 'crown' || group.title === 'Morgenbuffet' || group.title === 'Aftenbuffet' || group.title === 'Messen')
           .filter((group) =>
             visibleArea === 'morning-buffet'
@@ -394,18 +409,19 @@ export default function FoodWastePage({
               <div className={`grid gap-5 ${group.title === 'Morgenbuffet' ? 'lg:grid-cols-2' : ''}`}>
                 {(group.title === 'Morgenbuffet'
                   ? [
-                      { title: 'Skagerak', slugs: group.slugs.slice(0, 2) },
-                      { title: 'Commodore', slugs: group.slugs.slice(2, 4) },
+                      { title: 'Skagerak', slugs: group.slugs.filter((slug) => activeStations.find((station) => station.slug === slug)?.name.startsWith('Skagerak')) },
+                      { title: 'Commodore', slugs: group.slugs.filter((slug) => activeStations.find((station) => station.slug === slug)?.name.startsWith('Commodore')) },
+                      { title: 'Andre', slugs: group.slugs.filter((slug) => !/^(Skagerak|Commodore)/.test(activeStations.find((station) => station.slug === slug)?.name ?? '')) },
                     ]
                   : [{ title: lang === 'en' ? 'Evening' : lang === 'sv' ? 'Kväll' : 'Aften', slugs: group.slugs }]
-                ).map((buffetGroup) => (
+                ).filter((buffetGroup) => buffetGroup.slugs.length > 0).map((buffetGroup) => (
                   <div key={buffetGroup.title} className="rounded-2xl border border-black/5 bg-black/[0.025] p-3 dark:border-white/10 dark:bg-black/10">
                     <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-gray-500 md:text-base dark:text-white/60">
                       {buffetGroup.title}
                     </h3>
                     <div className={`grid grid-cols-2 gap-3 ${group.title === 'Aftenbuffet' ? 'sm:grid-cols-4' : ''}`}>
                       {buffetGroup.slugs.map((slug) => {
-                        const location = FOOD_WASTE_LOCATIONS.find((candidate) => candidate.slug === slug)
+                        const location = activeStations.find((candidate) => candidate.slug === slug)
                         if (!location) return null
                         const todayAmount = totals.byLocation[location.name] ?? 0
                         const presentation = getFoodWasteLocationPresentation(location.name, lang)
@@ -445,7 +461,7 @@ export default function FoodWastePage({
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                       {meal.slugs.map((slug) => {
-                        const location = FOOD_WASTE_LOCATIONS.find((candidate) => candidate.slug === slug)
+                        const location = activeStations.find((candidate) => candidate.slug === slug)
                         if (!location) return null
                         const todayAmount = totals.byLocation[location.name] ?? 0
                         const isPlateWaste = location.name.endsWith('tallerkenspild')
@@ -485,7 +501,7 @@ export default function FoodWastePage({
               `}
             >
               {group.slugs.map((slug) => {
-                const location = FOOD_WASTE_LOCATIONS.find(
+                const location = activeStations.find(
                   (candidate) => candidate.slug === slug
                 )
 

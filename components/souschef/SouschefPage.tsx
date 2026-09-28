@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Clock3,
   FolderKanban,
+  MapPinned,
   LayoutDashboard,
   ListTodo,
   LogOut,
@@ -17,11 +18,12 @@ import {
   Trash2,
 } from 'lucide-react'
 import SouschefAdmin from '@/components/souschef/SouschefAdmin'
+import FoodWasteStationsAdmin from '@/components/souschef/FoodWasteStationsAdmin'
 import type { AccessShip } from '@/lib/shipAccess'
 
 type TaskStatus = 'new' | 'doing' | 'waiting' | 'done'
 type TaskPriority = 'normal' | 'important' | 'critical'
-type DashboardTab = 'overview' | 'tasks' | 'folders' | 'handovers'
+type DashboardTab = 'overview' | 'tasks' | 'folders' | 'stations' | 'handovers'
 
 type ManagerTask = {
   id: string
@@ -175,6 +177,7 @@ export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) 
         </>}
 
         {activeTab === 'folders' && <SouschefAdmin ship={ship} view="folders" />}
+        {activeTab === 'stations' && <FoodWasteStationsAdmin ship={ship} />}
         {activeTab === 'handovers' && <SouschefAdmin ship={ship} view="handovers" />}
 
         {activeTab === 'tasks' && <>
@@ -224,10 +227,11 @@ export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) 
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(6,78,76,.10)] backdrop-blur-xl dark:border-white/10 dark:bg-[#073f3d]/95" aria-label="Souschef-navigation">
-        <div className="mx-auto grid max-w-xl grid-cols-4 gap-1">
+        <div className="mx-auto grid max-w-2xl grid-cols-5 gap-1">
           <DashboardNavButton active={activeTab === 'overview'} label="Overblik" icon={<LayoutDashboard size={20} />} onClick={() => setActiveTab('overview')} />
           <DashboardNavButton active={activeTab === 'tasks'} label="Opgaver" icon={<ListTodo size={20} />} onClick={() => setActiveTab('tasks')} />
           <DashboardNavButton active={activeTab === 'folders'} label="Mapper" icon={<FolderKanban size={20} />} onClick={() => setActiveTab('folders')} />
+          <DashboardNavButton active={activeTab === 'stations'} label="Stationer" icon={<MapPinned size={20} />} onClick={() => setActiveTab('stations')} />
           <DashboardNavButton active={activeTab === 'handovers'} label="Overleveringer" icon={<ClipboardList size={20} />} onClick={() => setActiveTab('handovers')} />
         </div>
       </nav>
