@@ -49,6 +49,9 @@ export default function SettingsPage() {
               ]
             : []),
         ]
+        const handoverPartis = ship === 'pearl'
+          ? ['SYD', 'SYD SPLIT', 'KULL', 'Konditor', 'Besætning', 'Varm Skagerak', 'Stilling 1', 'Slagter', 'KOLD A LA CARDE', 'BAGER', 'KONDIT SPLIT', 'KOLD SKAGERAK', 'MESSEN', 'KÆLDERMAND', 'POTTEN', 'STOR SKYLLERI', 'KULL SKYLLERI', 'PERIODE SKYLLERI', 'SKAGERAK', 'NATSKYLLER']
+          : ['SYD', 'KULL varmt', 'KULL koldt', 'Konditor', 'Besætning', 'Opsætter', 'Varm Skagerak', 'Stilling 2', 'Stilling 1', 'Slagter', 'Kældermand', 'Dagskyller', 'Natskyller']
         const cacheNames = await caches.keys()
         const versions = cacheNames
           .map((name) => name.match(/^handover-offline-v(\d+)$/))
@@ -57,7 +60,11 @@ export default function SettingsPage() {
 
         for (const match of versions) {
           const cache = await caches.open(match[0])
-          const requiredPaths = [`/${ship}`, ...routes.map((route) => `/${ship}/food-waste${route}`)]
+          const requiredPaths = [
+            `/${ship}`,
+            ...routes.map((route) => `/${ship}/food-waste${route}`),
+            ...handoverPartis.map((parti) => `/${ship}/parti/${encodeURIComponent(parti)}`),
+          ]
           const cachedPages = await Promise.all(
             requiredPaths.map((path) => cache.match(path))
           )

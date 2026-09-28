@@ -1,4 +1,4 @@
-const CACHE_VERSION = '56'
+const CACHE_VERSION = '57'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -53,12 +53,32 @@ const FOOD_WASTE_ROUTES = [
   '/produktion-proviant-daek-1',
 ]
 
+const HANDOVER_PARTIS = {
+  crown: [
+    'SYD', 'KULL varmt', 'KULL koldt', 'Konditor', 'Besætning', 'Opsætter',
+    'Varm Skagerak', 'Stilling 2', 'Stilling 1', 'Slagter', 'Kældermand',
+    'Dagskyller', 'Natskyller',
+  ],
+  pearl: [
+    'SYD', 'SYD SPLIT', 'KULL', 'Konditor', 'Besætning', 'Varm Skagerak',
+    'Stilling 1', 'Slagter', 'KOLD A LA CARDE', 'BAGER', 'KONDIT SPLIT',
+    'KOLD SKAGERAK', 'MESSEN', 'KÆLDERMAND', 'POTTEN', 'STOR SKYLLERI',
+    'KULL SKYLLERI', 'PERIODE SKYLLERI', 'SKAGERAK', 'NATSKYLLER',
+  ],
+}
+
+function handoverRoutes(ship) {
+  return HANDOVER_PARTIS[ship].map((parti) => `/${ship}/parti/${encodeURIComponent(parti)}`)
+}
+
 const APP_SHELL = [
   '/',
   '/ships',
   '/crown',
+  ...handoverRoutes('crown'),
   ...FOOD_WASTE_ROUTES.map((route) => `/crown/food-waste${route}`),
   '/pearl',
+  ...handoverRoutes('pearl'),
   ...FOOD_WASTE_ROUTES
     .filter((route) => !route.startsWith('/produktion-'))
     .map((route) => `/pearl/food-waste${route}`),
@@ -189,6 +209,7 @@ self.addEventListener('message', (event) => {
     .map((route) => `/${ship}/food-waste${route}`)
 
   const requiredPaths = [`/${ship}`, ...routes]
+  requiredPaths.push(...handoverRoutes(ship))
 
   if (event.data && event.data.type === 'GET_OFFLINE_CACHE_STATUS') {
     event.waitUntil(
