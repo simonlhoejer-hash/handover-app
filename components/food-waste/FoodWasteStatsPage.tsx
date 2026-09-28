@@ -328,8 +328,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [comparisonLoaded, setComparisonLoaded] = useState(false)
   const [guestCounts, setGuestCounts] = useState<GuestCount[]>([])
   const [guestDate, setGuestDate] = useState(today)
-  const [breakfastGuests, setBreakfastGuests] = useState('')
-  const [skagerakEveningGuests, setSkagerakEveningGuests] = useState('')
   const [messGuests, setMessGuests] = useState('160')
   const [buffetView, setBuffetView] = useState<BuffetView>('all')
   const [buffetDetailView, setBuffetDetailView] = useState<BuffetDetailView>('all')
@@ -524,8 +522,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   useEffect(() => {
     const saved = guestCounts.find((guest) => guest.service_date === guestDate)
     const breakdown = getGuestBreakdown(saved)
-    setBreakfastGuests(breakdown ? String(breakdown.breakfastGuests || '') : '')
-    setSkagerakEveningGuests(breakdown ? String(breakdown.skagerakEvening || '') : '')
     setMessGuests(String(breakdown?.messGuests ?? 160))
   }, [guestCounts, guestDate])
 
@@ -724,14 +720,13 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   async function saveGuestCount() {
     const breakdown: GuestBreakdown = {
       type: 'guest_breakdown',
-      breakfastGuests: Number(breakfastGuests) || 0,
-      skagerakMorning: Number(breakfastGuests) || 0,
+      breakfastGuests: 0,
+      skagerakMorning: 0,
       commodoreMorning: 0,
-      skagerakEvening: Number(skagerakEveningGuests) || 0,
+      skagerakEvening: 0,
       messGuests: Number(messGuests) || 0,
     }
-    const morningTotal = breakdown.breakfastGuests
-    const guests = Math.max(morningTotal, breakdown.skagerakEvening) + breakdown.messGuests
+    const guests = breakdown.messGuests
 
     if (
       Object.values(breakdown).some((value) => typeof value === 'number' && (!Number.isFinite(value) || value < 0)) ||
@@ -1140,7 +1135,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       maxValue: maxBuffetChartValue,
       averageValue: activeBuffetStats.chartPoints.reduce((sum, point) => sum + point.total, 0) / Math.max(activeBuffetStats.chartPoints.length, 1),
       barClass: 'bg-amber-500',
-      showGuestData: true,
+      showGuestData: buffetView === 'mess',
       showEstimate: false,
     },
     ...(vessel === 'crown' ? [{
@@ -2222,7 +2217,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
           >
             <span className="flex items-center gap-2">
               <Users size={18} className="text-nordic" />
-              {t.writeGuests}
+              {lang === 'en' ? 'Crew mess guests' : lang === 'sv' ? 'Gäster i mässen' : 'Gæster i Messen'}
               {missingGuestDates.length > 0 && (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-bold text-white">
                   {missingGuestDates.length}
@@ -2278,36 +2273,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   onChange={(event) => setGuestDate(event.target.value)}
                   className="h-12 w-full rounded-xl border border-black/5 bg-gray-100 px-4 dark:border-white/10 dark:bg-[#082f2e]"
                 />
-                <fieldset className="grid gap-2 rounded-xl border border-black/5 bg-gray-50 p-3 dark:border-white/10 dark:bg-[#082f2e]">
-                  <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-white/55">
-                    {guestFieldText.morning}
-                  </legend>
-                  <label className="grid grid-cols-[1fr_6rem] items-center gap-3">
-                    <span className="text-sm font-medium">{guestFieldText.breakfastTotal}</span>
-                    <input
-                      inputMode="numeric"
-                      value={breakfastGuests}
-                      onChange={(event) => setBreakfastGuests(event.target.value)}
-                      className="h-10 rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
-                      placeholder="0"
-                    />
-                  </label>
-                </fieldset>
-                <fieldset className="grid gap-2 rounded-xl border border-black/5 bg-gray-50 p-3 dark:border-white/10 dark:bg-[#082f2e]">
-                  <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-white/55">
-                    {guestFieldText.evening}
-                  </legend>
-                  <label className="grid grid-cols-[1fr_6rem] items-center gap-3">
-                    <span className="text-sm font-medium">Skagerak</span>
-                    <input
-                      inputMode="numeric"
-                      value={skagerakEveningGuests}
-                      onChange={(event) => setSkagerakEveningGuests(event.target.value)}
-                      className="h-10 rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
-                      placeholder="0"
-                    />
-                  </label>
-                </fieldset>
                 <label className="grid grid-cols-[1fr_6rem] items-center gap-3 rounded-xl border border-black/5 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-[#082f2e]">
                   <span className="text-sm font-medium">{guestFieldText.messPerMeal} <small className="block font-normal text-gray-500 dark:text-white/50">{guestFieldText.estimated}</small></span>
                   <input
@@ -2317,16 +2282,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                     className="h-10 rounded-lg border border-black/5 bg-white px-3 text-right text-lg font-semibold dark:border-white/10 dark:bg-[#0d3b3a]"
                   />
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-nordic-soft px-3 py-2 text-sm">
-                    <span className="block text-xs text-gray-500 dark:text-white/55">{guestFieldText.morningTotal}</span>
-                    <strong className="text-lg text-nordic">{formatNumber(Number(breakfastGuests) || 0, lang)}</strong>
-                  </div>
-                  <div className="rounded-xl bg-nordic-soft px-3 py-2 text-sm">
-                    <span className="block text-xs text-gray-500 dark:text-white/55">{guestFieldText.eveningTotal}</span>
-                    <strong className="text-lg text-nordic">{formatNumber(Number(skagerakEveningGuests) || 0, lang)}</strong>
-                  </div>
-                </div>
                 <button
                   onClick={saveGuestCount}
                   disabled={savingGuests}
