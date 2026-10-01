@@ -38,13 +38,12 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null
   const ship = parseAccessShip(typeof body?.ship === 'string' ? body.ship : null)
   const handoverId = typeof body?.handoverId === 'string' ? body.handoverId.slice(0, 100) : ''
-  const authorName = typeof body?.authorName === 'string' ? body.authorName.trim().slice(0, 100) : ''
+  const authorName = 'Anonym'
   const comment = typeof body?.comment === 'string' ? body.comment.trim().slice(0, 5000) : ''
 
   if (
     !ship ||
     !handoverId ||
-    !authorName ||
     !comment ||
     !(await requestHasShipAccess(request, ship)) ||
     !(await handoverBelongsToShip(handoverId, ship))

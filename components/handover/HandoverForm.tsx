@@ -62,10 +62,6 @@ const inputClass = `
 `
 
 export default function HandoverForm({
-  name,
-  setName,
-  receiver,
-  setReceiver,
   date,
   setDate,
   minDate,
@@ -82,28 +78,6 @@ export default function HandoverForm({
   const { t } = useTranslation()
   return (
 <section className={cardClass}>
-      <input
-        className={inputClass}
-        placeholder={t.senderName}
-        value={name}
-        maxLength={80}
-        autoCapitalize="words"
-        autoComplete="name"
-        spellCheck={false}
-        onChange={(e) => setName(e.target.value)}
-      />
-
-      <input
-        className={inputClass}
-        placeholder={t.receiverName}
-        value={receiver}
-        maxLength={80}
-        autoCapitalize="words"
-        autoComplete="name"
-        spellCheck={false}
-        onChange={(e) => setReceiver(e.target.value)}
-      />
-
 <input
   type="date"
   value={date}

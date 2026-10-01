@@ -9,7 +9,6 @@ import { createPortal } from 'react-dom'
 import { queryString, secureFetch, type AccessShip } from '@/lib/secureApi'
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronLeft, CloudOff, LoaderCircle, Sparkles, X } from 'lucide-react'
 import { displayPartiName } from '@/lib/partis'
-import { getHandoverNameIssue } from '@/lib/handoverQuality'
 
 const HandoverForm = dynamic(() => import('@/components/handover/HandoverForm'), {
   ssr: false,
@@ -289,7 +288,7 @@ export default function HandoverPage({
 
     const trimmedNote = getPlainText(note)
     const hasDraftContent = Boolean(
-      name.trim() || receiver.trim() || trimmedNote || imageValues.length
+      trimmedNote || imageValues.length
     )
     if (!draftId && !hasDraftContent) return
 
@@ -329,7 +328,7 @@ export default function HandoverPage({
   }
 
   async function saveNote() {
-    if (!name || !receiver || !getPlainText(note)) {
+    if (!getPlainText(note)) {
       alert(t.requiredFields)
       return
     }
@@ -337,15 +336,6 @@ export default function HandoverPage({
     if (date < today) {
       setDate(today)
       alert(t.handoverDateCannotBePast)
-      return
-    }
-
-    const nameIssue = getHandoverNameIssue({
-      authorName: name,
-      receiverName: receiver,
-    })
-    if (nameIssue) {
-      alert(t.professionalNamesRequired)
       return
     }
 
@@ -409,7 +399,7 @@ export default function HandoverPage({
 
     const trimmedNote = getPlainText(note)
     const hasDraftContent = Boolean(
-      name.trim() || receiver.trim() || trimmedNote || images.length
+      trimmedNote || images.length
     )
     if (!draftId && !hasDraftContent) return
 

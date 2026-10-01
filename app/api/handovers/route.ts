@@ -5,7 +5,6 @@ import {
 } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
 import { validHandoverFolderNames } from '@/lib/handoverFolderConfig'
-import { getHandoverNameIssue } from '@/lib/handoverQuality'
 
 function todayInCopenhagen() {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -136,13 +135,12 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .maybeSingle()
 
-    const previousReceiver = text(previousUnread?.receiver_name, 100).trim()
-    if (!previousUnread?.id || !previousReceiver) return
+    if (!previousUnread?.id) return
 
     await supabase
       .from('handover_notes')
       .update({
-        read_by: previousReceiver,
+        read_by: 'confirmed',
         read_at: new Date().toISOString(),
       })
       .eq('id', previousUnread.id)
@@ -159,19 +157,16 @@ export async function POST(request: NextRequest) {
 
     const { data: handover, error: lookupError } = await supabase
       .from('handover_notes')
-      .select('receiver_name')
+      .select('id')
       .eq('id', id)
       .eq('department', ship)
       .eq('status', 'published')
       .single()
 
     if (lookupError) return NextResponse.json({ error: lookupError.message }, { status: 500 })
-    const readBy = text(handover?.receiver_name, 100).trim()
-    if (!readBy) return NextResponse.json({ error: 'Modtager mangler.' }, { status: 400 })
-
     const { error } = await supabase
       .from('handover_notes')
-      .update({ read_by: readBy, read_at: new Date().toISOString() })
+      .update({ read_by: 'confirmed', read_at: new Date().toISOString() })
       .eq('id', id)
       .eq('department', ship)
       .eq('status', 'published')
@@ -181,8 +176,8 @@ export async function POST(request: NextRequest) {
   }
 
   const parti = text(body.parti, 200).trim()
-  const authorName = text(body.author_name, 100)
-  const receiverName = text(body.receiver_name, 100)
+  const authorName = 'Anonym'
+  const receiverName = 'Anonym'
   const shiftDate = text(body.shift_date, 20)
   const note = sanitizeHandoverHtml(text(body.note))
   const images = stringArray(body.images).map(imageStorageValue)
@@ -254,16 +249,8 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'publish') {
-    if (!authorName.trim() || !receiverName.trim() || !note.trim()) {
+    if (!note.trim()) {
       return NextResponse.json({ error: 'Obligatoriske felter mangler.' }, { status: 400 })
-    }
-
-    const nameIssue = getHandoverNameIssue({ authorName, receiverName })
-    if (nameIssue) {
-      return NextResponse.json(
-        { error: 'Brug rigtige navne på afsender og modtager.' },
-        { status: 400 }
-      )
     }
 
     const payload = {

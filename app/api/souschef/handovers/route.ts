@@ -52,10 +52,10 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Ingen adgang.' }, { status: 401 })
   }
 
-  const authorName = cleanText(body?.author_name, 100)
-  const receiverName = cleanText(body?.receiver_name, 100)
+  const authorName = 'Anonym'
+  const receiverName = 'Anonym'
   const note = sanitizeHandoverHtml(cleanText(body?.note, 20000))
-  if (!authorName || !receiverName || !note.replace(/<[^>]*>/g, '').trim()) {
+  if (!note.replace(/<[^>]*>/g, '').trim()) {
     return NextResponse.json({ error: 'Fra, til og overlevering skal udfyldes.' }, { status: 400 })
   }
 

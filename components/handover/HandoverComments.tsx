@@ -24,7 +24,6 @@ export default function HandoverComments({
   const [comments, setComments] = useState<HandoverComment[]>([])
   const [count, setCount] = useState(initialCount)
   const [open, setOpen] = useState(false)
-  const [author, setAuthor] = useState('')
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -48,10 +47,9 @@ export default function HandoverComments({
   }, [handoverId, initialCount])
 
   const addComment = async () => {
-    const authorName = author.trim()
     const comment = text.trim()
 
-    if (!authorName || !comment) {
+    if (!comment) {
       alert(t.commentFieldsRequired)
       return
     }
@@ -61,7 +59,7 @@ export default function HandoverComments({
     try {
       await secureFetch('/api/handover-comments', {
         method: 'POST',
-        body: JSON.stringify({ ship, handoverId, authorName, comment }),
+        body: JSON.stringify({ ship, handoverId, comment }),
       })
     } catch (error) {
       setLoading(false)
@@ -71,7 +69,6 @@ export default function HandoverComments({
 
     setLoading(false)
 
-    setAuthor('')
     setText('')
     await fetchAll()
   }
@@ -141,10 +138,6 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
             >
               <div className="flex justify-between items-center mb-3">
 
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {c.author_name}
-                </div>
-
                 <div className="text-xs text-gray-500 dark:text-white/50">
                   {new Date(c.created_at).toLocaleDateString(localeFor(lang), {
                     day: '2-digit',
@@ -166,31 +159,6 @@ dark:shadow-[0_8px_20px_rgba(0,0,0,0.35)]              "
 
           {/* FORM */}
           <div className="pt-6 border-t border-black/5 dark:border-white/10 space-y-4">
-
-            <input
-              className="
-                w-full
-                rounded-2xl
-                px-4 py-3
-                transition
-
-                bg-gray-100
-                border border-black/5
-                text-gray-900
-
-                dark:bg-[#0d3b3a]
-                dark:border-white/10
-                dark:text-white
-
-                focus:outline-none
-                focus:ring-2
-                focus:ring-black/10
-                dark:focus:ring-white/20
-              "
-              placeholder={t.yourName}
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-            />
 
             <textarea
               className="

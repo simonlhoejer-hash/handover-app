@@ -23,7 +23,6 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const isOral = isOralHandoverNote(item.note ?? '')
   const isStructured = String(item.note ?? '').includes('data-handover-format="structured"')
-  const receiverName = String(item.receiver_name ?? '').trim()
 
   function printHandover() {
     const card = document.querySelector<HTMLElement>(
@@ -115,30 +114,6 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
 
         </div>
 
-        {/* Names */}
-        <div className="flex flex-col items-center gap-3 text-center">
-
-          <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-            {item.author_name}
-          </div>
-
-          <div className="text-gray-400 dark:text-white/30">
-            <svg width="22" height="22" viewBox="0 0 24 24">
-              <path
-                d="M12 5v14M12 19l-5-5M12 19l5-5"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-
-          <div className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-            {item.receiver_name}
-          </div>
-
-        </div>
       </div>
 
       {isOral ? (
@@ -213,7 +188,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
                 disabled:opacity-60
               "
             >
-              {loading ? t.saving : t.confirmReadFor.replace('{name}', receiverName)}
+              {loading ? t.saving : lang === 'en' ? 'Confirm as read' : lang === 'sv' ? 'Bekräfta som läst' : 'Bekræft som læst'}
             </button>
             <button
               type="button"
@@ -227,7 +202,7 @@ export default function HandoverHistoryItem({ item, ship, reload }: Props) {
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-emerald-600 text-sm font-medium">
-              {t.readBy} {item.read_by}
+              {t.read}
             </p>
             <button
               type="button"

@@ -295,22 +295,6 @@ export default function DepartmentHome({
 
                       <div className="flex items-center justify-center gap-2">
 
-                        {info?.receiverName && !info?.readBy && (
-                          <span className="font-semibold text-amber-600">
-                            {info.receiverName}
-                          </span>
-                        )}
-
-                        {info?.readBy && (
-                          <span className="font-semibold text-emerald-600">
-                            {info.readBy}
-                          </span>
-                        )}
-
-                        {(info?.receiverName || info?.readBy) && (
-                          <span className="opacity-40">·</span>
-                        )}
-
                         <span className="opacity-70">
                           {formatDate(info.lastDate, lang)}
                         </span>

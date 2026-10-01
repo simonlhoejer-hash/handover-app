@@ -18,16 +18,16 @@ export const translations = {
     switchTheme: 'Skift tema',
     privacy: 'Privatliv og persondata',
     privacyIntro:
-      'HandoverPro registrerer fornavne i forbindelse med arbejdsrelaterede overleveringer.',
+      'HandoverPro gemmer arbejdsrelaterede overleveringer uden felter til personnavne.',
     privacyPurposeTitle: 'Formål',
     privacyPurpose:
-      'Fornavne bruges til at vise, hvem der har skrevet, modtaget og læst en overlevering samt hvem der har skrevet en kommentar.',
+      'Overleveringer og kommentarer er anonyme. En læsekvittering viser kun, at overleveringen er læst.',
     privacyContentTitle: 'Indhold',
     privacyContent:
       'Skriv kun arbejdsrelaterede driftsoplysninger. Skriv ikke CPR-numre, helbredsoplysninger eller andre følsomme eller private oplysninger.',
     privacyRetentionTitle: 'Opbevaring',
     privacyRetention:
-      'Overleveringer, fornavne, kommentarer og tilknyttede billeder opbevares i op til 12 måneder og slettes derefter.',
+      'Overleveringer, kommentarer og tilknyttede billeder opbevares i op til 12 måneder og slettes derefter.',
     privacyAccessTitle: 'Adgang',
     privacyAccess:
       'Adgangen til appens Nordic Crown- og Nordic Pearl-sider kræver hver sin fælles afdelingskode. Det begrænser adgangen via appen, og enheden husker den i op til 6 måneder. Koden kan deles af afdelingslederen og udskiftes ved behov. Da koden er fælles, identificerer den ikke den enkelte bruger.',
@@ -300,16 +300,16 @@ Skriv hvor tingene står.`,
     switchTheme: 'Byt tema',
     privacy: 'Integritet och personuppgifter',
     privacyIntro:
-      'HandoverPro registrerar förnamn i samband med arbetsrelaterade överlämningar.',
+      'HandoverPro sparar arbetsrelaterade överlämningar utan fält för personnamn.',
     privacyPurposeTitle: 'Syfte',
     privacyPurpose:
-      'Förnamn används för att visa vem som har skrivit, tagit emot och läst en överlämning samt vem som har skrivit en kommentar.',
+      'Överlämningar och kommentarer är anonyma. En läskvittens visar endast att överlämningen har lästs.',
     privacyContentTitle: 'Innehåll',
     privacyContent:
       'Skriv endast arbetsrelaterad driftinformation. Skriv inte personnummer, hälsouppgifter eller andra känsliga eller privata uppgifter.',
     privacyRetentionTitle: 'Lagring',
     privacyRetention:
-      'Överlämningar, förnamn, kommentarer och tillhörande bilder lagras i upp till 12 månader och raderas därefter.',
+      'Överlämningar, kommentarer och tillhörande bilder lagras i upp till 12 månader och raderas därefter.',
     privacyAccessTitle: 'Åtkomst',
     privacyAccess:
       'Åtkomst till appens Nordic Crown- och Nordic Pearl-sidor kräver var sin gemensamma avdelningskod. Det begränsar åtkomsten via appen, och enheten kommer ihåg den i upp till 6 månader. Koden kan delas av avdelningschefen och bytas vid behov. Eftersom koden är gemensam identifierar den inte den enskilda användaren.',
@@ -579,13 +579,13 @@ Skriv var sakerna står.`,
     switchLanguage: 'Change language',
     switchTheme: 'Change theme',
     privacy: 'Privacy and personal data',
-    privacyIntro: 'HandoverPro records first names in connection with work-related handovers.',
+    privacyIntro: 'HandoverPro stores work-related handovers without personal-name fields.',
     privacyPurposeTitle: 'Purpose',
-    privacyPurpose: 'First names are used to show who wrote, received and read a handover, and who wrote a comment.',
+    privacyPurpose: 'Handovers and comments are anonymous. A read receipt only shows that the handover has been read.',
     privacyContentTitle: 'Content',
     privacyContent: 'Only enter work-related operational information. Do not enter national ID numbers, health information or other sensitive or private information.',
     privacyRetentionTitle: 'Retention',
-    privacyRetention: 'Handovers, first names, comments and attached images are retained for up to 12 months and then deleted.',
+    privacyRetention: 'Handovers, comments and attached images are retained for up to 12 months and then deleted.',
     privacyAccessTitle: 'Access',
     privacyAccess: 'Access to the Nordic Crown and Nordic Pearl areas requires a shared department code for each ship. This restricts access through the app, and the device remembers access for up to 6 months. The department manager can share and replace the code when needed. Because the code is shared, it does not identify individual users.',
     privacyStorageTitle: 'Cookies and local storage',

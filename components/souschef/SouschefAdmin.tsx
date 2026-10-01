@@ -119,7 +119,7 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
 
   async function saveHandoverEdit(event: FormEvent) {
     event.preventDefault()
-    if (!editing || !editing.author_name?.trim() || !editing.receiver_name?.trim() || busy) return
+    if (!editing || !editing.note?.replace(/<[^>]*>/g, '').trim() || busy) return
     setBusy(true)
     setMessage('')
     try {
@@ -129,8 +129,8 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
         body: JSON.stringify({
           ship,
           id: editing.id,
-          author_name: editing.author_name,
-          receiver_name: editing.receiver_name,
+          author_name: 'Anonym',
+          receiver_name: 'Anonym',
           note: editing.note,
         }),
       })
@@ -190,16 +190,8 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
               </div>
               <button type="button" onClick={() => setEditing(null)} className="rounded-lg p-2 hover:bg-black/5 dark:hover:bg-white/10" aria-label="Luk redigering"><X size={18} /></button>
             </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="text-sm font-semibold">Fra
-                <input value={editing.author_name ?? ''} onChange={(event) => setEditing({ ...editing, author_name: event.target.value })} maxLength={100} required className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 font-normal dark:border-white/10 dark:bg-[#082f2e]" />
-              </label>
-              <label className="text-sm font-semibold">Til
-                <input value={editing.receiver_name ?? ''} onChange={(event) => setEditing({ ...editing, receiver_name: event.target.value })} maxLength={100} required className="mt-1 w-full rounded-xl border border-black/10 bg-white px-4 py-3 font-normal dark:border-white/10 dark:bg-[#082f2e]" />
-              </label>
-            </div>
             <div className="mt-3"><HandoverEditor value={editing.note ?? ''} onChange={(note) => setEditing({ ...editing, note })} /></div>
-            <button disabled={busy || !editing.author_name?.trim() || !editing.receiver_name?.trim()} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#064e4c] px-5 py-3 font-semibold text-white disabled:opacity-50"><Save size={18} /> {busy ? 'Gemmer…' : 'Gem rettelser'}</button>
+            <button disabled={busy || !editing.note?.replace(/<[^>]*>/g, '').trim()} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#064e4c] px-5 py-3 font-semibold text-white disabled:opacity-50"><Save size={18} /> {busy ? 'Gemmer…' : 'Gem rettelser'}</button>
           </form>
         )}
         <div className="mt-4 max-h-[32rem] space-y-2 overflow-y-auto">
@@ -207,7 +199,7 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
             <div key={handover.id} className="flex items-center justify-between gap-3 rounded-xl border border-black/5 px-4 py-3 dark:border-white/10">
               <div className="min-w-0">
                 <div className="truncate font-semibold">{handover.parti}</div>
-                <div className="text-xs text-gray-500 dark:text-white/50">{new Date(`${handover.shift_date}T12:00:00`).toLocaleDateString('da-DK')} · {handover.author_name || 'Ukendt'} · {handover.status === 'draft' ? 'Kladde' : 'Udgivet'}</div>
+                <div className="text-xs text-gray-500 dark:text-white/50">{new Date(`${handover.shift_date}T12:00:00`).toLocaleDateString('da-DK')} · {handover.status === 'draft' ? 'Kladde' : 'Udgivet'}</div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <button type="button" disabled={busy} onClick={() => setEditing({ ...handover })} className="rounded-lg p-2 text-gray-400 hover:bg-[#347f7a]/10 hover:text-[#216762]" aria-label="Ret overlevering"><Pencil size={17} /></button>
