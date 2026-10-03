@@ -97,7 +97,7 @@ export default function SouschefAdmin({ ship, view }: { ship: AccessShip; view: 
 
   async function deleteHandover(handover: Handover) {
     const label = `${handover.parti} fra ${new Date(`${handover.shift_date}T12:00:00`).toLocaleDateString('da-DK')}`
-    if (!window.confirm(`Slet overleveringen “${label}” permanent? Kommentarer og billeder bliver også slettet.`)) return
+    if (!window.confirm(`Slet overleveringen “${label}” permanent? Tilknyttede billeder bliver også slettet.`)) return
     setBusy(true)
     setMessage('')
     try {

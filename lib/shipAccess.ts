@@ -109,7 +109,10 @@ export async function verifySouschefAccessToken(token: string | undefined, ship:
 }
 
 export async function createAccessToken(ship: AccessShip) {
-  return signValue(`handover-access:${ship}:${getCode(ship)}`)
+  // The access code is only used when signing in. Keeping it out of the
+  // session signature prevents a routine code change from logging installed
+  // kitchen tablets out before their six-month cookie expires.
+  return signValue(`handover-access:${ship}:v2`)
 }
 
 export async function verifyAccessToken(
@@ -117,5 +120,10 @@ export async function verifyAccessToken(
   token: string | undefined
 ) {
   if (!token) return false
-  return token === (await createAccessToken(ship))
+  const currentToken = await createAccessToken(ship)
+  if (token === currentToken) return true
+
+  // Accept sessions issued by the previous code-bound format until their
+  // existing cookie expires. The next normal login receives the stable token.
+  return token === (await signValue(`handover-access:${ship}:${getCode(ship)}`))
 }
