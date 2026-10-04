@@ -1,4 +1,4 @@
-const CACHE_VERSION = '62'
+const CACHE_VERSION = '63'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -113,16 +113,18 @@ async function requiredPathsForShip(ship, refreshFolders) {
   const routes = FOOD_WASTE_ROUTES
     .filter((route) => ship === 'crown' || !route.startsWith('/produktion-'))
     .map((route) => `/${ship}/food-waste${route}`)
-  return [`/${ship}`, ...routes, ...await currentHandoverRoutes(ship, refreshFolders)]
+  return [`/${ship}`, `/${ship}/adgang`, ...routes, ...await currentHandoverRoutes(ship, refreshFolders)]
 }
 
 const APP_SHELL = [
   '/',
   '/ships',
   '/crown',
+  '/crown/adgang',
   ...handoverRoutes('crown'),
   ...FOOD_WASTE_ROUTES.map((route) => `/crown/food-waste${route}`),
   '/pearl',
+  '/pearl/adgang',
   ...handoverRoutes('pearl'),
   ...FOOD_WASTE_ROUTES
     .filter((route) => !route.startsWith('/produktion-'))

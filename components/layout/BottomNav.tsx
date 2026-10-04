@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   LogOut,
 } from 'lucide-react'
+import { clearAllOfflineAccess } from '@/lib/offlineAccess'
 
 export default function BottomNav() {
   const pathname = usePathname()
@@ -235,7 +236,11 @@ export default function BottomNav() {
                 <button
                   type="button"
                   onClick={async () => {
-                    await fetch('/api/access', { method: 'DELETE' })
+                    try {
+                      await fetch('/api/access', { method: 'DELETE' })
+                    } finally {
+                      clearAllOfflineAccess()
+                    }
                     setOpen(false)
                     window.location.assign('/')
                   }}

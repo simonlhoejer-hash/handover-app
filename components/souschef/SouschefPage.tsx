@@ -20,6 +20,7 @@ import {
 import SouschefAdmin from '@/components/souschef/SouschefAdmin'
 import FoodWasteStationsAdmin from '@/components/souschef/FoodWasteStationsAdmin'
 import type { AccessShip } from '@/lib/shipAccess'
+import { clearAllOfflineAccess } from '@/lib/offlineAccess'
 
 type TaskStatus = 'new' | 'doing' | 'waiting' | 'done'
 type TaskPriority = 'normal' | 'important' | 'critical'
@@ -141,7 +142,11 @@ export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) 
   }
 
   async function logOut() {
-    await fetch('/api/access', { method: 'DELETE' })
+    try {
+      await fetch('/api/access', { method: 'DELETE' })
+    } finally {
+      clearAllOfflineAccess()
+    }
     window.location.assign('/')
   }
 

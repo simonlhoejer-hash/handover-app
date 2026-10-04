@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import Image from 'next/image'
 import { AlertCircle, ArrowRight, LockKeyhole } from 'lucide-react'
 import type { AccessShip } from '@/lib/shipAccess'
+import { rememberOfflineAccess, verifyOfflineAccess } from '@/lib/offlineAccess'
 
 type Props = {
   ship: AccessShip
@@ -31,9 +32,45 @@ export default function ShipAccessForm({
   )
   const shipName = ship === 'crown' ? 'Nordic Crown' : 'Nordic Pearl'
 
-  function submit() {
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (loading || !code.trim()) return
     setLoading(true)
     setError('')
+
+    const openOffline = async () => {
+      if (await verifyOfflineAccess(ship, code)) {
+        window.location.assign(destination)
+        return true
+      }
+      setError('Offline-login er ikke klargjort på denne enhed, eller koden er forkert. Gå online én gang og log ind igen.')
+      return false
+    }
+
+    if (!navigator.onLine) {
+      await openOffline()
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ship, code, destination }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setError(result.error || 'Forkert kode. Prøv igen.')
+        setLoading(false)
+        return
+      }
+      await rememberOfflineAccess(ship, code)
+      window.location.assign(result.destination || destination)
+    } catch {
+      await openOffline()
+      setLoading(false)
+    }
   }
 
   return (
@@ -74,7 +111,7 @@ export default function ShipAccessForm({
           </p>
         </div>
 
-        <form action="/api/access" method="post" onSubmit={submit} className="mt-8 space-y-4">
+        <form onSubmit={submit} className="mt-8 space-y-4">
           <input type="hidden" name="ship" value={ship} />
           <input type="hidden" name="destination" value={destination} />
           <input
