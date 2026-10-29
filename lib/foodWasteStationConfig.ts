@@ -17,6 +17,7 @@ const areaBySlug: Record<string, WasteArea> = {
   'messen-morgen-koldt': 'mess', 'messen-morgen-varmt': 'mess', 'messen-morgen-tallerkenspild': 'mess',
   'messen-frokost-koldt': 'mess', 'messen-frokost-varmt': 'mess', 'messen-frokost-tallerkenspild': 'mess',
   'messen-aften-koldt': 'mess', 'messen-aften-varmt': 'mess', 'messen-aften-tallerkenspild': 'mess',
+  'messen-morgen': 'mess', 'messen-frokost': 'mess', 'messen-aften': 'mess',
   'produktion-main-galley': 'production', 'produktion-skagerak-galley': 'production',
   'produktion-slagteri': 'production', 'produktion-proviant-daek-1': 'production',
 }
@@ -24,6 +25,9 @@ const areaBySlug: Record<string, WasteArea> = {
 export function defaultFoodWasteStations(ship: 'crown' | 'pearl'): FoodWasteStation[] {
   return FOOD_WASTE_LOCATIONS
     .filter((location) => areaBySlug[location.slug])
+    .filter((location) => ship === 'pearl'
+      ? !/^messen-(morgen|frokost|aften)-(koldt|varmt|tallerkenspild)$/.test(location.slug)
+      : !/^messen-(morgen|frokost|aften)$/.test(location.slug))
     .filter((location) => ship === 'crown' || areaBySlug[location.slug] !== 'production')
     .map((location, order) => ({ ...location, area: areaBySlug[location.slug], active: true, order }))
 }
