@@ -1,4 +1,4 @@
-const CACHE_VERSION = '64'
+const CACHE_VERSION = '65'
 const CACHE_NAME = `handover-offline-v${CACHE_VERSION}`
 const CACHE_FETCH_TIMEOUT_MS = 15_000
 
@@ -240,6 +240,16 @@ function rscCacheKeys(request, url) {
   }
 }
 
+function responseMatchesPath(response, path) {
+  if (!response || !response.url) return false
+  try {
+    const finalUrl = new URL(response.url)
+    return finalUrl.origin === self.location.origin && normalizedPath(finalUrl.pathname) === path
+  } catch {
+    return false
+  }
+}
+
 self.addEventListener('install', (event) => {
   // Activate immediately. The complete working cache from the previous
   // version is retained and promoted when the current ship is warmed.
@@ -335,9 +345,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const keys = rscCacheKeys(request, url)
+        const path = normalizedPath(url.pathname)
         try {
           const response = await fetch(request)
-          if (response.ok) {
+          if (response.ok && responseMatchesPath(response, path)) {
             await Promise.all([
               cache.put(keys.exact, response.clone()),
               cache.put(keys.latest, response.clone()),
@@ -349,7 +360,7 @@ self.addEventListener('fetch', (event) => {
             await matchNewestOfflineCache(keys.exact) ||
             await matchNewestOfflineCache(keys.latest)
 
-          if (fallback) {
+          if (fallback && responseMatchesPath(fallback, path)) {
             await settleAll([
               cache.put(keys.exact, fallback.clone()),
               cache.put(keys.latest, fallback.clone()),
