@@ -28,6 +28,8 @@ export default function ShipAccessForm({
         ? 'Serverens adgang er ikke konfigureret endnu.'
         : initialError === 'cookie'
           ? 'Koden er rigtig, men denne browser gemmer ikke adgangscookien. Tillad cookies for handoverpro.dk, og prøv igen.'
+        : initialError === 'locked'
+          ? 'Koden er indtastet forkert for mange gange. Login er midlertidigt spærret.'
         : ''
   )
   const shipName = ship === 'crown' ? 'Nordic Crown' : 'Nordic Pearl'

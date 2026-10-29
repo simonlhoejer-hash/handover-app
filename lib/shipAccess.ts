@@ -10,9 +10,6 @@ export const SOUSCHEF_ACCESS_COOKIE_NAMES: Record<AccessShip, string> = {
   crown: 'handover_crown_souschef_access',
   pearl: 'handover_pearl_souschef_access',
 }
-const DEFAULT_SOUSCHEF_CODE_HASH =
-  '4cf6f9637d171efb2bf6e67f01ed16da3588cdae3f6014c25ca760d071d5172d'
-
 function getCode(ship: AccessShip) {
   const environmentCode =
     ship === 'crown'
@@ -48,9 +45,10 @@ async function getSouschefCodeHash(ship: AccessShip) {
       ? process.env.CROWN_SOUSCHEF_ACCESS_CODE ?? process.env.SOUSCHEF_ACCESS_CODE
       : process.env.PEARL_SOUSCHEF_ACCESS_CODE
   )?.trim().toUpperCase()
-  return environmentCode
-    ? hashValue(environmentCode)
-    : DEFAULT_SOUSCHEF_CODE_HASH
+  if (!environmentCode) {
+    throw new Error(`Souschef-adgangskoden til ${ship} mangler i miljøvariablerne.`)
+  }
+  return hashValue(environmentCode)
 }
 
 async function signValue(value: string) {
@@ -126,4 +124,8 @@ export async function verifyAccessToken(
   // Accept sessions issued by the previous code-bound format until their
   // existing cookie expires. The next normal login receives the stable token.
   return token === (await signValue(`handover-access:${ship}:${getCode(ship)}`))
+}
+
+export async function createLoginAttemptKey(ship: AccessShip, clientAddress: string) {
+  return signValue(`handover-login-attempt:${ship}:${clientAddress}`)
 }

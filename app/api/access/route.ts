@@ -3,12 +3,14 @@ import {
   ACCESS_COOKIE_NAMES,
   AccessShip,
   createAccessToken,
+  createLoginAttemptKey,
   createSouschefAccessToken,
   isCorrectAccessCode,
   isCorrectSouschefCode,
   LEGACY_ACCESS_COOKIE_NAMES,
   SOUSCHEF_ACCESS_COOKIE_NAMES,
 } from '@/lib/shipAccess'
+import { clearFailedLogins, getLoginLock, LOGIN_LOCK_MINUTES, recordFailedLogin } from '@/lib/loginRateLimit'
 
 function isAccessShip(value: unknown): value is AccessShip {
   return value === 'crown' || value === 'pearl'
@@ -28,12 +30,23 @@ export async function POST(request: Request) {
     destination?: unknown
   } | null
 
-  const formError = (reason: 'wrong' | 'config', status: number, message: string) => {
+  const formError = (reason: 'wrong' | 'config' | 'locked', status: number, message: string) => {
     if (!isFormRequest) return NextResponse.json({ error: message }, { status })
     const ship = body?.ship === 'pearl' ? 'pearl' : 'crown'
     const url = new URL(`/${ship}/adgang`, request.url)
     url.searchParams.set('error', reason)
     return NextResponse.redirect(url, 303)
+  }
+
+  const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const clientAddress = forwardedFor || request.headers.get('x-real-ip') || 'unknown'
+  const requestedShip = isAccessShip(body?.ship) ? body.ship : body?.ship === 'pearl' ? 'pearl' : 'crown'
+  const attemptKey = await createLoginAttemptKey(requestedShip, clientAddress)
+  const currentLock = await getLoginLock(attemptKey)
+  if (currentLock.locked) {
+    const response = formError('locked', 429, `For mange forkerte forsøg. Prøv igen om ${LOGIN_LOCK_MINUTES} minutter.`)
+    response.headers.set('Retry-After', String(currentLock.retryAfterSeconds))
+    return response
   }
 
   let valid = false
@@ -58,8 +71,14 @@ export async function POST(request: Request) {
   }
 
   if ((!valid && !souschef) || !body || !isAccessShip(body.ship)) {
-    return formError('wrong', 401, 'Forkert kode. Prøv igen.')
+    const failed = await recordFailedLogin(attemptKey)
+    return failed.locked
+      ? formError('locked', 429, `Koden er indtastet forkert 5 gange. Login er spærret i ${LOGIN_LOCK_MINUTES} minutter.`)
+      : formError('wrong', 401, `Forkert kode. ${failed.attemptsRemaining} forsøg tilbage.`)
   }
+
+
+  await clearFailedLogins(attemptKey)
 
   const destination = souschef ? `/${body.ship}/souschef` : `/${body.ship}`
   const response = isFormRequest
