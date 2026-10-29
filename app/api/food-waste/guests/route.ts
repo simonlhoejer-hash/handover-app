@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseAccessShip, requestHasShipAccess } from '@/lib/apiAccess'
+import { parseAccessShip, requestHasShipAccess, requestHasSouschefAccess } from '@/lib/apiAccess'
 import { getSupabaseAdmin } from '@/lib/supabaseServer'
 
 export async function GET(request: NextRequest) {
   const ship = parseAccessShip(request.nextUrl.searchParams.get('ship'))
-  if (!ship || !(await requestHasShipAccess(request, ship))) {
+  if (!ship || (!await requestHasShipAccess(request, ship) && !await requestHasSouschefAccess(request, ship))) {
     return NextResponse.json({ error: 'Ingen adgang.' }, { status: 401 })
   }
 
@@ -48,7 +48,7 @@ export async function PUT(request: NextRequest) {
     guestCount <= 0 ||
     guestCount > 10000 ||
     serviceCounts.some((count) => !Number.isInteger(count) || count < 0 || count > 10000) ||
-    !(await requestHasShipAccess(request, ship))
+    (!await requestHasShipAccess(request, ship) && !await requestHasSouschefAccess(request, ship))
   ) {
     return NextResponse.json({ error: 'Ugyldigt gæstetal.' }, { status: 400 })
   }

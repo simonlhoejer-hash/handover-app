@@ -184,6 +184,7 @@ type BuffetDetailView =
 type MessView = 'all' | 'morning' | 'lunch' | 'evening'
 type MessWasteView = 'all' | 'buffet' | 'plate'
 type GrinderView = 'all' | 'buffet' | 'production' | 'deck'
+type ChartKind = 'buffet' | 'grinder'
 
 function isBuffetLocationForView(name: string, view: BuffetView) {
   if (view === 'morning') {
@@ -334,6 +335,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   const [messView, setMessView] = useState<MessView>('all')
   const [messWasteView, setMessWasteView] = useState<MessWasteView>('all')
   const [grinderView, setGrinderView] = useState<GrinderView>('all')
+  const [activeChartKind, setActiveChartKind] = useState<ChartKind>('buffet')
   const [loading, setLoading] = useState(true)
   const [savingGuests, setSavingGuests] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -1127,7 +1129,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
     .sort((dateA, dateB) => dateA.localeCompare(dateB))
   const estimatedContainers = activeGrinderStats.totalKg / 2000
   const estimatedSavings = activeGrinderStats.totalKg * 1.9
-  const chartConfigs = [
+  const allChartConfigs = [
     {
       title: t.buffetDevelopment,
       kind: 'buffet' as const,
@@ -1135,7 +1137,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       maxValue: maxBuffetChartValue,
       averageValue: activeBuffetStats.chartPoints.reduce((sum, point) => sum + point.total, 0) / Math.max(activeBuffetStats.chartPoints.length, 1),
       barClass: 'bg-amber-500',
-      showGuestData: buffetView === 'mess',
+      showGuestData: false,
       showEstimate: false,
     },
     ...(vessel === 'crown' ? [{
@@ -1149,6 +1151,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
       showEstimate: true,
     }] : []),
   ]
+  const chartConfigs = allChartConfigs.filter((chart) => chart.kind === activeChartKind)
 
   const buffetViewLabels: Record<BuffetView, string> = lang === 'en'
     ? { all: 'Total', morning: 'Morning', evening: 'Evening', mess: 'Crew mess' }
@@ -1343,13 +1346,9 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
   }
 
   return (
-    <main className={`${vessel === 'pearl' ? 'max-w-7xl' : 'max-w-5xl'} mx-auto px-4 pt-4 pb-24 space-y-6`}>
+    <main className="mx-auto max-w-5xl space-y-6 px-4 pb-24 pt-4">
       {comparisonLoaded && (
-        <aside className={`fixed left-4 top-1/2 z-20 hidden -translate-y-1/2 min-[1800px]:left-6 min-[1800px]:w-64 ${
-          vessel === 'pearl'
-            ? 'w-64 min-[1800px]:block'
-            : 'w-52 min-[1450px]:block min-[1800px]:w-64'
-        }`}>
+        <aside className="hidden">
           <div className="overflow-hidden rounded-[28px] border border-amber-500/20 bg-white/95 p-4 shadow-[0_18px_45px_rgba(54,38,8,0.14)] backdrop-blur dark:border-amber-300/15 dark:bg-[#0d3b3a]/95 min-[1800px]:p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
               {lang === 'en' ? 'Compared with last month' : lang === 'sv' ? 'Jämfört med förra månaden' : 'Sammenlignet med sidste måned'}
@@ -1461,7 +1460,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         </label>
       </section>
 
-      <section className={`grid gap-3 ${vessel === 'crown' ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+      <section className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
           <p className="text-sm text-gray-500 dark:text-white/60">{t.buffetWaste}</p>
           <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.buffet.totalKg, lang)}</div>
@@ -1473,9 +1472,57 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.grinder.totalKg, lang)}</div>
           </div>
         )}
+
+        <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
+          <p className="text-sm text-gray-500 dark:text-white/60">
+            {vessel === 'crown'
+              ? t.estimatedRenovationSavings
+              : lang === 'en' ? 'Average per day' : lang === 'sv' ? 'Genomsnitt per dag' : 'Gennemsnit pr. dag'}
+          </p>
+          <div className="mt-2 text-2xl font-semibold">
+            {vessel === 'crown'
+              ? `${formatCurrency(stats.grinder.totalKg * 1.9, lang)} kr.`
+              : formatAmount(stats.buffet.averagePerDay, lang)}
+          </div>
+        </div>
+
+        {vessel === 'pearl' && (
+          <div className="rounded-2xl bg-white p-4 border border-black/5 shadow-sm dark:bg-[#0d3b3a] dark:border-white/10">
+            <p className="text-sm text-gray-500 dark:text-white/60">
+              {lang === 'en' ? 'Crew mess' : lang === 'sv' ? 'Mässen' : 'Messen'}
+            </p>
+            <div className="mt-2 text-2xl font-semibold">{formatAmount(stats.buffetViews.mess.totalKg, lang)}</div>
+          </div>
+        )}
       </section>
 
-      <section className={`grid gap-6 ${vessel === 'crown' ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+      {vessel === 'crown' && (
+        <section className="grid grid-cols-2 gap-1 rounded-2xl border border-black/5 bg-black/5 p-1.5 dark:border-white/10 dark:bg-black/20">
+          {([
+            { value: 'buffet' as const, label: t.buffetWaste },
+            { value: 'grinder' as const, label: t.productionWaste },
+          ]).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                setActiveChartKind(option.value)
+                setSelectedPoint(null)
+                setExpandedChart(null)
+              }}
+              className={`min-h-12 rounded-xl px-3 text-sm font-semibold transition sm:text-base ${
+                activeChartKind === option.value
+                  ? 'bg-white text-nordic shadow-sm dark:bg-white/15 dark:text-white'
+                  : 'text-gray-500 hover:text-gray-800 dark:text-white/55 dark:hover:text-white'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </section>
+      )}
+
+      <section className="grid grid-cols-1 gap-6">
         {chartConfigs.map((chart) => (
           <div
             key={chart.title}
@@ -1576,28 +1623,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               </div>
             )}
 
-            {chart.kind === 'buffet' && buffetView === 'mess' && (
-              <div className="food-waste-print-hidden mt-2 grid grid-cols-3 gap-1 rounded-xl border border-teal-500/15 bg-teal-50/70 p-1 dark:bg-teal-400/10">
-                {(Object.keys(messWasteViewLabels) as MessWasteView[]).map((view) => (
-                  <button
-                    key={view}
-                    type="button"
-                    onClick={() => {
-                      setMessWasteView(view)
-                      setSelectedPoint(null)
-                    }}
-                    className={`min-w-0 rounded-lg px-2 py-2 text-xs font-semibold transition sm:text-sm ${
-                      messWasteView === view
-                        ? 'bg-teal-700 text-white shadow-sm dark:bg-teal-500'
-                        : 'text-teal-900/65 hover:text-teal-950 dark:text-teal-100/60 dark:hover:text-teal-100'
-                    }`}
-                  >
-                    {messWasteViewLabels[view]}
-                  </button>
-                ))}
-              </div>
-            )}
-
             {chart.kind === 'grinder' && (
               <div className="food-waste-print-hidden mt-4 grid grid-cols-4 gap-1 rounded-xl bg-black/5 p-1 dark:bg-black/20">
                 {(Object.keys(grinderViewLabels) as GrinderView[]).map((view) => (
@@ -1644,7 +1669,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
               </div>
             )}
 
-            {chart.kind === 'buffet' && buffetView === 'mess' && (
+            {chart.showGuestData && chart.kind === 'buffet' && buffetView === 'mess' && (
               <div className="mt-4 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-400/10">
@@ -1993,28 +2018,6 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                   </div>
                 )}
 
-                {chart.kind === 'buffet' && buffetView === 'mess' && (
-                  <div className="grid grid-cols-3 gap-1 border-b border-teal-500/15 bg-teal-50/70 p-2 dark:bg-teal-400/10 sm:px-7">
-                    {(Object.keys(messWasteViewLabels) as MessWasteView[]).map((view) => (
-                      <button
-                        key={view}
-                        type="button"
-                        onClick={() => {
-                          setMessWasteView(view)
-                          setSelectedPoint(null)
-                        }}
-                        className={`rounded-xl px-2 py-2 text-xs font-semibold transition sm:text-sm ${
-                          messWasteView === view
-                            ? 'bg-teal-700 text-white shadow-sm dark:bg-teal-500'
-                            : 'text-teal-900/65 dark:text-teal-100/60'
-                        }`}
-                      >
-                        {messWasteViewLabels[view]}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
                 {chart.kind === 'grinder' && (
                   <div className="grid grid-cols-4 gap-1 border-b border-black/5 bg-black/[0.02] p-2 dark:border-white/10 dark:bg-black/10 sm:px-7">
                     {(Object.keys(grinderViewLabels) as GrinderView[]).map((view) => (
@@ -2112,7 +2115,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
                           </span>
                         </div>
 
-                        {chart.kind === 'buffet' && buffetView === 'mess' && (
+                        {chart.showGuestData && chart.kind === 'buffet' && buffetView === 'mess' && (
                           <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-amber-500/15 bg-amber-50 p-3 text-center dark:bg-amber-400/10">
                             <div>
                               <p className="text-[10px] text-gray-500 dark:text-white/55">{t.buffetWaste}</p>
@@ -2203,7 +2206,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         })()}
       </AnimatePresence>
 
-      <aside className="fixed bottom-24 right-4 z-40 hidden lg:block xl:right-6">
+      <aside className="hidden">
         <div
           className={`overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl transition-[width] duration-300 dark:border-white/10 dark:bg-[#0d3b3a] ${
             guestPanelOpen ? 'w-96 max-w-[calc(100vw-2rem)]' : 'w-44'

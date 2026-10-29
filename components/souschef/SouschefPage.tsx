@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import SouschefAdmin from '@/components/souschef/SouschefAdmin'
 import FoodWasteStationsAdmin from '@/components/souschef/FoodWasteStationsAdmin'
+import FoodWasteGuestsAdmin from '@/components/souschef/FoodWasteGuestsAdmin'
 import type { AccessShip } from '@/lib/shipAccess'
 import { clearAllOfflineAccess } from '@/lib/offlineAccess'
 
@@ -182,7 +183,10 @@ export default function SouschefPage({ ship = 'crown' }: { ship?: AccessShip }) 
         </>}
 
         {activeTab === 'folders' && <SouschefAdmin ship={ship} view="folders" />}
-        {activeTab === 'stations' && <FoodWasteStationsAdmin ship={ship} />}
+        {activeTab === 'stations' && <>
+          <FoodWasteStationsAdmin ship={ship} />
+          <FoodWasteGuestsAdmin ship={ship} />
+        </>}
         {activeTab === 'handovers' && <SouschefAdmin ship={ship} view="handovers" />}
 
         {activeTab === 'tasks' && <>
