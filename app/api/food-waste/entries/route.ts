@@ -29,25 +29,36 @@ export async function GET(request: NextRequest) {
   const from = request.nextUrl.searchParams.get('from')
   const to = request.nextUrl.searchParams.get('to')
   const location = request.nextUrl.searchParams.get('location')
-  const limit = Math.min(Number(request.nextUrl.searchParams.get('limit')) || 500, 2000)
+  const limit = Math.min(Number(request.nextUrl.searchParams.get('limit')) || 500, 10000)
+  const pageSize = 1000
+  const data: Record<string, unknown>[] = []
 
-  let query = getSupabaseAdmin()
-    .from('food_waste_entries')
-    .select('*')
-    .eq('vessel', ship)
+  // Supabase/PostgREST returns at most 1,000 rows per request. Fetch the
+  // selected period in stable pages so older weeks are not silently dropped.
+  for (let offset = 0; offset < limit; offset += pageSize) {
+    const lastIndex = Math.min(offset + pageSize, limit) - 1
+    let query = getSupabaseAdmin()
+      .from('food_waste_entries')
+      .select('*')
+      .eq('vessel', ship)
 
-  if (from) query = query.gte('waste_date', from)
-  if (to) query = query.lte('waste_date', to)
-  if (location) query = query.eq('location_name', location)
-  if (ship === 'pearl') query = query.not('location_name', 'like', 'Produktion %')
+    if (from) query = query.gte('waste_date', from)
+    if (to) query = query.lte('waste_date', to)
+    if (location) query = query.eq('location_name', location)
+    if (ship === 'pearl') query = query.not('location_name', 'like', 'Produktion %')
 
-  const { data, error } = await query
-    .order('waste_date', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(limit)
+    const { data: page, error } = await query
+      .order('waste_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(offset, lastIndex)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ data: data ?? [] })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    data.push(...(page ?? []))
+    if (!page || page.length < lastIndex - offset + 1) break
+  }
+
+  return NextResponse.json({ data })
 }
 
 export async function POST(request: NextRequest) {

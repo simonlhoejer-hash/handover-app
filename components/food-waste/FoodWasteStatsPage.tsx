@@ -412,7 +412,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
             ship: vessel,
             from: fromDate,
             to: toDate,
-            limit: 2000,
+            limit: 10000,
           })}`
         )
         data = result.data
@@ -488,7 +488,7 @@ export default function FoodWasteStatsPage({ vessel = 'crown' }: Props) {
         ship: vessel,
         from: range.previousFrom,
         to: range.currentTo,
-        limit: 2000,
+        limit: 10000,
       })}`
     )
       .then((result) => {
